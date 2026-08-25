@@ -66,9 +66,14 @@ A CTAN staging archive is built by `python3 scripts/tenkz_ctan.py archive`.
 
 ## Issues
 
-New defects belong in this repository's issue tracker. Historical tenkz
-issues opened before the split remain on
-[TNLean](https://github.com/LionSR/TNLean/issues?q=label%3Atenkz).
+Open package work here. Open issues were transferred from TNLean at the
+split; the old TNLean URLs redirect. One TNLean issue remains because it
+edits blueprint sources, not this package:
+[LionSR/TNLean#5693](https://github.com/LionSR/TNLean/issues/5693).
+
+The library tracker is [#10](https://github.com/LionSR/tenkz/issues/10).
+Issue numbers cited in `DESIGN.md` / `SOAK-1.0.md` are the original TNLean
+numbers and still resolve through those redirects.
 
 ## License
 
