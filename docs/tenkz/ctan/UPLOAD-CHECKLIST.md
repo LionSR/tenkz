@@ -66,9 +66,9 @@ material, so they are reviewed with it rather than typed fresh each time.
 | Maintainer contact | sirui.lu@mpq.mpg.de |
 | Summary | tensor-network diagrams from a description of the network |
 | Description | the opening section of the staged `README.md` |
-| Home page | https://github.com/LionSR/TNLean |
-| Repository | https://github.com/LionSR/TNLean |
-| Bug tracker | https://github.com/LionSR/TNLean/issues |
+| Home page | https://github.com/LionSR/tenkz |
+| Repository | https://github.com/LionSR/tenkz |
+| Bug tracker | https://github.com/LionSR/tenkz/issues |
 | Support | the same tracker |
 | Suggested directory | `graphics/pgf/contrib/tenkz` |
 | Announcement | `docs/tenkz/ANNOUNCEMENT-1.0-draft.md`, with every pending field filled |

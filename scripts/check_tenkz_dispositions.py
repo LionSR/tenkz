@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -26,7 +27,9 @@ from tenkz_language import load_registry, tombstone_rows, tombstone_shape
 
 
 DOCUMENT = ROOT / "docs/tenkz/DISPOSITIONS.md"
-BLUEPRINT_ROOT = ROOT / "blueprint/src/chapter"
+BLUEPRINT_ROOT = Path(
+    os.environ.get("TENKZ_BLUEPRINT_ROOT", ROOT / "blueprint/src/chapter")
+)
 FIXTURE_ROOT = ROOT / "tests/tenkz"
 ENVIRONMENT = re.compile(
     r"\\begin\s*\{\s*(tenkz(?:eq|free|cd|lattice|planes)?)\s*\}"
@@ -747,58 +750,65 @@ def documented_fixtures(text: str) -> dict[str, tuple[str, frozenset[str]]]:
 def main() -> int:
     text = DOCUMENT.read_text()
 
-    blueprint_occurrences: Counter[tuple[str, int, str]] = Counter()
-    blueprint_raw: Counter[str] = Counter()
-    blueprint_sources: dict[tuple[str, int, str], list[tuple[str, bool]]] = {}
-    for path in sorted(BLUEPRINT_ROOT.glob("*.tex")):
-        blueprint_sources.update(construct_sources(path))
-        for line, name in occurrences(path):
-            blueprint_occurrences[(path.name, line, name)] += 1
-            blueprint_raw[name] += 1
+    if BLUEPRINT_ROOT.is_dir():
+        blueprint_occurrences: Counter[tuple[str, int, str]] = Counter()
+        blueprint_raw: Counter[str] = Counter()
+        blueprint_sources: dict[tuple[str, int, str], list[tuple[str, bool]]] = {}
+        for path in sorted(BLUEPRINT_ROOT.glob("*.tex")):
+            blueprint_sources.update(construct_sources(path))
+            for line, name in occurrences(path):
+                blueprint_occurrences[(path.name, line, name)] += 1
+                blueprint_raw[name] += 1
 
-    (
-        listed_blueprint,
-        blueprint_dispositions,
-        blueprint_occurrence_dispositions,
-        blueprint_occurrence_targets,
-    ) = documented_blueprint(text)
-    if blueprint_occurrences != listed_blueprint:
-        fail(
-            "blueprint inventory mismatch: "
-            f"missing={blueprint_occurrences - listed_blueprint}, "
-            f"extra={listed_blueprint - blueprint_occurrences}"
-        )
-    documented_blueprint_raw, blueprint_total = parse_counter_table(
-        text, "| Raw construct | Occurrences |"
-    )
-    if blueprint_raw != documented_blueprint_raw:
-        fail("blueprint raw-count table does not match the source inventory")
-    documented_blueprint_dispositions, disposition_total = parse_counter_table(
-        text, "| Disposition | Occurrences |"
-    )
-    if blueprint_dispositions != documented_blueprint_dispositions:
-        fail("blueprint disposition totals do not match the line inventory")
-    if blueprint_total != disposition_total:
-        fail("blueprint reconciliation tables have different totals")
-    for key, documented_disposition in blueprint_occurrence_dispositions.items():
-        actual_targets = frozenset().union(
-            *(
-                fragment_target_codes(source, kernel)
-                for source, kernel in blueprint_sources[key]
-            )
-        )
-        if actual_targets != blueprint_occurrence_targets[key]:
+        (
+            listed_blueprint,
+            blueprint_dispositions,
+            blueprint_occurrence_dispositions,
+            blueprint_occurrence_targets,
+        ) = documented_blueprint(text)
+        if blueprint_occurrences != listed_blueprint:
             fail(
-                f"{key[0]}:{key[1]} {key[2]} target mismatch: "
-                f"documented={sorted(blueprint_occurrence_targets[key])}, "
-                f"actual={sorted(actual_targets)}"
+                "blueprint inventory mismatch: "
+                f"missing={blueprint_occurrences - listed_blueprint}, "
+                f"extra={listed_blueprint - blueprint_occurrences}"
             )
-        actual_disposition = target_disposition(actual_targets)
-        if actual_disposition != documented_disposition:
-            fail(
-                f"{key[0]}:{key[1]} {key[2]} disposition mismatch: "
-                f"documented={documented_disposition}, actual={actual_disposition}"
+        documented_blueprint_raw, blueprint_total = parse_counter_table(
+            text, "| Raw construct | Occurrences |"
+        )
+        if blueprint_raw != documented_blueprint_raw:
+            fail("blueprint raw-count table does not match the source inventory")
+        documented_blueprint_dispositions, disposition_total = parse_counter_table(
+            text, "| Disposition | Occurrences |"
+        )
+        if blueprint_dispositions != documented_blueprint_dispositions:
+            fail("blueprint disposition totals do not match the line inventory")
+        if blueprint_total != disposition_total:
+            fail("blueprint reconciliation tables have different totals")
+        for key, documented_disposition in blueprint_occurrence_dispositions.items():
+            actual_targets = frozenset().union(
+                *(
+                    fragment_target_codes(source, kernel)
+                    for source, kernel in blueprint_sources[key]
+                )
             )
+            if actual_targets != blueprint_occurrence_targets[key]:
+                fail(
+                    f"{key[0]}:{key[1]} {key[2]} target mismatch: "
+                    f"documented={sorted(blueprint_occurrence_targets[key])}, "
+                    f"actual={sorted(actual_targets)}"
+                )
+            actual_disposition = target_disposition(actual_targets)
+            if actual_disposition != documented_disposition:
+                fail(
+                    f"{key[0]}:{key[1]} {key[2]} disposition mismatch: "
+                    f"documented={documented_disposition}, actual={actual_disposition}"
+                )
+    else:
+        print(
+            "skipping blueprint inventory: "
+            f"{BLUEPRINT_ROOT} is absent (set TENKZ_BLUEPRINT_ROOT to check it)",
+            file=sys.stderr,
+        )
 
     fixtures = documented_fixtures(text)
     expected_fixtures = {path.name for path in FIXTURE_ROOT.glob("*.tex")}
@@ -880,8 +890,11 @@ def main() -> int:
     if not census or tuple(map(int, census.groups())) != actual_census:
         fail(f"fixture consumer census does not match {actual_census}")
 
+    blueprint_count = (
+        sum(blueprint_raw.values()) if BLUEPRINT_ROOT.is_dir() else 0
+    )
     print(
-        f"PASS: {sum(blueprint_raw.values())} blueprint occurrences and "
+        f"PASS: {blueprint_count} blueprint occurrences and "
         f"{len(expected_fixtures)} standalone fixtures reconcile exactly"
     )
     return 0

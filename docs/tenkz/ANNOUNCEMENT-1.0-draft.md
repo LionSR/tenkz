@@ -89,7 +89,7 @@ events as its canonical replacement.
 - Release notes and archive: `[[PENDING-RELEASE: release-url]]`
   (archive hash `[[PENDING-RELEASE: archive-hash]]`, frozen at
   `[[PENDING-RELEASE: freeze-sha]]`)
-- Project: <https://github.com/LionSR/TNLean>
+- Project: <https://github.com/LionSR/tenkz>
 
 ### Known limitations
 

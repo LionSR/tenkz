@@ -1,5 +1,13 @@
 # tenkz 1.0 — the kernel is the surface
 
+## Repository split (2026-08-25)
+
+The package, corpus, manual, and tooling now live in
+[LionSR/tenkz](https://github.com/LionSR/tenkz), extracted with history from
+TNLean `85a12e6b5`. The TeX package version remains 0.7. Historical tenkz
+issues stay on TNLean; new work opens here.
+
+
 0.7 drew pictures through four front ends. Five environments, seven picture
 commands, and four separate key ledgers each said the same few things in a
 private dialect: a cell, a wire, a mark, a frame. 1.0 has one environment and

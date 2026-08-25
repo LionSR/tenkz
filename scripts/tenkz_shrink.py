@@ -8,8 +8,10 @@ census strictly decreased or every raised flag carries a written verdict
 in the latest section of docs/tenkz/SHRINK.md.
 
 Consumer counting uses the demand corpus only -- the RMP benchmark cases
-and the blueprint chapters.  Package examples and regression fixtures are
-manufactured consumers and never count.
+and any extra roots named by ``TENKZ_EXTRA_DEMAND`` (colon-separated globs
+from the repository root; TNLean passes its blueprint chapters here).
+Package examples and regression fixtures are manufactured consumers and
+never count.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import statistics
 import subprocess
@@ -44,7 +47,17 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "tests/tenkz/census-baseline.json"
 SHRINK_LEDGER = ROOT / "docs/tenkz/SHRINK.md"
 RMP_MANIFEST = ROOT / "tests/tenkz/rmp/manifest.toml"
-BLUEPRINT = sorted(ROOT.glob("blueprint/src/chapter/*.tex"))
+
+
+def extra_demand_paths() -> list[Path]:
+    """Optional extra demand files from ``TENKZ_EXTRA_DEMAND`` globs."""
+    raw = os.environ.get("TENKZ_EXTRA_DEMAND", "")
+    paths: list[Path] = []
+    for pattern in raw.split(":"):
+        pattern = pattern.strip()
+        if pattern:
+            paths.extend(sorted(ROOT.glob(pattern)))
+    return paths
 
 # Alias sunsets execute at their milestone; milestones this project uses.
 CURRENT_MILESTONE = "0.8"
@@ -97,7 +110,7 @@ def consumer_files() -> dict[Path, str]:
     files: dict[Path, str] = {}
     for path in manifest_case_paths():
         files[path] = strip_comments(path.read_text(encoding="utf-8"))
-    for path in BLUEPRINT:
+    for path in extra_demand_paths():
         text = path.read_text(encoding="utf-8")
         if "begin{tenkz" in text or "\\tnpic" in text:
             files[path] = strip_comments(text)

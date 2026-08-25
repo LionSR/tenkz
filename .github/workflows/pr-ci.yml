@@ -1,0 +1,132 @@
+name: PR CI
+
+# Dedicated tenkz pipeline: language/shrink, the regression corpus, and the
+# RMP benchmark book. Path filters are unnecessary; every change in this
+# repository is a tenkz change.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tenkz-shrink:
+    name: Check tenkz shrink ratchets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Check language and shrink contracts
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+        run: |
+          python3 scripts/tenkz_language.py check
+          python3 scripts/test_tenkz_shrink.py
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags origin \
+              "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+            python3 scripts/tenkz_shrink.py gate --base-ref "$BASE_REF"
+          else
+            python3 scripts/tenkz_shrink.py gate
+          fi
+
+  tenkz-corpus:
+    name: Check tenkz regression corpus
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Test tenkz provenance invariant
+        run: python3 scripts/test_tenkz_corpus_provenance.py
+
+      - name: Test exact RMP dimension inventory
+        run: python3 scripts/test_tenkz_dimension_inventory.py
+
+      - name: Test tenkz render baseline replacement
+        run: python3 scripts/test_tenkz_corpus_render.py
+
+      - name: Test tenkz equation group enforcement
+        run: python3 scripts/test_tenkz_equation_audit.py
+
+      - name: Test tenkz topology and label regressions
+        run: |
+          python3 scripts/test_tenkz_cubic.py
+          python3 scripts/test_tenkz_label_overlap.py
+          python3 scripts/test_tenkz_tree.py
+          python3 scripts/test_tnlog.py
+          python3 scripts/test_texcase.py
+          python3 scripts/test_tenkz_kernel_audit.py
+
+      - name: Test tenkz manual extraction and reference coverage
+        run: python3 scripts/test_tenkz_manual_doctest.py
+
+      - name: Install TeX dependencies
+        uses: texra-ai/lean-env-action/blueprint-system-deps@v1
+
+      - name: Compile tenkz manual examples standalone
+        run: python3 scripts/tenkz_manual_doctest.py
+
+      - name: Check the CTAN archive against a clean installation
+        run: python3 scripts/tenkz_ctan.py check --require-smoke
+
+      - name: Check tenkz kernel record contracts
+        run: scripts/tenkz_kernel_probes.sh
+
+      - name: Compile and audit tenkz corpus
+        run: TENKZ_CORPUS_JOBS=4 scripts/tenkz_corpus.sh
+      - name: Check golden event baselines
+        run: TENKZ_CORPUS_JOBS=4 scripts/tenkz_golden.sh --check
+      - name: Check string-engine event and pixel probes
+        run: scripts/tenkz_string_probes.sh
+
+  tenkz-rmp:
+    name: Check tenkz RMP benchmark corpus
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install TeX dependencies
+        uses: texra-ai/lean-env-action/blueprint-system-deps@v1
+
+      - name: Compile, audit, and typeset the tenkz RMP benchmark
+        env:
+          TENKZ_RMP_JOBS: "2"
+          TENKZ_RMP_WORK_ROOT: ${{ runner.temp }}/rmp-work
+        run: python3 scripts/tenkz_rmp.py book --all
+
+      - name: Upload failure transcripts, event logs, and renders
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tenkz-rmp-failure
+          path: |
+            ${{ runner.temp }}/rmp-work/targets/**/*.txt
+            ${{ runner.temp }}/rmp-work/targets/**/*.log
+            ${{ runner.temp }}/rmp-work/targets/**/*.tnlog
+            ${{ runner.temp }}/rmp-work/targets/**/*.pdf
+            ${{ runner.temp }}/rmp-work/*.txt
+            ${{ runner.temp }}/rmp-work/*.log
+            ${{ runner.temp }}/rmp-work/*.pdf
+          retention-days: 7
+          if-no-files-found: warn

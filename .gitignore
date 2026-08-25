@@ -1,0 +1,43 @@
+# Local build output
+/build/
+/output/
+/tmp/
+
+# LaTeX compilation artifacts
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.xdv
+*.tnlog
+
+# Manual generated artifacts
+/docs/tenkz/*.exa
+/docs/tenkz/*.exm
+/docs/tenkz/manual2.pdf
+/output/pdf/tenkz-*.pdf
+
+# Render caches
+.tenkz_svg_cache
+.tn_svg_cache/
+
+# Python
+scripts/__pycache__/
+scripts/tenkzlib/__pycache__/
+tests/tenkz/release-harness/__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.bak*

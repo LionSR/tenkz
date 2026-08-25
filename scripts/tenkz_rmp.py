@@ -40,7 +40,7 @@ DEFAULT_VERDICT = REPO / "tests" / "tenkz" / "rmp" / "verdicts.toml"
 AUTHOR_SOURCE_HASHES = (
     REPO / "tests" / "tenkz" / "rmp" / "author-source.sha256"
 )
-PAPER_SOURCE = REPO / "Papers" / "2011.12127" / "TN-Review-main.tex"
+DEFAULT_PAPER_SOURCE = REPO / "Papers" / "2011.12127" / "TN-Review-main.tex"
 FROZEN_TARGET_COUNT = 130
 BOOK_SOURCE = REPO / "docs" / "tenkz" / "rmp-benchmark.tex"
 BOOK_OUTPUT = REPO / "output" / "pdf" / "tenkz-rmp-benchmark.pdf"
@@ -505,7 +505,9 @@ def load_manifest(path: Path) -> list[Target]:
             )
         )
     validate_census(targets, corpus)
-    validate_source_placements(targets)
+    paper = resolve_paper_source()
+    if paper is not None:
+        validate_source_placements(targets, paper)
     for target in targets:
         validate_case(target)
     validate_distinct_case_bodies(targets)
@@ -580,12 +582,30 @@ def validate_census(targets: list[Target], census: dict[str, Any]) -> None:
         )
 
 
-def validate_source_placements(targets: Sequence[Target]) -> None:
+def resolve_paper_source(cli: Path | None = None) -> Path | None:
+    """Return the RMP source paper when one is configured and present.
+
+    Default path is the TNLean `Papers/2011.12127` copy, so a sibling
+    checkout still pins placements. `TENKZ_RMP_PAPER` or `--paper-source`
+    override it. Absence skips the includegraphics census rather than
+    failing `check` / `book` / `render`.
+    """
+    if cli is not None:
+        return cli
+    raw = os.environ.get("TENKZ_RMP_PAPER")
+    if raw:
+        return Path(raw)
+    if DEFAULT_PAPER_SOURCE.is_file():
+        return DEFAULT_PAPER_SOURCE
+    return None
+
+
+def validate_source_placements(targets: Sequence[Target], paper: Path) -> None:
     """Keep the manifest's placement census anchored to the source paper."""
     try:
-        source = strip_comments(PAPER_SOURCE.read_text(encoding="utf-8"))
+        source = strip_comments(paper.read_text(encoding="utf-8"))
     except (OSError, UnicodeError) as exc:
-        fail(f"cannot read source paper {PAPER_SOURCE}: {exc}")
+        fail(f"cannot read source paper {paper}: {exc}")
     expected = [
         (source.count("\n", 0, match.start()) + 1, match.group(1))
         for match in INCLUDEGRAPHICS_RE.finditer(source)
@@ -1044,7 +1064,6 @@ def campaign_digest(targets: Sequence[Target]) -> str:
     paths = {
         DEFAULT_MANIFEST,
         AUTHOR_SOURCE_HASHES,
-        PAPER_SOURCE,
         BOOK_SOURCE,
         REPO / "docs" / "tenkz" / "tenkzrmpbenchmark.sty",
         REPO / "scripts" / "tenkz_rmp.py",
@@ -1053,6 +1072,14 @@ def campaign_digest(targets: Sequence[Target]) -> str:
         REPO / "scripts" / "tenkzlib" / "texcase.py",
         REPO / "scripts" / "tenkzlib" / "tnlog.py",
     }
+    paper = resolve_paper_source()
+    if paper is not None and paper.is_file():
+        try:
+            paper.relative_to(REPO)
+        except ValueError:
+            pass
+        else:
+            paths.add(paper)
     paths.update((REPO / "tex" / "tenkz").glob("*.tex"))
     paths.update((REPO / "tex" / "tenkz").glob("*.sty"))
     for target in targets:
@@ -1874,6 +1901,11 @@ def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         description="Compile, audit, render, and compare the source-first tenkz RMP benchmark."
     )
+    result.add_argument(
+        "--paper-source",
+        type=Path,
+        help="RMP review paper used for the includegraphics placement census",
+    )
     subparsers = result.add_subparsers(dest="command", required=True)
     for command in ("check", "book", "render", "compare"):
         subparser = subparsers.add_parser(command)
@@ -1895,6 +1927,8 @@ def parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = parser().parse_args()
     try:
+        if args.paper_source is not None:
+            os.environ["TENKZ_RMP_PAPER"] = str(args.paper_source.resolve())
         manifest = Path(os.environ.get("TENKZ_RMP_MANIFEST", DEFAULT_MANIFEST))
         targets = load_manifest(manifest)
         case_paths = tuple(target.case for target in targets)

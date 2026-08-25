@@ -4740,3 +4740,4 @@ The flag table carries forward unchanged from the prior ledger section.
 | flag:lonely-type:size-table | departed: its sole carrier was the inert sizes= setup key; permanent |
 | flag:consumers:key:kernel-setup:theme | retired: stored an identifier, read by nothing; the house palette binds at load and cited palettes enter through species hue declarations; permanent |
 | flag:consumers:key:kernel-wire:weight | retired: zero authored consumers; it changed no ink, endpoint type owns stroke, and multiplicity belongs to the mathematical label; permanent |
+| flag:consumers:command:tntree | keep-because: two RMP consumers remain after the TNLean blueprint left the default demand corpus at the repository split; extra demand is restored via TENKZ_EXTRA_DEMAND; expiry 1.0 |

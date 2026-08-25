@@ -64,16 +64,16 @@ environments and the body commands exist as soon as the package is loaded.
 The manual states the language: every environment, command, and key, with a
 picture for each and the failure each rejects. It is the contract the version
 policy freezes. Manual and sources:
-<https://github.com/LionSR/TNLean/tree/main/docs/tenkz>.
+<https://github.com/LionSR/tenkz/tree/main/docs/tenkz>.
 
 ## Author and maintainer
 
 Sirui Lu <sirui.lu@mpq.mpg.de>
 
 tenkz is written for TNLean, a Lean 4 formalization of the mathematics of
-tensor networks, and is developed in that repository:
-<https://github.com/LionSR/TNLean>. Defect reports and questions belong in
-its issue tracker: <https://github.com/LionSR/TNLean/issues>.
+tensor networks, and is developed at
+<https://github.com/LionSR/tenkz>. Defect reports and questions belong in
+its issue tracker: <https://github.com/LionSR/tenkz/issues>.
 
 ## License
 
