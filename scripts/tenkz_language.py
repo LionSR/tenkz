@@ -936,6 +936,30 @@ def key_installing_helpers(text: str) -> list[str]:
     return helpers
 
 
+def top_level_entries(block: str) -> list[str]:
+    """The comma-separated entries of one l3keys block, brace depth respected.
+
+    A nested handler body may itself contain `, key .code:n = ...`, and a
+    comma inside braces is not a separator of the outer block -- reading it as
+    one reports a rebinding that is not there.
+    """
+    entries: list[str] = []
+    depth = 0
+    current: list[str] = []
+    for character in block:
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+        if character == "," and depth == 0:
+            entries.append("".join(current))
+            current = []
+            continue
+        current.append(character)
+    entries.append("".join(current))
+    return entries
+
+
 def key_definitions(text: str, scope: str, key: str) -> int:
     """How many times `key` is bound in `scope`, by any spelling.
 
@@ -969,11 +993,11 @@ def key_definitions(text: str, scope: str, key: str) -> int:
         # properties would miss the next spelling -- `.tl_set:N` accepts any
         # value where `.choices:nn` accepted a list -- and l3keys has more of
         # them than a gate should try to enumerate.
-        for property_match in re.finditer(
-            r"(?:\A|,)\s*" + re.escape(key) + r"\s*(?:/[^,\s]*)?\s*"
-            r"\.([a-z_]+):", body,
-        ):
-            if property_match.group(1) not in ORTHOGONAL_PROPERTIES:
+        for entry in top_level_entries(body):
+            property_match = re.match(
+                r"\s*" + re.escape(key) + r"\s*(?:/[^\s]*)?\s*\.([a-z_]+):", entry
+            )
+            if property_match and property_match.group(1) not in ORTHOGONAL_PROPERTIES:
                 bindings += 1
     return bindings
 
@@ -1015,18 +1039,18 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
         # installs the last, so every assignment is collected.  A property
         # other than `.code:n` installs a handler this reader cannot read --
         # `.tl_set:N` accepts any value -- and saying so is the honest answer.
-        for binding in re.finditer(
-            r"(?:\A|,)\s*" + re.escape(key) + r"\s*\.([a-z_]+):[A-Za-z]*\s*=\s*",
-            block,
-        ):
-            if binding.group(1) in ORTHOGONAL_PROPERTIES:
+        for entry in top_level_entries(block):
+            binding = re.match(
+                r"\s*" + re.escape(key) + r"\s*\.([a-z_]+):[A-Za-z]*\s*=\s*", entry
+            )
+            if binding is None or binding.group(1) in ORTHOGONAL_PROPERTIES:
                 continue
             if binding.group(1) != "code":
                 raise ValueError(
                     f"{scope}:{key} is bound with .{binding.group(1)}, whose "
                     "handler this gate cannot read"
                 )
-            body, _ = _group(block, binding.end())
+            body, _ = _group(entry, binding.end())
             bodies.append(body)
     if not bodies:
         raise ValueError(f"no .code:n binding for {scope}:{key}")

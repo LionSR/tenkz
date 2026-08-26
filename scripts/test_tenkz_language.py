@@ -551,6 +551,15 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     )
     if tenkz_language.alphabet_errors(registry, contract, dormant):
         raise SystemExit("a dormant key definition was counted as a binding")
+    # A comma inside a nested handler body is not a separator of the outer
+    # block, and reading it as one reports a rebinding that is not there.
+    nested = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+        "{ probe .code:n = { \\keys_define:nn {inner} "
+        "{ x .code:n = {a}, form .code:n = {b} } } }\n"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, nested):
+        raise SystemExit("a nested comma was read as a top-level key assignment")
     duplicated = (
         contract
         + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
