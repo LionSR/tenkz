@@ -612,6 +612,54 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         for error in tenkz_language.alphabet_errors(registry, second_table, kernel)
     ):
         raise SystemExit("a second table inside section 2.8 was accepted")
+    for label, seeded_kernel, expected in (
+        (
+            "the side installer aimed at another alphabet's key",
+            f"{kernel}\n\\__tenkz_kernel_side:nn {{ tenkz-kernel-mark }} {{ form }}\n",
+            "bound directly",
+        ),
+        (
+            "a side installer call removed",
+            kernel.replace(
+                r"\__tenkz_kernel_side:nn { tenkz-kernel-picture } { west }", "", 1
+            ),
+            "installed 0 time(s)",
+        ),
+        (
+            "a parser replaced through xparse",
+            f"{kernel}\n\\RenewDocumentCommand \\__tenkz_kernel_route:n {{m}} {{ }}\n",
+            "times",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # Negatives: a call that never runs, and a branch that is not an override.
+    for label, benign in (
+        (
+            "a choice-helper call inside a macro body",
+            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_sleep: "
+            "{ \\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form } "
+            "{ bracket } { form } }\n",
+        ),
+        (
+            "a customised choice branch",
+            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+            "{ form / label .code:n = { } }\n",
+        ),
+    ):
+        if tenkz_language.alphabet_errors(registry, contract, benign):
+            raise SystemExit(f"{label} was reported as a binding")
+    # A blank line ends the table, so rows below it are not its rows.
+    blanked = contract.replace(
+        "| Alphabet | Words |\n|---|---|\n", "| Alphabet | Words |\n|---|---|\n\n", 1
+    )
+    if blanked != contract and not tenkz_language.alphabet_errors(
+        registry, blanked, kernel
+    ):
+        raise SystemExit("rows below a blank line were read as table rows")
     duplicated = (
         contract
         + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"

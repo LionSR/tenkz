@@ -62,9 +62,15 @@ CHOICE_HELPER = "__tenkz_kernel_choice:nnnn"
 # lists, and the side installer, which is checked to bind its key and call its
 # parser.  A call to any other key-installing helper is a binding this gate
 # has not accounted for.
-SANCTIONED_INSTALLERS = frozenset({
-    "__tenkz_kernel_choice:nnnn", "__tenkz_kernel_side:nn",
-})
+# Each sanctioned installer is sanctioned only for the scope and keys this
+# gate already reads it for.  The same helper aimed elsewhere -- the side
+# installer at `tenkz-kernel-mark:form`, say -- is an override like any other.
+SANCTIONED_INSTALLERS = {
+    "__tenkz_kernel_choice:nnnn": (("tenkz-kernel-mark", "form"),),
+    "__tenkz_kernel_side:nn": tuple(
+        ("tenkz-kernel-picture", word) for word in ("west", "east", "north", "south")
+    ),
+}
 # l3keys properties that decorate a key without installing the code that
 # accepts its value.  Everything else replaces the handler.
 ORTHOGONAL_PROPERTIES = frozenset({
@@ -684,6 +690,12 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
             # table is empty and whatever pipe-prefixed lines follow are not
             # its rows.
             if seen_delimiter:
+                if not row.strip():
+                    # A blank line ends the table, with or without rows above
+                    # it; reading on would take later pipe-prefixed lines for
+                    # rows of a table Markdown has already closed.
+                    ended = True
+                    continue
                 if alphabets:
                     # The table has ended.  What follows is prose -- and must
                     # stay prose: a second table below it would be a second
@@ -760,6 +772,7 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 # and leaves the base alone.
 DEFINITION_TOKEN = re.compile(
     r"\\(?:cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:[A-Za-z]*"
+    r"|(?:New|Renew|Provide|Declare)DocumentCommand"
     r"|let|[egx]?def)\s*$"
 )
 
@@ -887,13 +900,16 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
 
 def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     """The words a `\\__tenkz_kernel_choice:nnnn` table accepts for one key."""
-    matches = list(
-        re.finditer(
+    dormant = macro_body_spans(text)
+    matches = [
+        call for call in re.finditer(
             r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
             + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
             text,
         )
-    )
+        # A call inside a macro body installs nothing until that macro runs.
+        if not any(begin <= call.start() < end for begin, end in dormant)
+    ]
     if not matches:
         raise ValueError(f"kernel installs no choice table for {scope}:{key}")
     # Every invocation installs its choices with `\keys_define:nn`, so a second
@@ -939,8 +955,7 @@ def key_installing_helpers(text: str) -> list[str]:
         r"\\(__tenkz_kernel_[A-Za-z_]*:[a-zA-Z]+)", text
     ):
         name = match.group(1)
-        if name in SANCTIONED_INSTALLERS:
-            continue
+
         try:
             body = macro_body(text, name, match.start())
         except ValueError:
@@ -990,6 +1005,8 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     # handler as surely as a literal block does -- when it is called at load,
     # not from inside another macro's body.
     for helper in key_installing_helpers(text):
+        if (scope, key) in SANCTIONED_INSTALLERS.get(helper, ()):
+            continue
         bindings += sum(
             1 for call in re.finditer(
                 r"\\" + re.escape(helper) + r"\s*\{\s*" + re.escape(scope)
@@ -1025,10 +1042,17 @@ def key_definitions(text: str, scope: str, key: str) -> int:
         # value where `.choices:nn` accepted a list -- and l3keys has more of
         # them than a gate should try to enumerate.
         for entry in top_level_entries(body):
+            # `form / label .code:n` customises one branch of an existing
+            # choice; the parent key's handler and its alphabet are untouched,
+            # so counting it as an override would report one that is not there.
+            # `form / unknown` is the exception: it replaces the refusal.
             property_match = re.match(
-                r"\s*" + re.escape(key) + r"\s*(?:/\s*[^.\s]+\s*)*\.([a-z_]+):", entry
+                r"\s*" + re.escape(key)
+                + r"\s*(?:/\s*(?P<branch>[^.\s]+)\s*)?\.([a-z_]+):", entry
             )
-            if property_match and property_match.group(1) not in ORTHOGONAL_PROPERTIES:
+            if property_match and property_match.group("branch") not in (None, "unknown"):
+                continue
+            if property_match and property_match.group(2) not in ORTHOGONAL_PROPERTIES:
                 bindings += 1
     return bindings
 
@@ -1157,6 +1181,18 @@ def alphabet_errors(
                 # A later block rebinding one generated key would leave the
                 # installer untouched and that side accepting anything.
                 for word in SIDE_KEYS:
+                    # The installer must still be called for each side, or
+                    # that key is simply not installed and its alphabet is
+                    # not the picture's.
+                    installs = len(re.findall(
+                        r"\\__tenkz_kernel_side:nn\s*\{\s*tenkz-kernel-picture\s*\}"
+                        r"\s*\{\s*" + word + r"\s*\}", kernel_text,
+                    ))
+                    if installs != 1:
+                        errors.append(
+                            f"alphabet {alphabet!r}: tenkz-kernel-picture:{word} "
+                            f"is installed {installs} time(s), not once"
+                        )
                     direct = key_definitions(kernel_text, "tenkz-kernel-picture", word)
                     if direct:
                         errors.append(
