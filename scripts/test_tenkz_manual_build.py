@@ -21,11 +21,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     date, version = build.package_release()
-    if not version or build.metadata_errors(date, build.manual_dateline()):
+    manual = build.manual_version()
+    if not version or build.metadata_errors(date, build.manual_dateline(), version, manual):
         raise SystemExit("the unseeded metadata does not agree")
-    seeded = build.metadata_errors(date, "June 1999")
+    seeded = build.metadata_errors(date, "June 1999", version, manual)
     if not seeded or "synchronize" not in seeded[0]:
         raise SystemExit(f"a stale title page was not refused: {seeded}")
+    # A version bump inside the same month must not pass a date-only check.
+    bumped = build.metadata_errors(date, build.manual_dateline(), "0.8", manual)
+    if not any("names version" in error for error in bumped):
+        raise SystemExit(f"a stale manual version was not refused: {bumped}")
+    try:
+        build.manual_version("\\title{no version here}")
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("a manual naming no version was not refused")
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:

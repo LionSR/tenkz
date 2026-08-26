@@ -2003,11 +2003,16 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
     dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)
+    manual_version = re.search(r"manual for \\pkg\{\} version ([0-9.]+)", manual)
     event = re.search(r'^version = "([0-9.]+)"', tnlog, re.MULTILINE)
     heading = changes.splitlines()[0].lstrip("# ").strip() if changes else "absent"
     return [
         ("tex/tenkz/tenkz.sty", f"v{release.version} of {release.date}"),
-        ("docs/tenkz/manual2.tex", (dateline.group(1).strip() if dateline else "no date line")),
+        (
+            "docs/tenkz/manual2.tex",
+            f"{'v' + manual_version.group(1) if manual_version else 'no version'} of "
+            f"{dateline.group(1).strip() if dateline else 'no date line'}",
+        ),
         ("docs/tenkz/CHANGES.md", heading),
         ("docs/tenkz/TNLOG.md", f"event format {event.group(1)}" if event else "no version"),
     ]

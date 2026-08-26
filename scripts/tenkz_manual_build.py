@@ -50,6 +50,15 @@ def package_release() -> tuple[str, str]:
     return match.group(1), match.group(2)
 
 
+def manual_version(text: str | None = None) -> str:
+    """The version the manual's title page names for the package."""
+    text = MANUAL.read_text(encoding="utf-8") if text is None else text
+    match = re.search(r"manual for \\pkg\{\} version ([0-9.]+)", text)
+    if match is None:
+        raise ValueError("manual2.tex names no package version on its title page")
+    return match.group(1)
+
+
 def manual_dateline(text: str | None = None) -> str:
     """The title page's month and year, as `tenkz_ctan.py sync` reads it."""
     text = MANUAL.read_text(encoding="utf-8") if text is None else text
@@ -64,16 +73,29 @@ def source_date_epoch(date: str) -> int:
     return int(dt.datetime(year, month, day, tzinfo=dt.timezone.utc).timestamp())
 
 
-def metadata_errors(package_date: str, dateline: str) -> list[str]:
-    """The manual's date line must name the package's month and year."""
+def metadata_errors(
+    package_date: str, dateline: str, package_version: str = "", version: str = ""
+) -> list[str]:
+    """The manual's title page must name the package's release and date.
+
+    Both halves are checked: a version bump inside one month would pass a
+    date-only comparison, and the release policy (section 3) requires the
+    manual version to agree with `\\ProvidesPackage` at a tag.
+    """
+    errors: list[str] = []
     year, month, _day = (int(part) for part in package_date.split("/"))
     expected = f"{dt.date(year, month, 1):%B %Y}"
     if dateline != expected:
-        return [
+        errors.append(
             f"manual2.tex title page reads {dateline!r} but tenkz.sty is dated "
             f"{package_date} ({expected!r}); synchronize the release metadata"
-        ]
-    return []
+        )
+    if package_version and version != package_version:
+        errors.append(
+            f"manual2.tex names version {version!r} but tenkz.sty provides "
+            f"v{package_version}; synchronize the release metadata"
+        )
+    return errors
 
 
 def sha256(data: bytes) -> str:
@@ -115,7 +137,16 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     if not log.is_file() or not log.read_text(encoding="utf-8").strip():
         raise RuntimeError("the manual build emitted no event stream")
     findings: list[str] = []
-    audit = Audit(log, work / "manual2.tex")
+    # The manual's pictures are replayed by the example macros out of the
+    # generated `.exa`/`.exm` files and spread over the chapter inputs, so no
+    # single source describes this stream: a flattened source reads 61
+    # picture constructs against the log's 55, and the four inside refusal
+    # examples do not close the gap.  Rather than hand the audit a source it
+    # would silently decline to link, this is the stream-internal audit and
+    # is reported as such.  The source-linked half belongs to
+    # `tenkz_manual_doctest.py`, which audits every displayed example against
+    # its own standalone driver and runs immediately before this in CI.
+    audit = Audit(log, None)
     if audit.run():
         raise RuntimeError("the manual's event stream has hard audit findings")
     findings.extend(f"{f.severity} [{f.rule}] {f.msg}" for f in audit.findings)
@@ -156,7 +187,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     date, version = package_release()
-    errors = metadata_errors(date, manual_dateline())
+    errors = metadata_errors(date, manual_dateline(), version, manual_version())
     if errors:
         for error in errors:
             print(f"tenkz-manual: {error}", file=sys.stderr)
@@ -180,7 +211,11 @@ def main() -> int:
                 print(f"tenkz-manual: {exc}", file=sys.stderr)
                 return 1
             pdfs.append(pdf)
-            print(f"build {number}: {sha256(pdf)} ({len(pdf)} bytes, {len(findings)} audit advisories)")
+            print(
+                f"build {number}: {sha256(pdf)} ({len(pdf)} bytes, "
+                f"{len(findings)} stream-internal audit advisories; "
+                "source-linked auditing is the doctest's, per example)"
+            )
     if builds == 2:
         errors = compare(pdfs[0], pdfs[1])
         if errors:
