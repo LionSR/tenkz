@@ -100,6 +100,42 @@ def test_document_only_blueprint_gates_fire() -> None:
         "imply redraw",
         "preserve entry with a redraw target",
     )
+    # A second occurrence written in a spelling the grammar does not read,
+    # which leaves every counter where it was.
+    _expect_document_failure(
+        text.replace(
+            "| `ch03_single.tex` | L228 `tenkz` → `P-grid` |",
+            "| `ch03_single.tex` | L228 `tenkz` → `P-grid`; L229 tenkz -> P-grid |",
+            1,
+        ),
+        "the occurrence grammar does not read",
+        "cell text outside the grammar",
+    )
+    # A migration code outside P/C/R would be filed as preserve by default.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` |", "| `X-grid` | A typo. |\n| `P-none` |", 1
+        ),
+        "outside P/C/R",
+        "migration code outside the three families",
+    )
+    # A deleted zero row is not a zero: the totals do not move.
+    _expect_document_failure(
+        text.replace("| `tenkzcd` | 0 |\n", "", 1),
+        "every tracked construct row",
+        "deleted zero ratchet row",
+    )
+    # A repeated row overwrites the earlier one and the total still adds up.
+    _expect_document_failure(
+        text.replace("| preserve | 9 |", "| preserve | 999 |\n| preserve | 9 |", 1),
+        "more than once",
+        "duplicate fixture disposition row",
+    )
+    _expect_document_failure(
+        text.replace("| `tntree` | 11 |", "| `tntree` | 999 |\n| `tntree` | 11 |", 1),
+        "more than once",
+        "duplicate blueprint raw row",
+    )
 
 
 def test_fixture_table_reads_every_row() -> None:

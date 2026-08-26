@@ -38,6 +38,13 @@ COMMAND = re.compile(r"\\(tnpic|tntree)\b")
 TENKZEQ_TOKEN = re.compile(r"\\(begin|end)\{tenkzeq\}")
 SETUP_COMMAND = re.compile(r"\\(?:tnset|tndeclare(?:atom)?|tenkzkernel)\b")
 DISPOSITIONS = ("preserve", "codemod", "redraw")
+DISPOSITION_FAMILY = {"P": "preserve", "C": "codemod", "R": "redraw"}
+# Counter equality reads a missing label as a zero, so the rows standing at
+# zero -- the ratchets that say a retired construct has not come back -- could
+# be deleted without any total moving.  Their labels are pinned here, so
+# removing one is an edit to this checker and gets read.
+BLUEPRINT_RAW_LABELS = frozenset({"tenkz", "tenkzcd", "tenkzplanes", "tnpic", "tntree"})
+FIXTURE_RAW_LABELS = frozenset({"tenkz", "tenkzeq", "tnpic", "tntree"})
 MIGRATION_CODES: frozenset[str] = frozenset()
 # Retired spellings, read from the registry's tombstone rows: a command row
 # names a command that no longer exists, a `key=value` row a word struck from
@@ -600,10 +607,17 @@ def uses_tombstone(source: str) -> bool:
 def migration_codes(text: str) -> frozenset[str]:
     """The codes the document's own migration table defines."""
     body = section(text, "### Migration target codes", "## ")
-    return frozenset(
+    codes = frozenset(
         match.group(1)
-        for match in re.finditer(r"^\| `([A-Z]-[a-z]+)` \|", body, re.M)
+        for match in re.finditer(r"^\| `([A-Za-z]+-[a-z]+)` \|", body, re.M)
     )
+    # `target_disposition` reads the family letter, and everything that is
+    # neither C nor R falls to preserve, so a family it does not know would
+    # be filed as preserve without anyone saying so.  Three families exist.
+    stray = sorted(code for code in codes if code.split("-", 1)[0] not in DISPOSITION_FAMILY)
+    if stray:
+        fail(f"the migration table defines codes outside P/C/R: {stray}")
+    return codes
 
 
 def target_disposition(codes: frozenset[str]) -> str:
@@ -636,8 +650,14 @@ def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
         started |= bool(match)
         label = match.group(1).strip().strip("*") if match else ""
         if match and label.lower() == "total":
+            if total is not None:
+                fail(f"counter table below {heading} lists more than one Total row")
             total = int(match.group(2))
         elif match:
+            # A repeated label would overwrite its earlier row and, with the
+            # total left alone, the table would still add up.
+            if label in result:
+                fail(f"counter table below {heading} lists {label!r} more than once")
             result[label] = int(match.group(2))
     if not result:
         fail(f"could not parse counter table below {heading}")
@@ -654,6 +674,8 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
     for row in body.splitlines():
         total_match = re.match(r"\| \*\*Total\*\* \| \*\*([0-9]+)\*\* \|$", row)
         if total_match:
+            if total is not None:
+                fail("standalone fixture table lists more than one Total row")
             total = int(total_match.group(1))
             continue
         if not row.startswith("|") or row.startswith("|---") or "Disposition" in row:
@@ -664,7 +686,10 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
         match = re.match(r"\| ([^|]+) \| ([0-9]+) \|$", row)
         if match is None:
             fail(f"standalone fixture table has a row it cannot read: {row!r}")
-        files[match.group(1).strip()] = int(match.group(2))
+        label = match.group(1).strip()
+        if label in files:
+            fail(f"standalone fixture table lists {label!r} more than once")
+        files[label] = int(match.group(2))
     # Since the S4 surface swap every codemod and redraw fixture has left the
     # corpus, so the table may carry the preserve row alone.
     if not files:
@@ -696,6 +721,17 @@ def documented_blueprint(
             continue
         filename = cells[0].strip("`")
         for disposition, cell in zip(DISPOSITIONS, cells[1:]):
+            # The grammar must consume the whole cell: a second occurrence
+            # written any other way would otherwise be skipped while every
+            # counter stayed where it was.
+            residue = re.sub(
+                r"L([0-9]+(?:, [0-9]+)*) `([^`]+)` → `([^`]+)`", "", cell
+            ).strip(" ;,")
+            if cell.strip() != "—" and residue:
+                fail(
+                    f"{filename}: {disposition} cell has text the occurrence "
+                    f"grammar does not read: {residue!r}"
+                )
             for use in re.finditer(
                 r"L([0-9]+(?:, [0-9]+)*) `([^`]+)` → `([^`]+)`",
                 cell,
@@ -800,11 +836,25 @@ def main() -> int:
         )
     if blueprint_dispositions != documented_blueprint_dispositions:
         fail("blueprint disposition totals do not match the line inventory")
+    # Counter equality reads a missing label as a zero, so a deleted row and a
+    # row reading 0 compare the same and the documented zero ratchets could be
+    # dropped in silence.  The labels are compared as well as the counts.
+    if set(documented_blueprint_dispositions) != set(DISPOSITIONS):
+        fail(
+            "blueprint disposition table must carry every disposition row: "
+            f"{sorted(documented_blueprint_dispositions)}"
+        )
     # The totals agreeing is not the per-construct counts agreeing: moving one
     # occurrence from `tenkz` to `tntree` leaves every total where it was.
     listed_raw: Counter[str] = Counter()
     for (_file, _line, construct), count in listed_blueprint.items():
         listed_raw[construct] += count
+    if set(documented_blueprint_raw) != BLUEPRINT_RAW_LABELS:
+        fail(
+            "blueprint raw-count table must carry every tracked construct row: "
+            f"{sorted(documented_blueprint_raw)} against "
+            f"{sorted(BLUEPRINT_RAW_LABELS)}"
+        )
     if listed_raw != documented_blueprint_raw:
         fail(
             "blueprint raw-count table does not match the line inventory: "
