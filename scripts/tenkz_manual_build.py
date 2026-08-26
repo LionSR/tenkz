@@ -36,8 +36,23 @@ MANUAL = MANUAL_DIR / "manual2.tex"
 # manual grows must be added here, and the isolated build fails loudly when
 # it is not, because the copy is what makes the build reproducible.
 MANUAL_SOURCES = ("manual2.tex", "tenkzmanual2.sty", "chapters2")
-PASSES = 2
+# Two passes were the documented recipe and are not enough: the manual asks
+# for a rerun after its second, so the contents and cross-references it
+# printed were a pass behind.  Compile until the engine stops asking, with a
+# ceiling that fails rather than looping.
+MINIMUM_PASSES = 2
+MAXIMUM_PASSES = 6
 DEFAULT_OUTPUT = ROOT / "output" / "pdf" / "tenkz-manual.pdf"
+# `%B` is the caller's locale, and the manual's title page is English.
+MONTHS = (
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+)
+RERUN = re.compile(r"Rerun to get|Label\(s\) may have changed|Please \(re\)run")
+UNRESOLVED = re.compile(
+    r"There were undefined references|Citation `[^']*' on page|"
+    r"Reference `[^']*' on page [0-9]+ undefined"
+)
 
 
 def package_release() -> tuple[str, str]:
@@ -95,7 +110,7 @@ def metadata_errors(
     """
     errors: list[str] = []
     year, month, _day = (int(part) for part in package_date.split("/"))
-    expected = f"{dt.date(year, month, 1):%B %Y}"
+    expected = f"{MONTHS[month - 1]} {year}"
     if dateline != expected:
         errors.append(
             f"manual2.tex title page reads {dateline!r} but tenkz.sty is dated "
@@ -131,7 +146,8 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     # deliberately not on the path, so a stale generated file there cannot
     # leak into the build.
     env["TEXINPUTS"] = f"{ROOT / 'tex' / 'tenkz'}//:"
-    for number in range(1, PASSES + 1):
+    engine_log = work / "manual2.log"
+    for number in range(1, MAXIMUM_PASSES + 1):
         run = subprocess.run(
             [engine, "-interaction=nonstopmode", "-halt-on-error", "manual2.tex"],
             cwd=work,
@@ -144,6 +160,26 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
         if run.returncode:
             tail = "\n".join(run.stdout.splitlines()[-40:])
             raise RuntimeError(f"manual pass {number} failed in {work}:\n{tail}")
+        transcript = engine_log.read_text(encoding="utf-8", errors="replace")
+        if number >= MINIMUM_PASSES and not RERUN.search(transcript):
+            break
+    else:
+        raise RuntimeError(
+            f"the manual still asked for a rerun after {MAXIMUM_PASSES} passes; "
+            "its cross-references do not settle"
+        )
+    # A missing target leaves `??` on the page and leaves the engine's status
+    # at zero, so a release artifact needs the transcript read, not the exit
+    # code alone.
+    if UNRESOLVED.search(transcript):
+        lines = [
+            line for line in transcript.splitlines()
+            if UNRESOLVED.search(line) or "undefined" in line.lower()
+        ]
+        raise RuntimeError(
+            "the manual has unresolved references or citations:\n  "
+            + "\n  ".join(lines[:10])
+        )
     log = work / "manual2.tnlog"
     if not log.is_file() or not log.read_text(encoding="utf-8").strip():
         raise RuntimeError("the manual build emitted no event stream")
@@ -203,12 +239,21 @@ def main() -> int:
         for error in errors:
             print(f"tenkz-manual: {error}", file=sys.stderr)
         return 1
-    if shutil.which(args.engine) is None:
+    # Resolved before the builds start: each runs in its own directory, where
+    # a relative engine path would no longer name the same file.
+    engine = shutil.which(args.engine)
+    if engine is None:
         if args.require_engine:
             print(f"tenkz-manual: {args.engine} not found", file=sys.stderr)
             return 1
         print(f"SKIP: {args.engine} not found")
         return 0
+    # Absolute, but NOT resolved: TeX Live dispatches on the name it is
+    # invoked as, and `xelatex` is a symlink to `xetex`, so following it loads
+    # plain TeX and every `\documentclass` becomes an undefined control
+    # sequence.  `abspath` answers the relative-path case without renaming the
+    # engine.
+    engine = os.path.abspath(engine)
     epoch = source_date_epoch(date)
     builds = 2 if args.action == "check" else 1
     pdfs: list[bytes] = []
@@ -217,7 +262,7 @@ def main() -> int:
             work = Path(tmp) / f"build{number}"
             work.mkdir()
             try:
-                pdf, findings = build(work, epoch, args.engine)
+                pdf, findings = build(work, epoch, engine)
             except (RuntimeError, FileNotFoundError) as exc:
                 print(f"tenkz-manual: {exc}", file=sys.stderr)
                 return 1

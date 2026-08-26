@@ -38,27 +38,29 @@ def main() -> int:
     else:
         raise SystemExit("a manual naming no version was not refused")
     # Metadata that reaches no page is metadata the manual does not carry.
-    commented = build.MANUAL.read_text(encoding="utf-8")
-    commented = commented.replace(
-        "  {\\small manual for \\pkg{} version 0.7\\par}",
-        "  % {\\small manual for \\pkg{} version 0.7\\par}",
-    )
-    try:
-        build.manual_version(commented)
-    except ValueError:
-        pass
-    else:
-        raise SystemExit("a commented-out version line was read as the manual's")
-    commented_date = build.MANUAL.read_text(encoding="utf-8").replace(
-        "  {The TNLean project \\quad---\\quad July 2026\\par}",
-        "  % {The TNLean project \\quad---\\quad July 2026\\par}",
-    )
-    try:
-        build.manual_dateline(commented_date)
-    except ValueError:
-        pass
-    else:
-        raise SystemExit("a commented-out date line was read as the manual's")
+    # Both seeds are built from what the manual says today, so a release bump
+    # does not strand this test on a literal it no longer contains.
+    source = build.MANUAL.read_text(encoding="utf-8")
+    for reader, line in (
+        (build.manual_version, next(
+            row for row in source.splitlines() if f"version {manual}" in row
+        )),
+        (build.manual_dateline, next(
+            row for row in source.splitlines()
+            if "The TNLean project" in row and build.manual_dateline() in row
+        )),
+    ):
+        seeded = source.replace(line, "% " + line.lstrip(), 1)
+        if seeded == source:
+            raise SystemExit(f"could not comment out {line!r}")
+        try:
+            reader(seeded)
+        except ValueError:
+            continue
+        raise SystemExit(f"a commented-out line was read as the manual's: {line!r}")
+    # The month comes from a fixed English table, not the caller's locale.
+    if build.metadata_errors("2026/07/22", "July 2026", version, manual):
+        raise SystemExit("the English month table disagrees with the title page")
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:
