@@ -632,7 +632,9 @@ def migration_codes(text: str) -> frozenset[str]:
         # The whole row, not its opening: a definition that lost its target
         # prose, or grew a third cell, still defines a code and would go on
         # being referenced with nothing said about what it requires.
-        match = re.fullmatch(r"\| `([A-Za-z]+-[a-z]+)` \| (.+?) \|", line.rstrip())
+        # The description is one cell: allowing a pipe in it would let a row
+        # grow a third cell and still read as a definition.
+        match = re.fullmatch(r"\| `([A-Za-z]+-[a-z]+)` \| ([^|]+) \|", line.rstrip())
         if match is None or not match.group(2).strip():
             fail(f"the migration table has a row it cannot read: {line!r}")
         rows.append(match.group(1))
@@ -849,6 +851,13 @@ def documented_blueprint(
             seen_separator = True
             continue
         if cells[:1] == ["Source"]:
+            # The header names the three disposition columns the cells below
+            # are read into; renamed or shortened, the same rows would be
+            # filed under headings the document no longer carries.
+            if [cell.lower() for cell in cells] != [
+                "source", "preserve", "codemod", "redraw"
+            ]:
+                fail(f"the blueprint inventory header reads {cells!r}")
             continue
         # A row the grammar cannot read is refused rather than skipped: a
         # mistyped source name would otherwise drop its occurrences from the

@@ -226,6 +226,23 @@ def test_document_only_blueprint_gates_fire() -> None:
         "codes moved",
         "deleted migration definition",
     )
+    # The inventory header names the columns the cells are read into.
+    _expect_document_failure(
+        text.replace(
+            "| Source | Preserve | Codemod | Redraw |", "| Source | bogus |", 1
+        ),
+        "inventory header reads",
+        "shortened inventory header",
+    )
+    # A description carrying a cell separator grows the row a third cell.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` | Keep the fixture; it has no tenkz public-surface construct. |",
+            "| `P-none` | Keep the fixture. | EXTRA |", 1,
+        ),
+        "a row it cannot read",
+        "migration row with an extra cell",
+    )
     # A repeated component in one target set survives the frozenset.
     _expect_document_failure(
         text.replace("`tenkz` → `P-grid`", "`tenkz` → `P-grid+P-grid`", 1),
