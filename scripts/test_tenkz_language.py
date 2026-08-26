@@ -275,7 +275,7 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
                 r"route .code:n    = { \__tenkz_kernel_route:n {#1} }",
                 r"route .code:n    = { \__tenkz_kernel_stage_put:nn {route} {#1} }",
             ),
-            "no longer does",
+            "no longer calls it",
         ),
         (
             "a branch that refuses its own word",
@@ -286,11 +286,11 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
             "branch refuses the word",
         ),
         (
-            "a second case table in one parser",
+            "a second case table inside one parser",
             kernel.replace(
-                r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
-                "\\str_case:nn {x} { {bezier} {} }\n"
-                r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
+                r"\regex_match:nVTF { \A (?: all | n | e | s | w ) \s+ of \s+ \S }",
+                "\\str_case:nnF {x} { {bezier} {} } { }\n    "
+                r"\regex_match:nVTF { \A (?: all | n | e | s | w ) \s+ of \s+ \S }",
                 1,
             ),
             "case tables",
@@ -309,6 +309,75 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     errors = tenkz_language.alphabet_errors(registry, misshaped, kernel)
     if not any("delimiter" in error for error in errors):
         raise SystemExit(f"a misshaped delimiter was accepted; errors: {errors}")
+    colons = contract.replace(
+        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|:|:|"
+    )
+    if not any("delimiter" in error for error in tenkz_language.alphabet_errors(
+        registry, colons, kernel
+    )):
+        raise SystemExit("a delimiter with no hyphen was accepted")
+    # A parser's branches are its alphabet only while the surface reaches it,
+    # the fallback refuses what the branches do not name, and the helper that
+    # installs a choice list still installs a choice list.
+    for label, seeded_kernel, expected in (
+        (
+            "the side helper stops calling its parser",
+            kernel.replace(
+                r"{ #2 .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
+                r"{ #2 .code:n = { } }", 1,
+            ),
+            "no longer calls it",
+        ),
+        (
+            "the skin helper stops calling its parser",
+            kernel.replace(
+                r"\__tenkz_kernel_skin_base_aux:nN {#1} #2",
+                r"\tl_set:Nn #2 {box}", 1,
+            ),
+            "no longer calls it",
+        ),
+        (
+            "a branch refusing expandably",
+            kernel.replace(
+                r"{arc}      { \__tenkz_kernel_route_keep: }",
+                r"{arc}      { \msg_expandable_error:nnn {a}{b}{c} }",
+            ),
+            "branch refuses the word",
+        ),
+        (
+            "a case operation with no fallback",
+            kernel.replace(
+                r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
+                r"\str_case:Vn \l__tenkz_kernel_list_item_tl", 1,
+            ),
+            "no fallback",
+        ),
+        (
+            "the choice helper made unrestricted",
+            kernel.replace("#2 .choices:nn = {#3}", "#2 .code:n = {#3}", 1),
+            "no longer installs a choice table",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # An unrelated helper declared after a parser, with a table of its own,
+    # belongs to itself: the body is a balanced group, not everything up to a
+    # sentinel.
+    neighbour = kernel.replace(
+        r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
+        "\\cs_new:Npn \\__tenkz_language_probe: { \\str_case:nn {x} { {q} {} } }\n"
+        r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
+        1,
+    )
+    if neighbour == kernel:
+        raise SystemExit("could not place a neighbouring helper")
+    if tenkz_language.alphabet_errors(registry, contract, neighbour):
+        raise SystemExit(
+            "a neighbouring helper's case table was attributed to the parser"
+        )
 
 
 def main() -> int:

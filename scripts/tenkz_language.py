@@ -42,16 +42,18 @@ ALPHABET_CHOICES = {"mark forms": ("tenkz-kernel-mark", "form")}
 # body for the others.  This proves the one link that the rest of the gate
 # rests on, not the whole runtime path.
 ALPHABET_REACHED_FROM = {
-    "routes": ("__tenkz_kernel_route:n", r"route\s*\.code:n\s*=\s*"),
+    "routes": ("key", "__tenkz_kernel_route:n", ("tenkz-kernel-wire", "route")),
     "side policy": (
-        "__tenkz_kernel_side_policy:nn",
-        r"\\cs_new_protected:Npn\s*\\__tenkz_kernel_side:nn",
+        "macro", "__tenkz_kernel_side_policy:nn", "__tenkz_kernel_side:nn",
     ),
     "default skins": (
-        "__tenkz_kernel_skin_base_aux:nN",
-        r"\\cs_new_protected:Npn\s*\\__tenkz_kernel_skin_base:nN",
+        "macro", "__tenkz_kernel_skin_base_aux:nN", "__tenkz_kernel_skin_base:nN",
     ),
 }
+# The helper that installs a choice table must still install a *choice* table:
+# rewritten to an unrestricted `.code:n` handler it would accept anything,
+# while its call site and word list read unchanged.
+CHOICE_HELPER = "__tenkz_kernel_choice:nnnn"
 # Each choice-table alphabet is also a registry enum row, and the two must
 # name the same words: the registry is what the documents and tools read,
 # the choice table is what the parser accepts.
@@ -661,7 +663,7 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
                 )
             continue
         if not seen_delimiter:
-            if not all(set(cell) <= {"-", ":"} and cell for cell in cells):
+            if not all(re.fullmatch(r":?-+:?", cell) for cell in cells):
                 raise ValueError(f"section 2.8 has no delimiter row; found {row!r}")
             # A delimiter of a different width does not form the two-column
             # table the rows are read as, so the shape is checked, not just
@@ -703,9 +705,27 @@ DEFINITION_TOKEN = re.compile(
 )
 
 
+# expl3's error-raising operations, `\\msg_expandable_error` included: any of
+# them in a branch means the word is refused, not accepted.
+REFUSAL = re.compile(r"\\msg_(?:[a-z_]*_)?(?:error|fatal|critical)(?::|\s)")
 NAME_DEFINITION = re.compile(
     r"\\cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:c[A-Za-z]*\s*\{\s*([^}]*?)\s*\}"
 )
+
+
+def macro_body(text: str, macro: str, start: int) -> str:
+    """The balanced replacement text of the definition beginning at `start`.
+
+    Reading to the next `\\cs_new_protected:Npn` instead would swallow any
+    helper declared with another spelling, and attribute its tables to this
+    parser.
+    """
+    cursor = text.index(macro, start) + len(macro)
+    brace = text.find("{", cursor)
+    if brace < 0:
+        raise ValueError(f"definition of {macro} has no body")
+    body, _ = _group(text, brace)
+    return body
 
 
 def macro_definitions(text: str, macro: str) -> list[int]:
@@ -741,10 +761,8 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             f"kernel defines {macro} {len(definitions)} times; "
             "the last would decide what the parser accepts"
         )
-    start = definitions[0]
-    end = text.find("\\cs_new_protected:Npn", start + 1)
-    body = text[start : end if end > 0 else None]
-    cases = list(re.finditer(r"\\str_case:[A-Za-z]+\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body))
+    body = macro_body(text, macro, definitions[0])
+    cases = list(re.finditer(r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body))
     if not cases:
         raise ValueError(f"parser {macro} has no \\str_case")
     # A second table in the same body is a second acceptance path, and its
@@ -754,7 +772,21 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             f"parser {macro} has {len(cases)} case tables; only the first "
             "would be read as its alphabet"
         )
-    branches, _ = _group(body, cases[0].end())
+    # A closed alphabet is closed by its fallback: without one, a value
+    # outside the list completes silently and the branches describe nothing.
+    signature = cases[0].group(1)
+    if not signature.endswith("F") and not signature.endswith("TF"):
+        raise ValueError(
+            f"parser {macro} matches with \\str_case:{signature}, which has no "
+            "fallback, so an unmatched value is accepted in silence"
+        )
+    branches, after = _group(body, cases[0].end())
+    fallback, _ = _group(body, after)
+    if not REFUSAL.search(fallback):
+        raise ValueError(
+            f"parser {macro} has a fallback that does not refuse an unmatched "
+            "value"
+        )
     words: list[str] = []
     offset = 0
     while True:
@@ -775,7 +807,7 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
         action, offset = _group(branches, offset)
         # A label whose branch refuses is not an accepted word: the contract
         # would promise a spelling the parser answers with a diagnostic.
-        if re.search(r"\\msg_(?:error|fatal|critical):", action):
+        if REFUSAL.search(action):
             raise ValueError(
                 f"parser {macro} lists {word.strip()!r} as a case but its "
                 "branch refuses the word"
@@ -831,6 +863,35 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     return bindings
 
 
+def _sole_definition(text: str, macro: str) -> int:
+    """The offset of `macro`'s one definition, or a reason there is not one."""
+    definitions = macro_definitions(text, macro)
+    if not definitions:
+        raise ValueError(f"kernel defines no {macro}")
+    if len(definitions) > 1:
+        raise ValueError(f"kernel defines {macro} {len(definitions)} times")
+    return definitions[0]
+
+
+def key_binding_body(text: str, scope: str, key: str) -> str:
+    """The replacement text bound to `key` in `scope`."""
+    for match in re.finditer(r"\\keys_define:[nVvexoc]{2}\s*", text):
+        try:
+            named, offset = _group(text, match.end())
+            block, _ = _group(text, offset)
+        except ValueError:
+            continue
+        if named.strip() != scope:
+            continue
+        binding = re.search(
+            r"(?:\A|,)\s*" + re.escape(key) + r"\s*\.code:n\s*=\s*", block
+        )
+        if binding:
+            body, _ = _group(block, binding.end())
+            return body
+    raise ValueError(f"no .code:n binding for {scope}:{key}")
+
+
 def alphabet_errors(
     entries: list[Entry],
     contract_text: str | None = None,
@@ -858,25 +919,48 @@ def alphabet_errors(
     }
     accepted: dict[str, list[str]] = {}
     for alphabet, macro in ALPHABET_PARSERS.items():
-        called, anchor = ALPHABET_REACHED_FROM[alphabet]
-        site = re.search(anchor, kernel_text)
-        if site is None:
-            errors.append(
-                f"alphabet {alphabet!r}: the site that should reach {called} "
-                "is not in the kernel"
+        kind, called, site = ALPHABET_REACHED_FROM[alphabet]
+        try:
+            body = (
+                key_binding_body(kernel_text, *site)
+                if kind == "key"
+                else macro_body(
+                    kernel_text, site, _sole_definition(kernel_text, site)
+                )
             )
+        except ValueError as exc:
+            errors.append(f"alphabet {alphabet!r}: {exc}")
         else:
-            window = kernel_text[site.start():site.start() + 400]
-            if f"\\{called}" not in window:
+            # The caller's own body, not a window around it: a window wide
+            # enough to reach the call is wide enough to contain the parser's
+            # own definition, which would satisfy the test by itself.
+            if f"\\{called}" not in body:
                 errors.append(
-                    f"alphabet {alphabet!r}: {called} is defined but the site "
-                    "that should call it no longer does; its branches are not "
-                    "what the surface accepts"
+                    f"alphabet {alphabet!r}: {called} is defined but "
+                    f"{site if kind == 'macro' else ':'.join(site)} no longer "
+                    "calls it; its branches are not what the surface accepts"
                 )
         try:
             accepted[alphabet] = kernel_case_words(kernel_text, macro)
         except ValueError as exc:
             errors.append(f"alphabet {alphabet!r}: {exc}")
+    if ALPHABET_CHOICES:
+        try:
+            helper = macro_body(
+                kernel_text, CHOICE_HELPER, _sole_definition(kernel_text, CHOICE_HELPER)
+            )
+        except ValueError as exc:
+            errors.append(f"the choice helper: {exc}")
+        else:
+            if ".choices:nn" not in helper:
+                errors.append(
+                    f"{CHOICE_HELPER} no longer installs a choice table, so the "
+                    "word lists it is given do not bound what the parser accepts"
+                )
+            if "unknown .code:n" not in helper.replace("~", " ").replace("/", " "):
+                errors.append(
+                    f"{CHOICE_HELPER} no longer refuses an unknown word"
+                )
     for alphabet, (scope, key) in ALPHABET_CHOICES.items():
         direct = key_definitions(kernel_text, scope, key)
         if direct:
