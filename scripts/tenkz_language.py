@@ -681,6 +681,14 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
                 raise ValueError(
                     f"section 2.8 header has {header_width} cell(s), not two"
                 )
+            # The labels say what the rows below mean.  Renamed, the same rows
+            # would be read as an alphabet table while the contract rendered
+            # something else.
+            if [cell.lower() for cell in cells] != ["alphabet", "words"]:
+                raise ValueError(
+                    f"section 2.8 header reads {cells!r}, not "
+                    "['Alphabet', 'Words']"
+                )
             continue
         if not seen_delimiter:
             if not all(re.fullmatch(r":?-+:?", cell) for cell in cells):
@@ -986,6 +994,13 @@ def alphabet_errors(
             errors.append(f"alphabet {alphabet!r}: {exc}")
         else:
             if alphabet == "side policy":
+                # The installer must bind the key it is handed, not some
+                # other one while still calling the parser.
+                if not re.search(r"#2\s*\.code:n\s*=\s*", body):
+                    errors.append(
+                        f"alphabet {alphabet!r}: {site} no longer binds the "
+                        "key it is given"
+                    )
                 # A later block rebinding one generated key would leave the
                 # installer untouched and that side accepting anything.
                 for word in SIDE_KEYS:
@@ -1019,6 +1034,11 @@ def alphabet_errors(
         except ValueError as exc:
             errors.append(f"the choice helper: {exc}")
         else:
+            if not re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}", helper):
+                errors.append(
+                    f"{CHOICE_HELPER} no longer installs into the scope it is "
+                    "given, so the call sites this gate reads bind nothing"
+                )
             if ".choices:nn" not in helper:
                 errors.append(
                     f"{CHOICE_HELPER} no longer installs a choice table, so the "

@@ -502,6 +502,36 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         raise SystemExit("the section 2.8 table no longer ends with a blank line")
     if tenkz_language.alphabet_errors(registry, unspaced, kernel):
         raise SystemExit("prose closing the table was reported as an interruption")
+    renamed = contract.replace("| Alphabet | Words |", "| Deprecated | Replacements |", 1)
+    if not any("header reads" in error for error in tenkz_language.alphabet_errors(
+        registry, renamed, kernel
+    )):
+        raise SystemExit("a renamed section 2.8 header was accepted")
+    for label, seeded_kernel, expected in (
+        (
+            "the side installer binding another key",
+            kernel.replace(
+                r"{ #2 .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
+                r"{ ignored .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
+                1,
+            ),
+            "no longer binds the key it is given",
+        ),
+        (
+            "the choice helper installing into another scope",
+            kernel.replace(
+                "\\keys_define:nn {#1}\n      {\n        #2 .choices:nn",
+                "\\keys_define:nn {other-scope}\n      {\n        #2 .choices:nn",
+                1,
+            ),
+            "installs into the scope it is given",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
 
 
 def main() -> int:
