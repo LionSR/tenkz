@@ -136,6 +136,36 @@ def test_document_only_blueprint_gates_fire() -> None:
         "more than once",
         "duplicate blueprint raw row",
     )
+    # The fixture ratchet must be consulted, not merely declared.
+    _expect_document_failure(
+        text.replace("| `tnpic` | 0 |\n| `tntree` | 0 |\n", "| `tntree` | 0 |\n", 1),
+        "fixture raw-count table must carry",
+        "deleted fixture zero ratchet row",
+    )
+    # A malformed row naming the header word is still a data row.
+    _expect_document_failure(
+        text.replace("| preserve | 9 |", "| bogusDisposition | 1 |\n| preserve | 9 |", 1),
+        "unknown dispositions",
+        "row containing the header word",
+    )
+    # A repeated migration code makes the canonical table ambiguous.
+    _expect_document_failure(
+        text.replace("| `P-none` |", "| `P-grid` | A contradictory second row. |\n| `P-none` |", 1),
+        "more than once",
+        "duplicate migration code",
+    )
+    # A counter row the grammar cannot read leaves every number in place.
+    _expect_document_failure(
+        text.replace("| `tntree` | 11 |", "| `bogus` | eleven |\n| `tntree` | 11 |", 1),
+        "a row it cannot read",
+        "unreadable counter row",
+    )
+    # Source lines are one-based, so `L0` names nothing.
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` | L228 ", "| `ch03_single.tex` | L0 ", 1),
+        "the occurrence grammar does not read",
+        "zero line number",
+    )
 
 
 def test_fixture_table_reads_every_row() -> None:

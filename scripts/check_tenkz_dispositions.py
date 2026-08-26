@@ -607,10 +607,14 @@ def uses_tombstone(source: str) -> bool:
 def migration_codes(text: str) -> frozenset[str]:
     """The codes the document's own migration table defines."""
     body = section(text, "### Migration target codes", "## ")
-    codes = frozenset(
+    rows = [
         match.group(1)
         for match in re.finditer(r"^\| `([A-Za-z]+-[a-z]+)` \|", body, re.M)
-    )
+    ]
+    repeated = sorted({code for code in rows if rows.count(code) > 1})
+    if repeated:
+        fail(f"the migration table defines a code more than once: {repeated}")
+    codes = frozenset(rows)
     # `target_disposition` reads the family letter, and everything that is
     # neither C nor R falls to preserve, so a family it does not know would
     # be filed as preserve without anyone saying so.  Three families exist.
@@ -647,6 +651,10 @@ def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
         if started and not row.strip():
             break
         match = re.match(r"\| `?([^|`]+?)`? \| \**([0-9]+)\** \|$", row)
+        # A row the grammar cannot read leaves the counter and the total where
+        # they were, so it must be refused rather than stepped over.
+        if started and match is None and row.startswith("|") and not set(row) <= set("|-: "):
+            fail(f"counter table below {heading} has a row it cannot read: {row!r}")
         started |= bool(match)
         label = match.group(1).strip().strip("*") if match else ""
         if match and label.lower() == "total":
@@ -678,7 +686,9 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
                 fail("standalone fixture table lists more than one Total row")
             total = int(total_match.group(1))
             continue
-        if not row.startswith("|") or row.startswith("|---") or "Disposition" in row:
+        if not row.startswith("|") or set(row) <= set("|-: "):
+            continue
+        if re.match(r"\|\s*Disposition\s*\|\s*Fixtures\s*\|$", row):
             continue
         # The first cell is read as written, not filtered to the words already
         # known: a row spelt `BOGUS` or `bogus-value` must reach the unknown
@@ -725,15 +735,17 @@ def documented_blueprint(
             # written any other way would otherwise be skipped while every
             # counter stayed where it was.
             residue = re.sub(
-                r"L([0-9]+(?:, [0-9]+)*) `([^`]+)` → `([^`]+)`", "", cell
+                r"L([1-9][0-9]*(?:, [1-9][0-9]*)*) `([^`]+)` → `([^`]+)`", "", cell
             ).strip(" ;,")
             if cell.strip() != "—" and residue:
                 fail(
                     f"{filename}: {disposition} cell has text the occurrence "
                     f"grammar does not read: {residue!r}"
                 )
+            # Source lines are one-based, so `L0` names nothing and must not
+            # read as a location.
             for use in re.finditer(
-                r"L([0-9]+(?:, [0-9]+)*) `([^`]+)` → `([^`]+)`",
+                r"L([1-9][0-9]*(?:, [1-9][0-9]*)*) `([^`]+)` → `([^`]+)`",
                 cell,
             ):
                 for line in map(int, use.group(1).split(", ")):
@@ -982,6 +994,11 @@ def main() -> int:
     documented_fixture_raw, _fixture_raw_total = parse_counter_table(
         text, fixture_heading
     )
+    if set(documented_fixture_raw) != FIXTURE_RAW_LABELS:
+        fail(
+            "fixture raw-count table must carry every tracked construct row: "
+            f"{sorted(documented_fixture_raw)} against {sorted(FIXTURE_RAW_LABELS)}"
+        )
     if fixture_raw != documented_fixture_raw:
         fail("fixture raw-count table does not match the source inventory")
 
