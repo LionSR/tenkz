@@ -4789,3 +4789,34 @@ Every fix carries seeded-failure evidence beside it: a stray `.inc` in
 the corpus, an unknown disposition word, and a mangled blueprint total
 each fail their gate and are pinned as tests.  No meter moves: the sweep
 deletes assertions, not vocabulary.
+
+### 2026-08-26 — the closed alphabets are checked, not metered (LionSR/tenkz#7)
+
+The 2026-08-11 session retired four `form=` words and no meter moved, because
+the meters count keys, paths, escapes, and records, never the words inside a
+closed alphabet.  Of the two honest remedies recorded there, the check is
+chosen over a seventh meter: `tenkz_language.py check` now reads the
+contract's section 2.8 table and requires each row to equal the word set
+its acceptor holds — the `\str_case` branches of the kernel's side-policy,
+route, and primitive-skin parsers, the kernel's own `form` choice table,
+and the registry's `form` enum less its recording `prose` row, which is
+subtracted in one named place.  A word added or struck on any of them
+fails the gate in both directions; `test_tenkz_language.py` seeds every
+drift, the malformed spellings the readers must refuse rather than skip,
+and the benign ones they must not report, and watches each.
+
+What the check states is bounded, and the bound is the point.  It reads
+the contract's published words and the acceptors' words and requires them
+to agree.  It does not prove that an acceptor is reached, that a handler
+forwards its argument, or what a kernel rewritten to defeat it would do.
+An earlier draft of this change tried to: it grew a body inventory, a
+liveness rule, a reference-versus-call test and a nesting reader, and
+each layer produced the next layer's false positive — four rounds in
+which every finding was the gate failing a kernel TeX accepts, and none
+about tenkz.  Those layers are not here.  Reachability belongs to the
+corpus and probe suites, which compile the pictures; this one compares
+two lists of words.
+
+The meters stay six: the contract and the implementation now pin each
+other, which is what the freeze needs, and a vocabulary that shrinks is
+still a session's verdict rather than a number.

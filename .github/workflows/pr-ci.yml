@@ -96,6 +96,11 @@ jobs:
           path: output/pdf/tenkz-manual.pdf
           retention-days: 30
 
+      # The language test compiles refusals and event-equivalence probes, so
+      # it runs after the engine is installed rather than skipping them.
+      - name: Test the tenkz language registry and its alphabets
+        run: python3 scripts/test_tenkz_language.py
+
       - name: Check the CTAN archive against a clean installation
         run: python3 scripts/tenkz_ctan.py check --require-smoke
 

@@ -21,6 +21,42 @@ ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = ROOT / "docs/tenkz/chapters2/generated-language-reference.tex"
 ALIASES = ROOT / "docs/tenkz/chapters2/generated-language-aliases.tex"
+CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
+KERNEL = ROOT / "tex/tenkz/tenkz-kernel.code.tex"
+
+# The closed alphabets of LANGUAGE-1.0 section 2.8, each paired with the place
+# that accepts its words.  The census meters count keys, not the words inside a
+# closed alphabet (LionSR/tenkz#7), so this is what keeps the contract's table
+# and the implementation from drifting apart in either direction.
+#
+# What this gate states, and no more: the words the contract publishes are the
+# words the acceptor holds.  It does not prove that the acceptor is reached, or
+# that a handler forwards its argument, or what a kernel deliberately rewritten
+# to defeat it would do -- those are the corpus, probe, and review suites'
+# business, and a static reader that claimed them would be claiming more than
+# it can check.
+ALPHABET_PARSERS = {
+    "side policy": "__tenkz_kernel_side_policy:nn",
+    "routes": "__tenkz_kernel_route:n",
+    "default skins": "__tenkz_kernel_skin_base_aux:nN",
+}
+ALPHABET_CHOICES = {"mark forms": ("tenkz-kernel-mark", "form")}
+# Each choice-table alphabet is also a registry enum row, and the two must name
+# the same words: the registry is what the documents and tools read, the choice
+# table is what the parser accepts.
+ALPHABET_ENUMS = {"mark forms": ("kernel-mark", "form")}
+# The contract's table holds the words that put ink on the page; `prose` is the
+# recording row the sugar ledger keeps (SHRINK 2026-08-11), subtracted here,
+# the one place the difference is spelled.
+ALPHABET_RECORDING_WORDS = {"mark forms": {"prose"}}
+# expl3's error-raising operations: any of them in a branch means the word is
+# refused rather than accepted.
+REFUSAL = re.compile(r"\\msg_(?:[a-z_]*_)?(?:error|fatal|critical)(?::|\s)")
+# The spellings that install a body under a name.  A parser bound more than
+# once is reported rather than resolved.
+DEFINITION_TOKEN = re.compile(
+    r"\\(?:cs_(?:new|set|gset)[a-z_]*:[A-Za-z]*|let|[egx]?def)\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -588,6 +624,248 @@ def tombstone_errors(
     return errors
 
 
+def contract_alphabets(text: str) -> dict[str, list[str]]:
+    """Read the section 2.8 table: one row per alphabet, words in backticks.
+
+    The reader is total over the table -- the header and its delimiter are the
+    only rows it skips, and any other row must be one alphabet name and a cell
+    of backticked words.  A row it cannot account for is an error, because a
+    row the contract renders and this reader ignores is the drift the gate is
+    for.
+    """
+    sections = list(re.finditer(
+        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", text, re.M | re.S
+    ))
+    if not sections:
+        raise ValueError("LANGUAGE-1.0 has no section 2.8")
+    if len(sections) > 1:
+        raise ValueError(f"LANGUAGE-1.0 has {len(sections)} section 2.8s")
+    alphabets: dict[str, list[str]] = {}
+    seen_header = False
+    seen_delimiter = False
+    for line in sections[0].group(1).splitlines():
+        if not line.startswith("|"):
+            if seen_delimiter and alphabets:
+                break  # the table has ended
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if not seen_header:
+            seen_header = True
+            if [cell.lower() for cell in cells] != ["alphabet", "words"]:
+                raise ValueError(f"section 2.8 header reads {cells!r}")
+            continue
+        if not seen_delimiter:
+            if not all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
+                raise ValueError(f"section 2.8 has no delimiter row; found {line!r}")
+            # A delimiter of another width does not form the two-column table
+            # the rows below are read as.
+            if len(cells) != 2:
+                raise ValueError(
+                    f"section 2.8 delimiter has {len(cells)} cell(s), not two"
+                )
+            seen_delimiter = True
+            continue
+        if len(cells) != 2 or not cells[0]:
+            raise ValueError(f"section 2.8 has a row this reader cannot name: {line!r}")
+        name, cell = cells
+        if name in alphabets:
+            raise ValueError(f"section 2.8 lists {name!r} twice")
+        # Backticked words and the space between them, nothing else: bare text
+        # beside them reads as a word to a person and is invisible to findall.
+        if not re.fullmatch(r"(?:`[^`]+`\s*)+", cell):
+            raise ValueError(
+                f"section 2.8 row {name!r} has words this reader cannot name: {cell!r}"
+            )
+        alphabets[name] = re.findall(r"`([^`]+)`", cell)
+    if not alphabets:
+        raise ValueError("section 2.8 lists no alphabets")
+    return alphabets
+
+
+def macro_definitions(text: str, macro: str) -> list[int]:
+    """Offsets at which `macro` is bound, in file order.
+
+    Every occurrence is classified by the control sequence before it, so a
+    replacement spelt `\\cs_set:Nn` counts as a definition just as
+    `\\cs_new_protected:Npn` does.  TeX runs the last body installed, so a
+    reader pinned to the first would compare an alphabet the parser no longer
+    has.
+    """
+    offsets: list[int] = []
+    for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
+        cursor = match.start()
+        while cursor > 0 and text[cursor - 1].isspace():
+            cursor -= 1
+        if DEFINITION_TOKEN.search(text[max(0, cursor - 64):cursor]):
+            offsets.append(match.start())
+    return offsets
+
+
+def macro_body(text: str, macro: str, start: int) -> str:
+    """The balanced replacement text of the definition beginning at `start`."""
+    cursor = text.index(macro, start) + len(macro)
+    brace = text.find("{", cursor)
+    if brace < 0:
+        raise ValueError(f"definition of {macro} has no body")
+    body, _ = _group(text, brace)
+    return body
+
+
+def kernel_case_words(text: str, macro: str) -> list[str]:
+    """The ``\\str_case`` branch words of one kernel parser, in file order."""
+    definitions = macro_definitions(text, macro)
+    if not definitions:
+        raise ValueError(f"kernel defines no parser {macro}")
+    if len(definitions) > 1:
+        raise ValueError(
+            f"kernel defines {macro} {len(definitions)} times; the last would "
+            "decide what the parser accepts"
+        )
+    body = macro_body(text, macro, definitions[0])
+    cases = list(re.finditer(
+        r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body
+    ))
+    if not cases:
+        raise ValueError(f"parser {macro} has no \\str_case")
+    signature = cases[0].group(1)
+    # A closed alphabet is closed by its fallback: without one, a value outside
+    # the list completes in silence and the branches describe nothing.
+    if not signature.endswith("F"):
+        raise ValueError(
+            f"parser {macro} matches with \\str_case:{signature}, which has no "
+            "fallback, so an unmatched value is accepted in silence"
+        )
+    branches, after = _group(body, cases[0].end())
+    if signature.endswith("TF"):
+        _matched, after = _group(body, after)
+    fallback, _ = _group(body, after)
+    if not REFUSAL.search(fallback):
+        raise ValueError(
+            f"parser {macro} has a fallback that does not refuse an unmatched value"
+        )
+    words: list[str] = []
+    offset = 0
+    while True:
+        while offset < len(branches) and branches[offset].isspace():
+            offset += 1
+        if offset >= len(branches):
+            return words
+        word, offset = _group(branches, offset)
+        # A branch key is one word of a closed alphabet.  Anything else is
+        # reported rather than skipped: a branch dropped here is a word the
+        # gate would never compare.
+        if not re.fullmatch(r"[a-z][a-z0-9-]*", word.strip()):
+            raise ValueError(
+                f"parser {macro} has a branch key this reader cannot name: "
+                f"{word.strip()!r}"
+            )
+        action, offset = _group(branches, offset)
+        # A label whose branch refuses is not an accepted word.
+        if REFUSAL.search(action):
+            raise ValueError(
+                f"parser {macro} lists {word.strip()!r} as a case but its branch "
+                "refuses the word"
+            )
+        words.append(word.strip())
+
+
+def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
+    """The words a `\\__tenkz_kernel_choice` table accepts for one key."""
+    matches = list(re.finditer(
+        r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
+        + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}", text,
+    ))
+    if not matches:
+        raise ValueError(f"kernel installs no choice table for {scope}:{key}")
+    if len(matches) > 1:
+        raise ValueError(
+            f"kernel installs {len(matches)} choice tables for {scope}:{key}; "
+            "the last would decide what the parser accepts"
+        )
+    words, _ = _group(text, matches[0].end())
+    return [word.strip() for word in words.split(",") if word.strip()]
+
+
+def alphabet_errors(
+    entries: list[Entry],
+    contract_text: str | None = None,
+    kernel_text: str | None = None,
+) -> list[str]:
+    """Every section 2.8 row equals the word set its acceptor holds."""
+    contract_text = (
+        CONTRACT.read_text(encoding="utf-8") if contract_text is None else contract_text
+    )
+    kernel_text = (
+        strip_comments(KERNEL.read_text(encoding="utf-8"))
+        if kernel_text is None
+        else strip_comments(kernel_text)
+    )
+    errors: list[str] = []
+    try:
+        contract = contract_alphabets(contract_text)
+    except ValueError as exc:
+        return [f"alphabet table: {exc}"]
+    enums = {
+        (scope, name): value_type
+        for scope, name, value_type, *_rest in (
+            entry.fields for entry in entries if entry.kind == "key"
+        )
+    }
+    accepted: dict[str, list[str]] = {}
+    for alphabet, macro in ALPHABET_PARSERS.items():
+        try:
+            accepted[alphabet] = kernel_case_words(kernel_text, macro)
+        except ValueError as exc:
+            errors.append(f"alphabet {alphabet!r}: {exc}")
+    for alphabet, (scope, key) in ALPHABET_CHOICES.items():
+        try:
+            words = kernel_choice_words(kernel_text, scope, key)
+        except ValueError as exc:
+            errors.append(f"alphabet {alphabet!r}: {exc}")
+            continue
+        registry_key = ALPHABET_ENUMS.get(alphabet)
+        if registry_key is not None:
+            value_type = enums.get(registry_key, "")
+            enum = re.fullmatch(r"enum\(([^)]*)\)", value_type)
+            if enum is None:
+                errors.append(
+                    f"alphabet {alphabet!r}: {':'.join(registry_key)} is not an enum"
+                )
+            # The helper dispatches on the word, not its position, so the two
+            # hold the same words rather than the same order.
+            elif sorted(enum.group(1).split("|")) != sorted(words):
+                errors.append(
+                    f"alphabet {alphabet!r}: the registry row "
+                    f"{':'.join(registry_key)} reads {value_type} but the parser "
+                    f"accepts {', '.join(words)}"
+                )
+        recording = ALPHABET_RECORDING_WORDS.get(alphabet, set())
+        # Subtracting a word the acceptor no longer has would hide its removal.
+        missing = sorted(recording - set(words))
+        if missing:
+            errors.append(
+                f"alphabet {alphabet!r}: the recording word(s) {', '.join(missing)} "
+                "left the parser but the contract still carries them"
+            )
+        accepted[alphabet] = [word for word in words if word not in recording]
+    for alphabet in sorted(set(accepted) | set(contract)):
+        if alphabet not in contract:
+            errors.append(f"alphabet {alphabet!r} is accepted but has no section 2.8 row")
+            continue
+        if alphabet not in accepted:
+            errors.append(f"alphabet {alphabet!r} has a section 2.8 row but no acceptor")
+            continue
+        table, words = set(contract[alphabet]), set(accepted[alphabet])
+        if table != words:
+            missing = ", ".join(sorted(words - table)) or "-"
+            extra = ", ".join(sorted(table - words)) or "-"
+            errors.append(
+                f"alphabet {alphabet!r}: accepted but not in section 2.8: {missing}; "
+                f"in section 2.8 but not accepted: {extra}"
+            )
+    return errors
+
+
 def _parser_leaf_keys() -> set[tuple[str, str]]:
     """Collect public leaf-key spellings installed by the TeX parsers.
 
@@ -617,8 +895,13 @@ def _parser_registry_keys() -> set[tuple[str, str]]:
     return scoped
 
 
-def check(entries: list[Entry]) -> list[str]:
-    errors: list[str] = []
+def check(
+    entries: list[Entry],
+    *,
+    contract_text: str | None = None,
+    kernel_text: str | None = None,
+) -> list[str]:
+    errors: list[str] = alphabet_errors(entries, contract_text, kernel_text)
     by_kind = {
         kind: [entry.fields for entry in entries if entry.kind == kind]
         for kind in ARITIES
