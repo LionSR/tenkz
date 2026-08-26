@@ -1541,13 +1541,12 @@ def scan_case_dimension_sites(
         if occurrence.in_comment:
             continue
         span = _matching_owner_span(owner_spans, occurrence.offset)
+        # `occurrence.owner` is this same span's owner, read by the same
+        # classifier at the same offset, so there is nothing to compare it
+        # against (LionSR/tenkz#6); only an unowned site can be refused.
         if span is None or occurrence.owner is None:
             raise DimensionOwnershipError(
                 "cannot inventory unowned case dimension: " + _location(occurrence)
-            )
-        if span.owner is not occurrence.owner:
-            raise DimensionOwnershipError(
-                "dimension owner/site mismatch: " + _location(occurrence)
             )
         grouped.setdefault(span, []).append(occurrence)
     for span, occurrences in grouped.items():

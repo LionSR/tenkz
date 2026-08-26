@@ -38,6 +38,23 @@ COMMAND = re.compile(r"\\(tnpic|tntree)\b")
 TENKZEQ_TOKEN = re.compile(r"\\(begin|end)\{tenkzeq\}")
 SETUP_COMMAND = re.compile(r"\\(?:tnset|tndeclare(?:atom)?|tenkzkernel)\b")
 DISPOSITIONS = ("preserve", "codemod", "redraw")
+DISPOSITION_FAMILY = {"P": "preserve", "C": "codemod", "R": "redraw"}
+# Counter equality reads a missing label as a zero, so the rows standing at
+# zero -- the ratchets that say a retired construct has not come back -- could
+# be deleted without any total moving.  Their labels are pinned here, so
+# removing one is an edit to this checker and gets read.
+BLUEPRINT_RAW_LABELS = frozenset({"tenkz", "tenkzcd", "tenkzplanes", "tnpic", "tntree"})
+FIXTURE_RAW_LABELS = frozenset({"tenkz", "tenkzeq", "tnpic", "tntree"})
+# The canonical migration vocabulary of `### Migration target codes`.  Only
+# three are referenced by the inventories today, so the rest are readable
+# only here: deleting one would otherwise cost nothing.
+MIGRATION_CODE_SET = frozenset({
+    "P-grid", "P-none",
+    "C-declare", "C-picture", "C-tree", "C-policy", "C-frame", "C-record",
+    "C-species", "C-switch",
+    "R-free", "R-cd", "R-lattice", "R-plane", "R-record",
+})
+MIGRATION_CODES: frozenset[str] = frozenset()
 # Retired spellings, read from the registry's tombstone rows: a command row
 # names a command that no longer exists, a `key=value` row a word struck from
 # a live key's alphabet.  Retiring a spelling is one registry edit, and this
@@ -596,6 +613,67 @@ def uses_tombstone(source: str) -> bool:
     return any(code.startswith("R-") for code in source_target_codes(source))
 
 
+def migration_codes(text: str) -> frozenset[str]:
+    """The codes the document's own migration table defines."""
+    body = section(text, "### Migration target codes", "## ")
+    rows: list[str] = []
+    seen_header = False
+    seen_separator = False
+    for line in body.splitlines():
+        if not line.startswith("|"):
+            continue
+        if set(line) <= set("|-: "):
+            require_separator(line, 2, "the migration table")
+            if not seen_header:
+                fail("the migration table's separator precedes its header")
+            seen_separator = True
+            continue
+        if re.match(r"\|\s*Code\s*\|\s*Required 1\.0 target\s*\|$", line):
+            if seen_header:
+                fail("the migration table has two header rows")
+            seen_header = True
+            continue
+        # A definition standing before the header and separator is a row of a
+        # table Markdown does not render, and reading it would accept a
+        # section that no longer forms one.
+        if not seen_separator:
+            fail(f"the migration table has a row before its separator: {line!r}")
+        # A malformed definition is unreferenced today and would disappear
+        # unnoticed, taking the code it should have defined with it.
+        # The whole row, not its opening: a definition that lost its target
+        # prose, or grew a third cell, still defines a code and would go on
+        # being referenced with nothing said about what it requires.
+        # The description is one cell: allowing a pipe in it would let a row
+        # grow a third cell and still read as a definition.
+        match = re.fullmatch(r"\| `([A-Za-z]+-[a-z]+)` \| ([^|]+) \|", line.rstrip())
+        if match is None or not match.group(2).strip():
+            fail(f"the migration table has a row it cannot read: {line!r}")
+        rows.append(match.group(1))
+    if not seen_header:
+        fail("the migration table has no header row")
+    if not seen_separator:
+        fail("the migration table has no separator row")
+    repeated = sorted({code for code in rows if rows.count(code) > 1})
+    if repeated:
+        fail(f"the migration table defines a code more than once: {repeated}")
+    codes = frozenset(rows)
+    # `target_disposition` reads the family letter, and everything that is
+    # neither C nor R falls to preserve, so a family it does not know would
+    # be filed as preserve without anyone saying so.  Three families exist.
+    stray = sorted(code for code in codes if code.split("-", 1)[0] not in DISPOSITION_FAMILY)
+    if stray:
+        fail(f"the migration table defines codes outside P/C/R: {stray}")
+    # The inventories reference three of these today, so deleting any of the
+    # others would pass every check that reads them.  The canonical set is
+    # pinned, and changing it is an edit to this checker that gets read.
+    if codes != MIGRATION_CODE_SET:
+        fail(
+            "the migration table's codes moved: "
+            f"{sorted(codes)} against {sorted(MIGRATION_CODE_SET)}"
+        )
+    return codes
+
+
 def target_disposition(codes: frozenset[str]) -> str:
     """Return the workload disposition implied by a target-code set."""
     if any(code.startswith("R-") for code in codes):
@@ -615,20 +693,99 @@ def section(text: str, heading: str, next_heading: str | None = None) -> str:
     return result
 
 
-def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
+def separator_columns(row: str) -> int | None:
+    """The column count of a Markdown separator row, or None if it is not one.
+
+    A row made of the characters a separator uses is not a separator: `|` on
+    its own forms no table, and neither does one whose cells are bare colons.
+    """
+    stripped = row.rstrip()
+    if not stripped.startswith("|") or set(stripped) - set("|-: "):
+        return None
+    cells = stripped.strip("|").split("|")
+    if not cells or not all(re.fullmatch(r"\s*:?-+:?\s*", cell) for cell in cells):
+        return None
+    return len(cells)
+
+
+def require_separator(row: str, columns: int, where: str) -> None:
+    """Refuse a separator that does not form a table of `columns` columns."""
+    found = separator_columns(row)
+    if found is None:
+        fail(f"{where} has a separator that forms no table: {row!r}")
+    if found != columns:
+        fail(f"{where} has a {found}-column separator against {columns} columns")
+
+
+def parse_counter_table(
+    text: str, heading: str, header: str | None = None
+) -> tuple[Counter[str], int]:
+    """Read a two-column counter table, refusing any row it cannot read.
+
+    The table's shape is checked, not assumed: an optional header row, then a
+    separator, then data rows.  `section` consumes the heading for some
+    callers and not for others, so the separator is what the reader keys on
+    rather than a positional guess -- a row standing where the separator
+    should be is a row, and reading it is the point.
+    """
     result: Counter[str] = Counter()
     total: int | None = None
     started = False
+    seen_separator = False
+    rows = 0
     for row in section(text, heading).splitlines():
         if started and not row.strip():
             break
+        if not row.startswith("|"):
+            continue
+        rows += 1
+        # A separator is two delimiter cells, not any arrangement of the
+        # characters one is made of: `|` alone forms no table.
+        if set(row) <= set("|-: "):
+            require_separator(row, 2, f"counter table below {heading}")
+            if seen_separator:
+                fail(f"counter table below {heading} has two separator rows")
+            seen_separator = True
+            continue
+        # Before the separator there is at most the table's own header, and it
+        # must be the header this table has: any other row there is a data row
+        # standing where the header belongs, and reading it is the point.
+        if not seen_separator:
+            if rows > 1:
+                fail(
+                    f"counter table below {heading} has no separator row; "
+                    f"found {row!r}"
+                )
+            # `section` consumes the heading when the caller names the header
+            # row itself, and leaves it when the caller names a `###` heading.
+            # Either way the row standing before the separator must be the
+            # header this table has, or it is a data row being skipped.
+            expected = header if header is not None else heading
+            if row.rstrip() != expected.rstrip():
+                fail(
+                    f"counter table below {heading} has an unexpected header "
+                    f"row: {row!r}"
+                )
+            continue
         match = re.match(r"\| `?([^|`]+?)`? \| \**([0-9]+)\** \|$", row)
-        started |= bool(match)
-        label = match.group(1).strip().strip("*") if match else ""
-        if match and label.lower() == "total":
+        # A row the grammar cannot read leaves the counter and the total where
+        # they were, so it must be refused rather than stepped over.
+        if match is None:
+            fail(f"counter table below {heading} has a row it cannot read: {row!r}")
+        started = True
+        label = match.group(1).strip().strip("*")
+        if label.lower() == "total":
+            if total is not None:
+                fail(f"counter table below {heading} lists more than one Total row")
             total = int(match.group(2))
-        elif match:
+        else:
+            # A repeated label would overwrite its earlier row and, with the
+            # total left alone, the table would still add up.
+            if label in result:
+                fail(f"counter table below {heading} lists {label!r} more than once")
             result[label] = int(match.group(2))
+    if not seen_separator:
+        fail(f"counter table below {heading} has no separator row")
     if not result:
         fail(f"could not parse counter table below {heading}")
     if total is None or total != sum(result.values()):
@@ -641,17 +798,41 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
     body = body.split("\n\n", 1)[0]
     files: Counter[str] = Counter()
     total: int | None = None
+    seen_separator = False
     for row in body.splitlines():
-        match = re.match(r"\| ([a-z]+) \| ([0-9]+) \|$", row)
-        if match and match.group(1) in DISPOSITIONS:
-            files[match.group(1)] = int(match.group(2))
         total_match = re.match(r"\| \*\*Total\*\* \| \*\*([0-9]+)\*\* \|$", row)
         if total_match:
+            if total is not None:
+                fail("standalone fixture table lists more than one Total row")
             total = int(total_match.group(1))
+            continue
+        if not row.startswith("|"):
+            continue
+        if set(row) <= set("|-: "):
+            require_separator(row, 2, "the standalone fixture table")
+            seen_separator = True
+            continue
+        if re.match(r"\|\s*Disposition\s*\|\s*Fixtures\s*\|$", row):
+            continue
+        # The first cell is read as written, not filtered to the words already
+        # known: a row spelt `BOGUS` or `bogus-value` must reach the unknown
+        # check below rather than be skipped by the pattern (LionSR/tenkz#6).
+        match = re.match(r"\| ([^|]+) \| ([0-9]+) \|$", row)
+        if match is None:
+            fail(f"standalone fixture table has a row it cannot read: {row!r}")
+        label = match.group(1).strip()
+        if label in files:
+            fail(f"standalone fixture table lists {label!r} more than once")
+        files[label] = int(match.group(2))
     # Since the S4 surface swap every codemod and redraw fixture has left the
     # corpus, so the table may carry the preserve row alone.
-    if not files or set(files) - set(DISPOSITIONS):
+    if not seen_separator:
+        fail("the standalone fixture table has no separator row")
+    if not files:
         fail("could not parse standalone fixture reconciliation table")
+    unknown = sorted(set(files) - set(DISPOSITIONS))
+    if unknown:
+        fail(f"standalone fixture table names unknown dispositions: {unknown}")
     if total is None or total != sum(files.values()):
         fail(f"invalid standalone fixture total: {total} != {sum(files.values())}")
     return files, total
@@ -670,14 +851,50 @@ def documented_blueprint(
     dispositions: Counter[str] = Counter()
     disposition_by_occurrence: dict[tuple[str, int, str], str] = {}
     targets_by_occurrence: dict[tuple[str, int, str], frozenset[str]] = {}
+    started = False
+    seen_separator = False
     for row in body.splitlines():
-        cells = [cell.strip() for cell in row.split("|")[1:-1]]
-        if len(cells) != 4 or not re.fullmatch(r"`[^`]+\.tex`", cells[0]):
+        if not row.startswith("|"):
+            if started:
+                break
             continue
+        cells = [cell.strip() for cell in row.split("|")[1:-1]]
+        if set(row) <= set("|-: "):
+            require_separator(row, 4, "the blueprint inventory")
+            seen_separator = True
+            continue
+        if cells[:1] == ["Source"]:
+            # The header names the three disposition columns the cells below
+            # are read into; renamed or shortened, the same rows would be
+            # filed under headings the document no longer carries.
+            if [cell.lower() for cell in cells] != [
+                "source", "preserve", "codemod", "redraw"
+            ]:
+                fail(f"the blueprint inventory header reads {cells!r}")
+            continue
+        # A row the grammar cannot read is refused rather than skipped: a
+        # mistyped source name would otherwise drop its occurrences from the
+        # inventory and the totals could be lowered to agree.
+        if len(cells) != 4 or not re.fullmatch(r"`[^`]+\.tex`", cells[0]):
+            fail(f"blueprint inventory has a row it cannot read: {row!r}")
+        started = True
         filename = cells[0].strip("`")
         for disposition, cell in zip(DISPOSITIONS, cells[1:]):
+            # The grammar must consume the whole cell: a second occurrence
+            # written any other way would otherwise be skipped while every
+            # counter stayed where it was.
+            residue = re.sub(
+                r"L([1-9][0-9]*(?:, [1-9][0-9]*)*) `([^`]+)` → `([^`]+)`", "", cell
+            ).strip(" ;,")
+            if cell.strip() != "—" and residue:
+                fail(
+                    f"{filename}: {disposition} cell has text the occurrence "
+                    f"grammar does not read: {residue!r}"
+                )
+            # Source lines are one-based, so `L0` names nothing and must not
+            # read as a location.
             for use in re.finditer(
-                r"L([0-9]+(?:, [0-9]+)*) `([^`]+)` → `([^`]+)`",
+                r"L([1-9][0-9]*(?:, [1-9][0-9]*)*) `([^`]+)` → `([^`]+)`",
                 cell,
             ):
                 for line in map(int, use.group(1).split(", ")):
@@ -685,9 +902,15 @@ def documented_blueprint(
                     listed[key] += 1
                     dispositions[disposition] += 1
                     disposition_by_occurrence[key] = disposition
-                    targets_by_occurrence[key] = frozenset(
-                        use.group(3).split("+")
-                    )
+                    components = use.group(3).split("+")
+                    if len(components) != len(set(components)):
+                        fail(
+                            f"{filename}:{line} {use.group(2)} spells a target "
+                            f"more than once: {use.group(3)!r}"
+                        )
+                    targets_by_occurrence[key] = frozenset(components)
+    if not seen_separator:
+        fail("the blueprint inventory has no separator row")
     return (
         listed,
         dispositions,
@@ -749,8 +972,100 @@ def documented_fixtures(text: str) -> dict[str, tuple[str, frozenset[str]]]:
 
 def main() -> int:
     text = DOCUMENT.read_text()
+    global MIGRATION_CODES
+    MIGRATION_CODES = migration_codes(text)
+    if not MIGRATION_CODES:
+        fail("the migration target-code table is empty or unreadable")
 
-    if BLUEPRINT_ROOT.is_dir():
+    # The blueprint's two counter tables and their shared total are checked
+    # from the document alone.  Reconciling them against the chapter sources
+    # needs the TNLean blueprint tree, which this repository does not carry
+    # (LionSR/tenkz#6): with TENKZ_BLUEPRINT_ROOT unset that half is reported
+    # as not run rather than folded into a pass.
+    (
+        listed_blueprint,
+        blueprint_dispositions,
+        blueprint_occurrence_dispositions,
+        blueprint_occurrence_targets,
+    ) = documented_blueprint(text)
+    documented_blueprint_raw, blueprint_total = parse_counter_table(
+        text, "| Raw construct | Occurrences |"
+    )
+    documented_blueprint_dispositions, disposition_total = parse_counter_table(
+        text, "| Disposition | Occurrences |"
+    )
+    if blueprint_total != disposition_total:
+        fail("blueprint reconciliation tables have different totals")
+    if sum(listed_blueprint.values()) != blueprint_total:
+        fail(
+            f"blueprint inventory lists {sum(listed_blueprint.values())} "
+            f"occurrences but the raw-count table totals {blueprint_total}"
+        )
+    if blueprint_dispositions != documented_blueprint_dispositions:
+        fail("blueprint disposition totals do not match the line inventory")
+    # Counter equality reads a missing label as a zero, so a deleted row and a
+    # row reading 0 compare the same and the documented zero ratchets could be
+    # dropped in silence.  The labels are compared as well as the counts.
+    if set(documented_blueprint_dispositions) != set(DISPOSITIONS):
+        fail(
+            "blueprint disposition table must carry every disposition row: "
+            f"{sorted(documented_blueprint_dispositions)}"
+        )
+    # The totals agreeing is not the per-construct counts agreeing: moving one
+    # occurrence from `tenkz` to `tntree` leaves every total where it was.
+    listed_raw: Counter[str] = Counter()
+    for (_file, _line, construct), count in listed_blueprint.items():
+        listed_raw[construct] += count
+    if set(documented_blueprint_raw) != BLUEPRINT_RAW_LABELS:
+        fail(
+            "blueprint raw-count table must carry every tracked construct row: "
+            f"{sorted(documented_blueprint_raw)} against "
+            f"{sorted(BLUEPRINT_RAW_LABELS)}"
+        )
+    if listed_raw != documented_blueprint_raw:
+        fail(
+            "blueprint raw-count table does not match the line inventory: "
+            f"table={dict(sorted(documented_blueprint_raw.items()))}, "
+            f"inventory={dict(sorted(listed_raw.items()))}"
+        )
+    repeated = sorted(key for key, count in listed_blueprint.items() if count != 1)
+    if repeated:
+        fail(f"blueprint inventory lists one occurrence more than once: {repeated}")
+    # A target code is a row of the migration table, and its family decides
+    # the disposition the entry is filed under; both are readable without the
+    # chapter sources.
+    for key, codes in blueprint_occurrence_targets.items():
+        unknown_codes = sorted(code for code in codes if code not in MIGRATION_CODES)
+        if unknown_codes:
+            fail(f"{key[0]}:{key[1]} {key[2]} names unknown target code(s): {unknown_codes}")
+        # `source_target_codes` drops every preserve code as soon as a
+        # non-preserve one is present, so a set holding both is one no source
+        # could produce -- and reading only the strongest family would file it
+        # as if the preserve half were not written.
+        families = {code.split("-", 1)[0] for code in codes}
+        if "P" in families and families - {"P"}:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} mixes preserve and non-preserve "
+                f"targets {sorted(codes)}, which the source classifier never "
+                "produces"
+            )
+        # Every inventory key names a public-surface occurrence, and `P-none`
+        # says the file carries none, so the two cannot both be true.
+        if "P-none" in codes:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} is targeted `P-none`, which says "
+                "the file has no public-surface construct"
+            )
+        implied = target_disposition(codes)
+        if implied != blueprint_occurrence_dispositions[key]:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} is filed under "
+                f"{blueprint_occurrence_dispositions[key]} but its targets "
+                f"{sorted(codes)} imply {implied}"
+            )
+    blueprint_reconciled = BLUEPRINT_ROOT.is_dir()
+
+    if blueprint_reconciled:
         blueprint_occurrences: Counter[tuple[str, int, str]] = Counter()
         blueprint_raw: Counter[str] = Counter()
         blueprint_sources: dict[tuple[str, int, str], list[tuple[str, bool]]] = {}
@@ -760,30 +1075,14 @@ def main() -> int:
                 blueprint_occurrences[(path.name, line, name)] += 1
                 blueprint_raw[name] += 1
 
-        (
-            listed_blueprint,
-            blueprint_dispositions,
-            blueprint_occurrence_dispositions,
-            blueprint_occurrence_targets,
-        ) = documented_blueprint(text)
         if blueprint_occurrences != listed_blueprint:
             fail(
                 "blueprint inventory mismatch: "
                 f"missing={blueprint_occurrences - listed_blueprint}, "
                 f"extra={listed_blueprint - blueprint_occurrences}"
             )
-        documented_blueprint_raw, blueprint_total = parse_counter_table(
-            text, "| Raw construct | Occurrences |"
-        )
         if blueprint_raw != documented_blueprint_raw:
             fail("blueprint raw-count table does not match the source inventory")
-        documented_blueprint_dispositions, disposition_total = parse_counter_table(
-            text, "| Disposition | Occurrences |"
-        )
-        if blueprint_dispositions != documented_blueprint_dispositions:
-            fail("blueprint disposition totals do not match the line inventory")
-        if blueprint_total != disposition_total:
-            fail("blueprint reconciliation tables have different totals")
         for key, documented_disposition in blueprint_occurrence_dispositions.items():
             actual_targets = frozenset().union(
                 *(
@@ -805,8 +1104,9 @@ def main() -> int:
                 )
     else:
         print(
-            "skipping blueprint inventory: "
-            f"{BLUEPRINT_ROOT} is absent (set TENKZ_BLUEPRINT_ROOT to check it)",
+            "NOT RUN: blueprint source reconciliation; "
+            f"{BLUEPRINT_ROOT} is absent (the chapters live in LionSR/TNLean; "
+            "set TENKZ_BLUEPRINT_ROOT to reconcile them)",
             file=sys.stderr,
         )
 
@@ -865,8 +1165,13 @@ def main() -> int:
         fail("fixture disposition totals do not match the fixture lists")
     fixture_heading = "### Fixture raw-count reconciliation"
     documented_fixture_raw, _fixture_raw_total = parse_counter_table(
-        text, fixture_heading
+        text, fixture_heading, "| Raw construct | Occurrences |"
     )
+    if set(documented_fixture_raw) != FIXTURE_RAW_LABELS:
+        fail(
+            "fixture raw-count table must carry every tracked construct row: "
+            f"{sorted(documented_fixture_raw)} against {sorted(FIXTURE_RAW_LABELS)}"
+        )
     if fixture_raw != documented_fixture_raw:
         fail("fixture raw-count table does not match the source inventory")
 
@@ -890,11 +1195,14 @@ def main() -> int:
     if not census or tuple(map(int, census.groups())) != actual_census:
         fail(f"fixture consumer census does not match {actual_census}")
 
-    blueprint_count = (
-        sum(blueprint_raw.values()) if BLUEPRINT_ROOT.is_dir() else 0
+    blueprint_status = (
+        f"{blueprint_total} blueprint occurrences reconcile exactly with their sources"
+        if blueprint_reconciled
+        else f"{blueprint_total} documented blueprint occurrences are internally "
+        "consistent (sources not reconciled)"
     )
     print(
-        f"PASS: {blueprint_count} blueprint occurrences and "
+        f"PASS: {blueprint_status}; "
         f"{len(expected_fixtures)} standalone fixtures reconcile exactly"
     )
     return 0

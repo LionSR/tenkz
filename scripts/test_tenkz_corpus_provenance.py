@@ -76,6 +76,25 @@ def validate(path: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+def test_stray_include_is_refused() -> None:
+    """An include file beside the fixtures is one the manifest cannot name."""
+    stray = ROOT / "tests" / "tenkz" / "zz_seeded_sweep.inc"
+    if stray.exists():
+        raise AssertionError(f"{stray} already exists; refusing to overwrite")
+    stray.write_text("% seeded by test_tenkz_corpus_provenance\n", encoding="utf-8")
+    try:
+        result = validate(PROVENANCE)
+    finally:
+        stray.unlink()
+    if result.returncode == 0 or "zz_seeded_sweep.inc" not in result.stderr:
+        raise AssertionError(
+            "a stray .inc beside the fixtures was not refused:\n" + result.stderr
+        )
+    clean = validate(PROVENANCE)
+    if clean.returncode:
+        raise AssertionError("the unseeded corpus census failed:\n" + clean.stderr)
+
+
 def test_kernel_capability_owner() -> None:
     kernel_body = r"\tenkzkernel{\begin{tenkz} A \end{tenkz}}"
     if structural_capability_problems("good", ("kernel",), kernel_body):
@@ -1807,20 +1826,6 @@ ch=21mm]{a}}
         "allowlist requires exactly",
     )
 
-    # The corpus owns no dimensions at all; any surviving occurrence would
-    # already have failed the ceiling above, so the removal probe is vacuous.
-    if report.cases:
-        first_route = next(
-            index
-            for index, occurrence in enumerate(report.cases)
-            if occurrence.owner is DimensionOwner.ROUTE
-        )
-        reduced = dataclasses.replace(
-            report,
-            cases=report.cases[:first_route] + report.cases[first_route + 1 :],
-        )
-        validate_dimension_report(reduced)
-
 
 def test_rmp_author_source_identity() -> None:
     targets = load_manifest(DEFAULT_MANIFEST)
@@ -1930,6 +1935,7 @@ def test_rmp_pairing_identity() -> None:
 
 
 def main() -> int:
+    test_stray_include_is_refused()
     test_kernel_capability_owner()
     test_ink_environment_owner()
     test_rmp_dimension_cli_failure()

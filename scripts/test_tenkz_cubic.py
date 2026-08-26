@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 
@@ -58,12 +57,6 @@ EXPECTED_PICTURE_OPTIONS = {
     "south": "none",
     "frame": "{plane,basis={wireat(0,0),wireat(-3,5),wireat(-6,10)}}",
 }
-
-
-@dataclass(frozen=True)
-class Topology:
-    edges: frozenset[EDGE]
-    marked: EDGE
 
 
 def fail(path: Path, message: str) -> None:
@@ -125,7 +118,7 @@ def compare_edges(path: Path, counts: Counter[EDGE]) -> None:
         )
 
 
-def inspect(path: Path) -> Topology:
+def inspect(path: Path) -> None:
     source = strip_comments(path.read_text(encoding="utf-8"))
     # Since the S4 surface swap the package binds the kernel surface at
     # load; a per-document switch would be an inert leftover spelling.
@@ -188,21 +181,10 @@ def inspect(path: Path) -> Topology:
         counts[edge] += 1
         if marked:
             marked_edges.append(edge)
+    # The edge comparison is the whole topology gate: equality with the
+    # 54-edge constant fixes the address set and the per-axis counts, so no
+    # second check on either can report (LionSR/tenkz#6).
     compare_edges(path, counts)
-
-    addresses = {address for edge in counts for address in edge}
-    if addresses != EXPECTED_ADDRESSES:
-        fail(
-            path,
-            f"address set mismatch; missing={sorted(EXPECTED_ADDRESSES - addresses)}, "
-            f"extra={sorted(addresses - EXPECTED_ADDRESSES)}",
-        )
-    axis_counts = {
-        axis: sum(edge in expected for edge in counts)
-        for axis, expected in EXPECTED_BY_AXIS.items()
-    }
-    if axis_counts != {"column": 18, "row": 18, "member": 18}:
-        fail(path, f"axis counts differ: {axis_counts}")
     if marked_edges != [EXPECTED_MARKED]:
         fail(path, f"marked edge differs: {marked_edges}")
 
@@ -211,15 +193,15 @@ def inspect(path: Path) -> Topology:
         residue[start:end] = " " * (end - start)
     if "".join(residue).strip():
         fail(path, "picture body contains nonliteral topology or other residue")
-    return Topology(frozenset(counts), marked_edges[0])
 
 
 def main() -> int:
-    topologies = [inspect(path) for path in SOURCES]
-    if len(set(topologies)) != 1:
-        raise AssertionError("cubic example and regression twins differ")
+    # Each source is held to the one constant; three sources that each equal
+    # it are equal to each other, so no cross-source comparison remains.
+    for path in SOURCES:
+        inspect(path)
     print(
-        "PASS: three cubic sources declare the same 27 sites, "
+        "PASS: three cubic sources each declare the 27 sites, "
         "54 edges (18 per axis), and one middle-layer marked edge"
     )
     return 0

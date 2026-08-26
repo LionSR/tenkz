@@ -4762,6 +4762,34 @@ No parser, registry, or kernel change rides with this correction.  The
 flag table carries forward unchanged.  This correction is appended
 because shrink sessions are immutable.
 
+### 2026-08-26 — the checking surface is swept for gates that cannot fail (LionSR/tenkz#6)
+
+Nine checking-surface groups were read in full and every candidate traced
+to the input that would make it report.  Eight assertions had no such
+input and are executed here; two further candidates were refuted on
+inspection and stand.
+
+| site | why it could not fail | disposition |
+|---|---|---|
+| `test_tenkz_cubic.py` main | every `Topology` reaching it is pinned to one constant by the per-file gate, so the set always had one member | the cross-source comparison and the address-set and axis-count checks it implied are deleted; `compare_edges` is the stated gate |
+| `tenkz_corpus.sh` support rows | the fixed disposition census admits no `support` row, so the adopted-path predicate ran over an empty set | replaced by a refusal of any include file beside the fixtures, which is the live input |
+| `test_tenkz_corpus_provenance.py` removal probe | guarded by `if report.cases`, which the preceding assertion forces empty | deleted; a seeded stray include takes its place as evidence |
+| `dimensions.py` owner/site mismatch | compared the classifier's own output with the same classifier on the same offset | deleted; the unowned-site refusal stands |
+| `dimension_inventory.py` inventory step | the zero ratchet refuses every active dimension before the inventory is collected | kept and documented: what it still refuses is a committed inventory naming a case, and the rest becomes live when a ceiling rises |
+| `tenkz_rmp.py` workbench remainder | implied by the frozen count and the published count already checked | deleted |
+| `check_tenkz_dispositions.py` fixture table | `set(files) - set(DISPOSITIONS)` was empty by construction, the filter having dropped the offending rows | the rows are collected first and an unknown word is refused by name |
+| `check_tenkz_dispositions.py` blueprint branch | the whole reconciliation sat behind a directory this repository does not carry, and the run still printed PASS | the two counter tables and their totals are checked from the document on every run; the source half reports NOT RUN and the PASS line says which ran |
+
+Refuted and left alone: the language test's compiles (they skip only
+where TeX is absent, and CI installs it before the corpus job) and the
+CTAN permission audit (it reads the staged tree, whose modes come from
+the manifest, not from a chmod of its own).
+
+Every fix carries seeded-failure evidence beside it: a stray `.inc` in
+the corpus, an unknown disposition word, and a mangled blueprint total
+each fail their gate and are pinned as tests.  No meter moves: the sweep
+deletes assertions, not vocabulary.
+
 ### 2026-08-26 — the closed alphabets are checked, not metered (LionSR/tenkz#7)
 
 The 2026-08-11 session retired four `form=` words and no meter moved, because
