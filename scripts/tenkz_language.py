@@ -928,7 +928,12 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
 
 def macro_body_spans(text: str) -> list[tuple[int, int]]:
     """The replacement-text spans of every macro definition in `text`."""
-    spans: list[tuple[int, int]] = []
+    return [(begin, end) for begin, end, _name in named_macro_bodies(text)]
+
+
+def named_macro_bodies(text: str) -> list[tuple[int, int, str]]:
+    """Each macro definition's body span, with the name it defines."""
+    spans: list[tuple[int, int, str]] = []
     for match in re.finditer(
         r"\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*\\([A-Za-z_@]+(?::[a-zA-Z]*)?)", text
     ):
@@ -939,7 +944,7 @@ def macro_body_spans(text: str) -> list[tuple[int, int]]:
             body, end = _group(text, brace)
         except ValueError:
             continue
-        spans.append((brace, end))
+        spans.append((brace, end, match.group(1)))
     return spans
 
 
@@ -993,6 +998,23 @@ def top_level_entries(block: str) -> list[str]:
     return entries
 
 
+def runs_at_load(text: str, macro: str, bodies: list[tuple[int, int, str]]) -> bool:
+    """Whether `macro` is called from outside every macro body.
+
+    A definition inside a body executes when that body does, so a body that
+    something calls at load installs its keys at load.  This follows one link,
+    not the whole call graph: a macro called only from another dormant macro
+    reads as dormant, which is the safe direction -- it under-reports rather
+    than failing a kernel TeX accepts.
+    """
+    for call in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
+        if DEFINITION_TOKEN.search(text[max(0, call.start() - 80):call.start()]):
+            continue
+        if not any(begin <= call.start() < end for begin, end, _ in bodies):
+            return True
+    return False
+
+
 def key_definitions(text: str, scope: str, key: str) -> int:
     """How many times `key` is bound in `scope`, by any spelling.
 
@@ -1002,7 +1024,13 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     Counting only calls to the helper would read that override as absent.
     """
     bindings = 0
-    dormant = macro_body_spans(text)
+    bodies = named_macro_bodies(text)
+    # A body that something calls at load installs its keys at load, so only
+    # the bodies nothing reaches are dormant.
+    dormant = [
+        (begin, end) for begin, end, name in bodies
+        if not runs_at_load(text, name, bodies)
+    ]
     # A kernel helper that binds its second argument in its first installs a
     # handler as surely as a literal block does -- when it is called at load,
     # not from inside another macro's body.
@@ -1080,7 +1108,11 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
     # A helper call binds the key as surely as a literal block does; the route
     # reader must count them for the same reason the override audit does.
     installed = key_definitions(text, scope, key)
-    dormant = macro_body_spans(text)
+    defined = named_macro_bodies(text)
+    dormant = [
+        (begin, end) for begin, end, name in defined
+        if not runs_at_load(text, name, defined)
+    ]
     for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
         # A block inside a macro body runs when that macro is called, not at
         # load; counting it would report a binding TeX never installs.

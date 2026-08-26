@@ -652,6 +652,20 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     ):
         if tenkz_language.alphabet_errors(registry, contract, benign):
             raise SystemExit(f"{label} was reported as a binding")
+    # A body nothing calls is dormant; a body called at load is not.
+    sleeper = (
+        "\\cs_new_protected:Npn \\__tenkz_language_wake: "
+        "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{sleeper}\n"):
+        raise SystemExit("an uncalled body was counted as a binding")
+    if not any(
+        "bound directly" in error
+        for error in tenkz_language.alphabet_errors(
+            registry, contract, f"{kernel}\n{sleeper}\n\\__tenkz_language_wake:\n"
+        )
+    ):
+        raise SystemExit("a body invoked at load was skipped as dormant")
     # Three more negatives, each a way a valid kernel could be failed.
     for label, benign in (
         (
