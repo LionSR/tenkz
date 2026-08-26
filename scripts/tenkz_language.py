@@ -41,6 +41,10 @@ ALPHABET_CHOICES = {"mark forms": ("tenkz-kernel-mark", "form")}
 # to it: the key binding for a directly wired parser, the installing helper's
 # body for the others.  This proves the one link that the rest of the gate
 # rests on, not the whole runtime path.
+# The side words are installed on the picture scope by a helper, so the
+# generated keys are what a later block would rebind; each is checked in
+# addition to the installer.
+SIDE_KEYS = ("west", "east", "north", "south")
 ALPHABET_REACHED_FROM = {
     "routes": ("key", "__tenkz_kernel_route:n", ("tenkz-kernel-wire", "route")),
     "side policy": (
@@ -655,15 +659,19 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
         # renders it inside the table, so the reader must see it there too.
         row = line[:3].lstrip(" ") + line[3:]
         if not row.startswith("|"):
-            # Markdown ends the table at the first line that is not a row.
-            # Continuing past one would read whatever pipe-prefixed lines came
-            # after it as rows of a table the contract no longer renders.
+            # Markdown ends the table at the first line that is not a row, so
+            # prose after the last row simply ends it -- with or without a
+            # blank line between.  Before any row has been read, though, the
+            # table is empty and whatever pipe-prefixed lines follow are not
+            # its rows.
             if seen_delimiter:
-                if not row.strip():
+                if alphabets:
                     break
-                raise ValueError(
-                    f"section 2.8's table is interrupted before it ends: {row!r}"
-                )
+                if row.strip():
+                    raise ValueError(
+                        f"section 2.8's table is empty and interrupted by "
+                        f"{row!r}"
+                    )
             continue
         cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
         if not seen_header:
@@ -921,10 +929,11 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
             continue
         if named.strip() != scope:
             continue
-        binding = re.search(
+        # A key may be assigned more than once inside one block, and l3keys
+        # installs the last, so every assignment is collected.
+        for binding in re.finditer(
             r"(?:\A|,)\s*" + re.escape(key) + r"\s*\.code:n\s*=\s*", block
-        )
-        if binding:
+        ):
             body, _ = _group(block, binding.end())
             bodies.append(body)
     if not bodies:
@@ -976,6 +985,17 @@ def alphabet_errors(
         except ValueError as exc:
             errors.append(f"alphabet {alphabet!r}: {exc}")
         else:
+            if alphabet == "side policy":
+                # A later block rebinding one generated key would leave the
+                # installer untouched and that side accepting anything.
+                for word in SIDE_KEYS:
+                    direct = key_definitions(kernel_text, "tenkz-kernel-picture", word)
+                    if direct:
+                        errors.append(
+                            f"alphabet {alphabet!r}: tenkz-kernel-picture:{word} "
+                            f"is bound directly in {direct} block(s), past the "
+                            "installer that reaches the parser"
+                        )
             # The caller's own body, not a window around it: a window wide
             # enough to reach the call is wide enough to contain the parser's
             # own definition, which would satisfy the test by itself.

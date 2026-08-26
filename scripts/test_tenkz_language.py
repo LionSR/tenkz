@@ -470,6 +470,38 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
         if not any(expected in error for error in errors):
             raise SystemExit(f"{label} was not reported; errors: {errors}")
+    for label, seeded_kernel, expected in (
+        (
+            "two assignments of one key in one block",
+            kernel.replace(
+                r"route .code:n    = { \__tenkz_kernel_route:n {#1} } ,",
+                r"route .code:n    = { \__tenkz_kernel_route:n {#1} } , "
+                r"route .code:n = { } ,", 1,
+            ),
+            "bound 2 times",
+        ),
+        (
+            "a generated side key rebound past its installer",
+            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-picture }} "
+            "{ west .code:n = { } }\n",
+            "past the installer",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # Prose immediately after the last row ends the table, blank line or not,
+    # and must not be reported as an interruption.
+    unspaced = contract.replace(
+        "| mark forms | `bracket` `enclosure` `label` |\n\n",
+        "| mark forms | `bracket` `enclosure` `label` |\n", 1,
+    )
+    if unspaced == contract:
+        raise SystemExit("the section 2.8 table no longer ends with a blank line")
+    if tenkz_language.alphabet_errors(registry, unspaced, kernel):
+        raise SystemExit("prose closing the table was reported as an interruption")
 
 
 def main() -> int:
