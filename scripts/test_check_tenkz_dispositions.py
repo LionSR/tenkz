@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 import sys
 import tempfile
 from pathlib import Path
@@ -40,8 +41,85 @@ def test_document_gates_fire_on_seeded_tables() -> None:
     assert before == sum(guard.documented_blueprint(text)[0].values())
 
 
+def _expect_document_failure(seeded: str, expected: str, name: str) -> None:
+    """Run the whole checker against a seeded document and require it to fail."""
+    original = guard.DOCUMENT
+    with tempfile.TemporaryDirectory(prefix="tenkz-disposition-seed-") as tmp:
+        path = Path(tmp) / "DISPOSITIONS.md"
+        path.write_text(seeded, encoding="utf-8")
+        guard.DOCUMENT = path
+        try:
+            guard.main()
+        except SystemExit as error:
+            if expected not in str(error):
+                raise AssertionError(f"seed {name!r} failed for another reason: {error}")
+        else:
+            raise AssertionError(f"seed {name!r} passed the checker")
+        finally:
+            guard.DOCUMENT = original
+
+
+def test_document_only_blueprint_gates_fire() -> None:
+    """LionSR/tenkz#6: the checks that run without the chapter sources fire.
+
+    Every seed below keeps the totals adding up, which is what the blueprint
+    reconciliation looked like while it was skipped entirely, and each is run
+    through the whole checker rather than through one function.
+    """
+    text = guard.DOCUMENT.read_text()
+    if guard.BLUEPRINT_ROOT.is_dir():
+        print("SKIP: blueprint sources present; the document-only path is not taken")
+        return
+    guard.main()
+
+    # A construct moved between raw rows: both totals stay where they were.
+    _expect_document_failure(
+        text.replace("| `tenkz` | 188 |", "| `tenkz` | 187 |", 1)
+            .replace("| `tntree` | 11 |", "| `tntree` | 12 |", 1),
+        "raw-count table does not match the line inventory",
+        "construct moved between raw rows",
+    )
+    # One occurrence inventoried twice, with the totals raised to match.
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` | L228 ", "| `ch03_single.tex` | L228, 228 ", 1)
+            .replace("| `tenkz` | 188 |", "| `tenkz` | 189 |", 1)
+            .replace("| **Total** | **199** |", "| **Total** | **200** |")
+            .replace("| preserve | 188 |", "| preserve | 189 |", 1),
+        "more than once",
+        "occurrence listed twice",
+    )
+    # A target code the migration table does not define.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `BOGUS`", 1),
+        "unknown target code",
+        "unknown target code",
+    )
+    # A preserve entry pointed at a redraw target.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `R-free`", 1),
+        "imply redraw",
+        "preserve entry with a redraw target",
+    )
+
+
+def test_fixture_table_reads_every_row() -> None:
+    """A row the grammar cannot read is refused rather than skipped."""
+    text = guard.DOCUMENT.read_text()
+    for seed in ("| BOGUS | 1 |", "| bogus-value | 1 |"):
+        seeded = text.replace("| preserve | 9 |", f"| preserve | 9 |\n{seed}", 1)
+        assert seeded != text
+        try:
+            guard.parse_fixture_table(seeded)
+        except SystemExit as error:
+            assert "unknown dispositions" in str(error), (seed, str(error))
+        else:
+            raise AssertionError(f"the fixture table accepted {seed!r}")
+
+
 def main() -> int:
     test_document_gates_fire_on_seeded_tables()
+    test_document_only_blueprint_gates_fire()
+    test_fixture_table_reads_every_row()
     tombstones = (
         r"\begin{tenkzfree}\end{tenkzfree}",
         r"\tnghost{}",

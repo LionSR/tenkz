@@ -1935,6 +1935,7 @@ def test_rmp_pairing_identity() -> None:
 
 
 def main() -> int:
+    test_stray_include_is_refused()
     test_kernel_capability_owner()
     test_ink_environment_owner()
     test_rmp_dimension_cli_failure()

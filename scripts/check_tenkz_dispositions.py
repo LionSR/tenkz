@@ -38,6 +38,7 @@ COMMAND = re.compile(r"\\(tnpic|tntree)\b")
 TENKZEQ_TOKEN = re.compile(r"\\(begin|end)\{tenkzeq\}")
 SETUP_COMMAND = re.compile(r"\\(?:tnset|tndeclare(?:atom)?|tenkzkernel)\b")
 DISPOSITIONS = ("preserve", "codemod", "redraw")
+MIGRATION_CODES: frozenset[str] = frozenset()
 # Retired spellings, read from the registry's tombstone rows: a command row
 # names a command that no longer exists, a `key=value` row a word struck from
 # a live key's alphabet.  Retiring a spelling is one registry edit, and this
@@ -596,6 +597,15 @@ def uses_tombstone(source: str) -> bool:
     return any(code.startswith("R-") for code in source_target_codes(source))
 
 
+def migration_codes(text: str) -> frozenset[str]:
+    """The codes the document's own migration table defines."""
+    body = section(text, "### Migration target codes", "## ")
+    return frozenset(
+        match.group(1)
+        for match in re.finditer(r"^\| `([A-Z]-[a-z]+)` \|", body, re.M)
+    )
+
+
 def target_disposition(codes: frozenset[str]) -> str:
     """Return the workload disposition implied by a target-code set."""
     if any(code.startswith("R-") for code in codes):
@@ -642,12 +652,19 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
     files: Counter[str] = Counter()
     total: int | None = None
     for row in body.splitlines():
-        match = re.match(r"\| ([a-z]+) \| ([0-9]+) \|$", row)
-        if match:
-            files[match.group(1)] = int(match.group(2))
         total_match = re.match(r"\| \*\*Total\*\* \| \*\*([0-9]+)\*\* \|$", row)
         if total_match:
             total = int(total_match.group(1))
+            continue
+        if not row.startswith("|") or row.startswith("|---") or "Disposition" in row:
+            continue
+        # The first cell is read as written, not filtered to the words already
+        # known: a row spelt `BOGUS` or `bogus-value` must reach the unknown
+        # check below rather than be skipped by the pattern (LionSR/tenkz#6).
+        match = re.match(r"\| ([^|]+) \| ([0-9]+) \|$", row)
+        if match is None:
+            fail(f"standalone fixture table has a row it cannot read: {row!r}")
+        files[match.group(1).strip()] = int(match.group(2))
     # Since the S4 surface swap every codemod and redraw fixture has left the
     # corpus, so the table may carry the preserve row alone.
     if not files:
@@ -752,6 +769,10 @@ def documented_fixtures(text: str) -> dict[str, tuple[str, frozenset[str]]]:
 
 def main() -> int:
     text = DOCUMENT.read_text()
+    global MIGRATION_CODES
+    MIGRATION_CODES = migration_codes(text)
+    if not MIGRATION_CODES:
+        fail("the migration target-code table is empty or unreadable")
 
     # The blueprint's two counter tables and their shared total are checked
     # from the document alone.  Reconciling them against the chapter sources
@@ -779,6 +800,34 @@ def main() -> int:
         )
     if blueprint_dispositions != documented_blueprint_dispositions:
         fail("blueprint disposition totals do not match the line inventory")
+    # The totals agreeing is not the per-construct counts agreeing: moving one
+    # occurrence from `tenkz` to `tntree` leaves every total where it was.
+    listed_raw: Counter[str] = Counter()
+    for (_file, _line, construct), count in listed_blueprint.items():
+        listed_raw[construct] += count
+    if listed_raw != documented_blueprint_raw:
+        fail(
+            "blueprint raw-count table does not match the line inventory: "
+            f"table={dict(sorted(documented_blueprint_raw.items()))}, "
+            f"inventory={dict(sorted(listed_raw.items()))}"
+        )
+    repeated = sorted(key for key, count in listed_blueprint.items() if count != 1)
+    if repeated:
+        fail(f"blueprint inventory lists one occurrence more than once: {repeated}")
+    # A target code is a row of the migration table, and its family decides
+    # the disposition the entry is filed under; both are readable without the
+    # chapter sources.
+    for key, codes in blueprint_occurrence_targets.items():
+        unknown_codes = sorted(code for code in codes if code not in MIGRATION_CODES)
+        if unknown_codes:
+            fail(f"{key[0]}:{key[1]} {key[2]} names unknown target code(s): {unknown_codes}")
+        implied = target_disposition(codes)
+        if implied != blueprint_occurrence_dispositions[key]:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} is filed under "
+                f"{blueprint_occurrence_dispositions[key]} but its targets "
+                f"{sorted(codes)} imply {implied}"
+            )
     blueprint_reconciled = BLUEPRINT_ROOT.is_dir()
 
     if blueprint_reconciled:
