@@ -46,11 +46,9 @@ python3 scripts/tenkz_shrink.py gate
 scripts/tenkz_corpus.sh
 scripts/tenkz_golden.sh --check
 
-# Compact manual (twice, for contents)
+# Compact manual: examples doctested, then a reproducible build
 python3 scripts/tenkz_manual_doctest.py
-cd docs/tenkz
-timeout 150 env TEXINPUTS="../../tex/tenkz//:" \
-  xelatex -interaction=nonstopmode -halt-on-error manual2.tex
+python3 scripts/tenkz_manual_build.py check
 ```
 
 Operational detail lives in [`docs/tenkz/HACKING.md`](docs/tenkz/HACKING.md).

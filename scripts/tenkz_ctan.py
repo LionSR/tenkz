@@ -1985,6 +1985,13 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
         report.failures.append(f"{case.name} failed the event audit:\n{tail}")
 
 
+def executed_tex(source: str, source_dir: Path) -> str:
+    """`source` with comments and everything TeX never executes blanked."""
+    from tenkz_manual_doctest import _mask_inert_tex
+
+    return _mask_inert_tex(strip_comments(source), source_dir)
+
+
 def release_sync(release: Release) -> list[tuple[str, str]]:
     """What each release artifact currently says about its version and date.
 
@@ -1999,15 +2006,27 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
         path = ROOT / relative
         return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
 
-    manual = text("docs/tenkz/manual2.tex")
+    # Inert source blanked, exactly as `tenkz_manual_build.py` does it: a line
+    # that is commented, or in a branch TeX never takes, reaches no page and is
+    # not the release metadata the manual carries (LionSR/tenkz#8 review).
+    manual = executed_tex(text("docs/tenkz/manual2.tex"), ROOT / "docs" / "tenkz")
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
     dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)
+    # Read whole and validated, as `tenkz_manual_build.py` does: a numeric
+    # prefix match would report `0.7-beta` as agreeing with `v0.7`.
+    manual_version = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", manual)
+    if manual_version and not re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", manual_version.group(1).strip()):
+        manual_version = None
     event = re.search(r'^version = "([0-9.]+)"', tnlog, re.MULTILINE)
     heading = changes.splitlines()[0].lstrip("# ").strip() if changes else "absent"
     return [
         ("tex/tenkz/tenkz.sty", f"v{release.version} of {release.date}"),
-        ("docs/tenkz/manual2.tex", (dateline.group(1).strip() if dateline else "no date line")),
+        (
+            "docs/tenkz/manual2.tex",
+            f"{'v' + manual_version.group(1) if manual_version else 'no version'} of "
+            f"{dateline.group(1).strip() if dateline else 'no date line'}",
+        ),
         ("docs/tenkz/CHANGES.md", heading),
         ("docs/tenkz/TNLOG.md", f"event format {event.group(1)}" if event else "no version"),
     ]

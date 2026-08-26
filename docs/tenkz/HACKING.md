@@ -25,6 +25,14 @@ timeout 150 env TEXINPUTS="../../tex/tenkz//:" \
   xelatex -interaction=nonstopmode -halt-on-error manual2.tex
 ```
 
+The release build is `python3 scripts/tenkz_manual_build.py check`: two
+isolated copies of the manual's sources, each compiled twice under a
+`SOURCE_DATE_EPOCH` read from `tenkz.sty`'s `\ProvidesPackage` date, the
+event stream audited, and the two PDFs required to agree byte for byte
+before one is installed at `output/pdf/tenkz-manual.pdf`.  The title-page
+date must name the package's month and year or the build refuses.  CI runs
+it on every change and uploads the PDF as the `tenkz-manual` artifact.
+
 The generated language reference is
 `chapters2/generated-language-reference.tex`.  Regenerate it from the
 executable registry at `tex/tenkz/tenkz-language-registry.tex`; parser-facing
