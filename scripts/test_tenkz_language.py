@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -50,9 +51,94 @@ def compile_event_source(source: str) -> tuple[subprocess.CompletedProcess[str],
         return result, log
 
 
+def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> None:
+    """LionSR/tenkz#7: the section 2.8 table and its acceptors pin each other.
+
+    Each seed below is one drift the census meters cannot see: a word added
+    to or struck from the contract's table, a branch added to a kernel
+    parser, and a registry enum that grows.  The unseeded texts pass; every
+    seed must be named by the check, in both directions of the diff.
+    """
+    contract = tenkz_language.CONTRACT.read_text(encoding="utf-8")
+    kernel = tenkz_language.KERNEL.read_text(encoding="utf-8")
+    if tenkz_language.alphabet_errors(registry, contract, kernel):
+        raise SystemExit("the alphabet check fails on the unseeded tree")
+    seeds = {
+        "contract gains a route word": (
+            contract.replace("| routes | `straight` `orth` `arc` |",
+                             "| routes | `straight` `orth` `arc` `bezier` |"),
+            kernel, registry, "in section 2.8 but not accepted: bezier",
+        ),
+        "contract drops a skin word": (
+            contract.replace("`triwest` ", ""),
+            kernel, registry, "accepted but not in section 2.8: triwest",
+        ),
+        "kernel gains a side word": (
+            contract,
+            kernel.replace(
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+                "        {seal}  { \\__tenkz_kernel_stage_put:nn {#1} {none}  }\n",
+            ),
+            registry, "accepted but not in section 2.8: seal",
+        ),
+        "kernel choice table gains a form word": (
+            contract,
+            kernel.replace(
+                "  { bracket, enclosure, label, prose }\n",
+                "  { bracket, enclosure, label, prose, band }\n",
+            ),
+            registry, "accepted but not in section 2.8: band",
+        ),
+        "registry enum drifts from the parser": (
+            contract, kernel,
+            [
+                tenkz_language.Entry(
+                    entry.kind,
+                    (*entry.fields[:2], "enum(bracket|enclosure|label)",
+                     *entry.fields[3:]),
+                )
+                if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
+                else entry
+                for entry in registry
+            ],
+            "the registry row kernel-mark:form reads enum(bracket|enclosure|label) "
+            "but the parser accepts bracket, enclosure, label, prose",
+        ),
+        "contract lists an alphabet twice": (
+            contract.replace(
+                "| routes | `straight` `orth` `arc` |",
+                "| routes | `straight` `orth` |\n| routes | `straight` `orth` `arc` |",
+            ),
+            kernel, registry, "lists 'routes' twice",
+        ),
+    }
+    for name, (seed_contract, seed_kernel, seed_registry, expected) in seeds.items():
+        if seed_contract == contract and seed_kernel == kernel and seed_registry is registry:
+            raise SystemExit(f"seed {name!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(seed_registry, seed_contract, seed_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"seed {name!r} was not caught; errors: {errors}")
+    # A branch key the reader cannot name is reported rather than skipped, so
+    # a word this gate would never compare cannot slip in silently.
+    unreadable = kernel.replace(
+        "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+        "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+        "        {\\l_tenkz_word_tl} { }\n",
+    )
+    assert unreadable != kernel
+    errors = tenkz_language.alphabet_errors(registry, contract, unreadable)
+    if not any("cannot name" in error for error in errors):
+        raise SystemExit(f"an unreadable branch key was skipped; errors: {errors}")
+
+
 def main() -> int:
     run("python3", "scripts/tenkz_language.py", "check")
     registry = tenkz_language.load_registry()
+    alphabet_gate_fails_when_seeded(registry)
+    if shutil.which("xelatex") is None:
+        print("PASS: registry and seeded alphabet drift; SKIP: xelatex not found")
+        return 0
     mpo_preludes = [
         entry.fields
         for entry in registry

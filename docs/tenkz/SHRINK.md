@@ -4741,3 +4741,19 @@ The flag table carries forward unchanged from the prior ledger section.
 | flag:consumers:key:kernel-setup:theme | retired: stored an identifier, read by nothing; the house palette binds at load and cited palettes enter through species hue declarations; permanent |
 | flag:consumers:key:kernel-wire:weight | retired: zero authored consumers; it changed no ink, endpoint type owns stroke, and multiplicity belongs to the mathematical label; permanent |
 | flag:consumers:command:tntree | keep-because: two RMP consumers remain after the TNLean blueprint left the default demand corpus at the repository split; extra demand is restored via TENKZ_EXTRA_DEMAND; expiry 1.0 |
+
+### 2026-08-26 — the closed alphabets are checked, not metered (LionSR/tenkz#7)
+
+The 2026-08-11 session retired four `form=` words and no meter moved, because
+the meters count keys, paths, escapes, and records, never the words inside a
+closed alphabet.  Of the two honest remedies recorded there, the check is
+chosen over a seventh meter: `tenkz_language.py check` now reads the
+contract's section 2.8 table and requires each row to equal the word set
+its acceptor holds — the `\str_case` branches of the kernel's side-policy,
+route, and primitive-skin parsers, and the registry's `form` enum less its
+recording `prose` row, which is subtracted in one named place.  A word
+added or struck on either side fails the gate in both directions;
+`test_tenkz_language.py` seeds all four drifts and watches it fail.  The
+meters stay six: the contract and the implementation now pin each other,
+which is what the freeze needs, and a vocabulary that shrinks is still a
+session's verdict rather than a number.
