@@ -166,6 +166,20 @@ def test_document_only_blueprint_gates_fire() -> None:
         "the occurrence grammar does not read",
         "zero line number",
     )
+    # A malformed definition in the canonical table, unreferenced today.
+    _expect_document_failure(
+        text.replace("| `C-picture` |", "| `C-pictur3` |", 1),
+        "a row it cannot read",
+        "malformed migration definition",
+    )
+    # A target set mixing preserve with a codemod code: the source classifier
+    # drops every P- code as soon as another family is present, so no source
+    # produces this, yet reading the strongest family alone accepts it.
+    _expect_document_failure(
+        text.replace("`tntree` → `C-tree`", "`tntree` → `P-grid+C-tree`", 1),
+        "mixes preserve and non-preserve",
+        "mixed preserve and codemod targets",
+    )
 
 
 def test_fixture_table_reads_every_row() -> None:

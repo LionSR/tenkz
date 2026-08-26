@@ -607,10 +607,18 @@ def uses_tombstone(source: str) -> bool:
 def migration_codes(text: str) -> frozenset[str]:
     """The codes the document's own migration table defines."""
     body = section(text, "### Migration target codes", "## ")
-    rows = [
-        match.group(1)
-        for match in re.finditer(r"^\| `([A-Za-z]+-[a-z]+)` \|", body, re.M)
-    ]
+    rows: list[str] = []
+    for line in body.splitlines():
+        if not line.startswith("|") or set(line) <= set("|-: "):
+            continue
+        if re.match(r"\|\s*Code\s*\|\s*Required 1\.0 target\s*\|$", line):
+            continue
+        # A malformed definition is unreferenced today and would disappear
+        # unnoticed, taking the code it should have defined with it.
+        match = re.match(r"\| `([A-Za-z]+-[a-z]+)` \|", line)
+        if match is None:
+            fail(f"the migration table has a row it cannot read: {line!r}")
+        rows.append(match.group(1))
     repeated = sorted({code for code in rows if rows.count(code) > 1})
     if repeated:
         fail(f"the migration table defines a code more than once: {repeated}")
@@ -883,6 +891,17 @@ def main() -> int:
         unknown_codes = sorted(code for code in codes if code not in MIGRATION_CODES)
         if unknown_codes:
             fail(f"{key[0]}:{key[1]} {key[2]} names unknown target code(s): {unknown_codes}")
+        # `source_target_codes` drops every preserve code as soon as a
+        # non-preserve one is present, so a set holding both is one no source
+        # could produce -- and reading only the strongest family would file it
+        # as if the preserve half were not written.
+        families = {code.split("-", 1)[0] for code in codes}
+        if "P" in families and families - {"P"}:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} mixes preserve and non-preserve "
+                f"targets {sorted(codes)}, which the source classifier never "
+                "produces"
+            )
         implied = target_disposition(codes)
         if implied != blueprint_occurrence_dispositions[key]:
             fail(
