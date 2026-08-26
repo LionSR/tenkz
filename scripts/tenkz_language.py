@@ -650,8 +650,15 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
         # renders it inside the table, so the reader must see it there too.
         row = line[:3].lstrip(" ") + line[3:]
         if not row.startswith("|"):
-            if seen_delimiter and alphabets:
-                break  # the table has ended
+            # Markdown ends the table at the first line that is not a row.
+            # Continuing past one would read whatever pipe-prefixed lines came
+            # after it as rows of a table the contract no longer renders.
+            if seen_delimiter:
+                if not row.strip():
+                    break
+                raise ValueError(
+                    f"section 2.8's table is interrupted before it ends: {row!r}"
+                )
             continue
         cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
         if not seen_header:
@@ -874,7 +881,13 @@ def _sole_definition(text: str, macro: str) -> int:
 
 
 def key_binding_body(text: str, scope: str, key: str) -> str:
-    """The replacement text bound to `key` in `scope`."""
+    """The replacement text bound to `key` in `scope`.
+
+    More than one binding is refused rather than resolved: the last would be
+    the effective handler, and reading the first would let an added block
+    rewire the key while the original binding went on satisfying the check.
+    """
+    bodies: list[str] = []
     for match in re.finditer(r"\\keys_define:[nVvexoc]{2}\s*", text):
         try:
             named, offset = _group(text, match.end())
@@ -888,8 +901,15 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
         )
         if binding:
             body, _ = _group(block, binding.end())
-            return body
-    raise ValueError(f"no .code:n binding for {scope}:{key}")
+            bodies.append(body)
+    if not bodies:
+        raise ValueError(f"no .code:n binding for {scope}:{key}")
+    if len(bodies) > 1:
+        raise ValueError(
+            f"{scope}:{key} is bound {len(bodies)} times; the last would be "
+            "the effective handler"
+        )
+    return bodies[0]
 
 
 def alphabet_errors(

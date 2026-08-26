@@ -378,6 +378,31 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         raise SystemExit(
             "a neighbouring helper's case table was attributed to the parser"
         )
+    # A second binding is the effective handler; reading the first would let
+    # the original go on satisfying the check while the key was rewired.
+    rebound = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-wire }} "
+        r"{ route .code:n = { \__tenkz_kernel_stage_put:nn {route} {#1} } }"
+        "\n"
+    )
+    if not any("bound 2 times" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, rebound
+    )):
+        raise SystemExit("a second route binding was not reported")
+    # Markdown ends the table at the first line that is not a row, so reading
+    # past one would take later pipe-prefixed lines for rows of a table the
+    # contract no longer renders.
+    interrupted = contract.replace(
+        "| Alphabet | Words |\n|---|---|\n",
+        "| Alphabet | Words |\n|---|---|\nA sentence interrupts the table.\n",
+        1,
+    )
+    if interrupted == contract:
+        raise SystemExit("could not interrupt the section 2.8 table")
+    if not any("interrupted" in error for error in tenkz_language.alphabet_errors(
+        registry, interrupted, kernel
+    )):
+        raise SystemExit("an interrupted alphabet table was accepted")
 
 
 def main() -> int:
