@@ -668,7 +668,8 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 # is deliberately absent, since it derives a differently-signatured sibling
 # and leaves the base alone.
 DEFINITION_TOKEN = re.compile(
-    r"\\(?:cs_(?:new|set|gset)[a-z_]*:[A-Za-z]*|let|[egx]?def)\s*$"
+    r"\\(?:cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:[A-Za-z]*"
+    r"|let|[egx]?def)\s*$"
 )
 
 
@@ -677,9 +678,10 @@ def macro_definitions(text: str, macro: str) -> list[int]:
 
     Every occurrence is classified by the control sequence that precedes it,
     so a replacement spelt `\\cs_set:Nn` or `\\cs_set_eq:NN` counts as one
-    definition just as `\\cs_new_protected:Npn` does.  TeX runs the last body
-    installed, so a reader of the first would compare an alphabet the parser
-    no longer has.
+    definition just as `\\cs_new_protected:Npn` does, and so does a removal
+    spelt `\\cs_undefine:N` -- after it the original body is not what runs
+    either.  TeX runs the last binding, so a reader of the first would
+    compare an alphabet the parser no longer has.
     """
     offsets: list[int] = []
     for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
@@ -749,6 +751,28 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     return [word.strip() for word in words.split(",") if word.strip()]
 
 
+def key_definitions(text: str, scope: str, key: str) -> int:
+    """How many times `key` is bound in `scope`, by any spelling.
+
+    The helper installs its choices with `\\keys_define:nn`, and so can any
+    later code: a direct `key .code:n = { ... }` in the same scope replaces
+    the handler and can accept words the helper's list does not carry.
+    Counting only calls to the helper would read that override as absent.
+    """
+    bindings = 0
+    for match in re.finditer(r"\\keys_define:nn\s*", text):
+        try:
+            named, offset = _group(text, match.end())
+            body, _ = _group(text, offset)
+        except ValueError:
+            continue
+        if named.strip() != scope:
+            continue
+        if re.search(r"(?:\A|,)\s*" + re.escape(key) + r"\s*(?:/[^,]*?)?\s*\.", body):
+            bindings += 1
+    return bindings
+
+
 def alphabet_errors(
     entries: list[Entry],
     contract_text: str | None = None,
@@ -781,6 +805,13 @@ def alphabet_errors(
         except ValueError as exc:
             errors.append(f"alphabet {alphabet!r}: {exc}")
     for alphabet, (scope, key) in ALPHABET_CHOICES.items():
+        direct = key_definitions(kernel_text, scope, key)
+        if direct:
+            errors.append(
+                f"alphabet {alphabet!r}: {scope}:{key} is also bound directly "
+                f"in {direct} \\keys_define:nn block(s); the last handler "
+                "installed decides what the parser accepts"
+            )
         try:
             words = kernel_choice_words(kernel_text, scope, key)
         except ValueError as exc:

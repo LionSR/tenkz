@@ -228,6 +228,31 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         registry, contract, variant
     )):
         raise SystemExit("a generated variant was counted as a redefinition")
+    # Removing a parser changes what runs as surely as replacing it.
+    undefined = f"{kernel}\n\\cs_undefine:N \\__tenkz_kernel_route:n\n"
+    if not any("times" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, undefined
+    )):
+        raise SystemExit("an undefined parser was not reported")
+    # A key bound directly in its scope replaces the handler the helper
+    # installed, and can then accept words the helper's list does not carry.
+    override = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+        "{ form .code:n = { } }\n"
+    )
+    if not any("bound directly" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, override
+    )):
+        raise SystemExit("a direct key override was not reported")
+    # Another key in the same scope is ordinary and must not report.
+    sibling = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+        "{ species .code:n = { } }\n"
+    )
+    if any("bound directly" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, sibling
+    )):
+        raise SystemExit("binding a sibling key was reported as an override")
 
 
 def main() -> int:
