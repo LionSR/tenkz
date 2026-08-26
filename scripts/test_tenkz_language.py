@@ -518,6 +518,39 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         for error in tenkz_language.alphabet_errors(registry, contract, kernel)
     ):
         raise SystemExit("the sanctioned side installer was read as an override")
+    at_eof = (
+        contract
+        + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
+        "| routes | `bezier` |\n"
+    )
+    if not any("section 2.8s" in error for error in tenkz_language.alphabet_errors(
+        registry, at_eof, kernel
+    )):
+        raise SystemExit("a second section 2.8 at end of file was accepted")
+    short = contract.replace(
+        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|-|-|", 1
+    )
+    if not any("delimiter" in error for error in tenkz_language.alphabet_errors(
+        registry, short, kernel
+    )):
+        raise SystemExit("a delimiter with fewer than three hyphens was accepted")
+    moved = kernel.replace(
+        "\\keys_define:nn {#1}\n      {\n        #2 .choices:nn = {#3}",
+        "\\keys_define:nn {#1}\n      {\n        #2 .code:n = {#3}", 1,
+    )
+    if moved != kernel and not any(
+        "choices into the" in error
+        for error in tenkz_language.alphabet_errors(registry, contract, moved)
+    ):
+        raise SystemExit("choices installed outside the given scope were accepted")
+    # A definition inside a macro body runs when that macro is called, not at
+    # load, so counting it would report a binding TeX never installs.
+    dormant = (
+        f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_dormant: "
+        "{ \\keys_define:nn { tenkz-kernel-wire } { route .code:n = { } } }\n"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, dormant):
+        raise SystemExit("a dormant key definition was counted as a binding")
     duplicated = (
         contract
         + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"

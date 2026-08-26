@@ -654,7 +654,9 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     than a line it steps over, because a row the contract renders and this
     reader ignores is exactly the drift the gate exists to catch.
     """
-    sections = list(re.finditer(r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} )", text, re.M | re.S))
+    sections = list(re.finditer(
+        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} |\Z)", text, re.M | re.S
+    ))
     if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
     # Two sections are two contracts, and a reader of the first would not see
@@ -703,7 +705,9 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
                 )
             continue
         if not seen_delimiter:
-            if not all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+            # Markdown wants at least three hyphens in a delimiter cell;
+            # `|-|-|` renders as text, not as the table read below.
+            if not all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
                 raise ValueError(f"section 2.8 has no delimiter row; found {row!r}")
             # A delimiter of a different width does not form the two-column
             # table the rows are read as, so the shape is checked, not just
@@ -889,6 +893,23 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     return [word.strip() for word in words.split(",") if word.strip()]
 
 
+def macro_body_spans(text: str) -> list[tuple[int, int]]:
+    """The replacement-text spans of every macro definition in `text`."""
+    spans: list[tuple[int, int]] = []
+    for match in re.finditer(
+        r"\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*\\([A-Za-z_@]+(?::[a-zA-Z]*)?)", text
+    ):
+        brace = text.find("{", match.end())
+        if brace < 0:
+            continue
+        try:
+            body, end = _group(text, brace)
+        except ValueError:
+            continue
+        spans.append((brace, end))
+    return spans
+
+
 def key_installing_helpers(text: str) -> list[str]:
     """Kernel helpers whose body binds their second argument in their first.
 
@@ -975,7 +996,12 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
     rewire the key while the original binding went on satisfying the check.
     """
     bodies: list[str] = []
+    dormant = macro_body_spans(text)
     for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
+        # A block inside a macro body runs when that macro is called, not at
+        # load; counting it would report a binding TeX never installs.
+        if any(begin <= match.start() < end for begin, end in dormant):
+            continue
         try:
             named, offset = _group(text, match.end())
             block, _ = _group(text, offset)
@@ -1092,10 +1118,25 @@ def alphabet_errors(
         except ValueError as exc:
             errors.append(f"the choice helper: {exc}")
         else:
-            if not re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}", helper):
+            scoped = re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}\s*", helper)
+            if scoped is None:
                 errors.append(
                     f"{CHOICE_HELPER} no longer installs into the scope it is "
                     "given, so the call sites this gate reads bind nothing"
+                )
+                block = ""
+            else:
+                try:
+                    block, _ = _group(helper, scoped.end())
+                except ValueError:
+                    block = ""
+            # The choice table must be in that block: installing `#2 .code:n`
+            # into the given scope and the choices into another would satisfy
+            # two independent checks and bound nothing.
+            if ".choices:nn" not in block:
+                errors.append(
+                    f"{CHOICE_HELPER} does not install its choices into the "
+                    "scope it is given"
                 )
             if ".choices:nn" not in helper:
                 errors.append(
