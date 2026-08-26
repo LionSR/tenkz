@@ -229,9 +229,9 @@ tracked_fixtures = {
     if Path(line).parent == Path("tests/tenkz")
     and line.endswith((".tex", ".inc"))
 }
-actual_fixtures = {
-    f"tests/tenkz/{name}" for name in actual_tex
-} | actual_support
+# No include file survives the refusal above, so the tracked census is the
+# .tex fixtures alone; a tracked .inc still reports as missing on disk.
+actual_fixtures = {f"tests/tenkz/{name}" for name in actual_tex}
 if tracked_fixtures != actual_fixtures:
     missing = sorted(actual_fixtures - tracked_fixtures)
     stale = sorted(tracked_fixtures - actual_fixtures)
