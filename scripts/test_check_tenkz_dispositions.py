@@ -15,7 +15,33 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import check_tenkz_dispositions as guard
 
 
+def test_document_gates_fire_on_seeded_tables() -> None:
+    """LionSR/tenkz#6: the document-only checks refuse a seeded edit by name."""
+    text = guard.DOCUMENT.read_text()
+    seeded = text.replace("| preserve | 9 |", "| preserve | 9 |\n| bogus | 1 |", 1)
+    assert seeded != text, "the standalone fixture table no longer has the preserve row"
+    try:
+        guard.parse_fixture_table(seeded)
+    except SystemExit as error:
+        assert "unknown dispositions: ['bogus']" in str(error), error
+    else:
+        raise AssertionError("an unknown disposition word in the fixture table passed")
+    raw_body = guard.section(text, "| Raw construct | Occurrences |")
+    total_row = next(row for row in raw_body.splitlines() if row.startswith("| **Total**"))
+    seeded_total = text.replace(total_row, total_row.replace("**", "*9*", 1), 1)
+    assert seeded_total != text
+    _, before = guard.parse_counter_table(text, "| Raw construct | Occurrences |")
+    try:
+        guard.parse_counter_table(seeded_total, "| Raw construct | Occurrences |")
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("a mangled blueprint total row was parsed as valid")
+    assert before == sum(guard.documented_blueprint(text)[0].values())
+
+
 def main() -> int:
+    test_document_gates_fire_on_seeded_tables()
     tombstones = (
         r"\begin{tenkzfree}\end{tenkzfree}",
         r"\tnghost{}",

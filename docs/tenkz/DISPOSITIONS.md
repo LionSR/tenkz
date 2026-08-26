@@ -54,7 +54,10 @@ with the tracked TeX sources.
 
 ## Blueprint inventory
 
-The source root for every path in this table is `blueprint/src/chapter/`.
+The source root for every path in this table is `blueprint/src/chapter/`
+in LionSR/TNLean.  `check_tenkz_dispositions.py` holds the tables below to
+each other on every run; it reconciles them against the chapter sources
+only when `TENKZ_BLUEPRINT_ROOT` names that tree, and says so otherwise.
 Every environment opening and every `\tnpic` or `\tntree` occurrence is
 listed by its tracked line. A command nested inside an environment is a
 separate public-surface occurrence and therefore appears separately.

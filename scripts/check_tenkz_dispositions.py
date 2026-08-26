@@ -643,15 +643,18 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
     total: int | None = None
     for row in body.splitlines():
         match = re.match(r"\| ([a-z]+) \| ([0-9]+) \|$", row)
-        if match and match.group(1) in DISPOSITIONS:
+        if match:
             files[match.group(1)] = int(match.group(2))
         total_match = re.match(r"\| \*\*Total\*\* \| \*\*([0-9]+)\*\* \|$", row)
         if total_match:
             total = int(total_match.group(1))
     # Since the S4 surface swap every codemod and redraw fixture has left the
     # corpus, so the table may carry the preserve row alone.
-    if not files or set(files) - set(DISPOSITIONS):
+    if not files:
         fail("could not parse standalone fixture reconciliation table")
+    unknown = sorted(set(files) - set(DISPOSITIONS))
+    if unknown:
+        fail(f"standalone fixture table names unknown dispositions: {unknown}")
     if total is None or total != sum(files.values()):
         fail(f"invalid standalone fixture total: {total} != {sum(files.values())}")
     return files, total
@@ -750,7 +753,35 @@ def documented_fixtures(text: str) -> dict[str, tuple[str, frozenset[str]]]:
 def main() -> int:
     text = DOCUMENT.read_text()
 
-    if BLUEPRINT_ROOT.is_dir():
+    # The blueprint's two counter tables and their shared total are checked
+    # from the document alone.  Reconciling them against the chapter sources
+    # needs the TNLean blueprint tree, which this repository does not carry
+    # (LionSR/tenkz#6): with TENKZ_BLUEPRINT_ROOT unset that half is reported
+    # as not run rather than folded into a pass.
+    (
+        listed_blueprint,
+        blueprint_dispositions,
+        blueprint_occurrence_dispositions,
+        blueprint_occurrence_targets,
+    ) = documented_blueprint(text)
+    documented_blueprint_raw, blueprint_total = parse_counter_table(
+        text, "| Raw construct | Occurrences |"
+    )
+    documented_blueprint_dispositions, disposition_total = parse_counter_table(
+        text, "| Disposition | Occurrences |"
+    )
+    if blueprint_total != disposition_total:
+        fail("blueprint reconciliation tables have different totals")
+    if sum(listed_blueprint.values()) != blueprint_total:
+        fail(
+            f"blueprint inventory lists {sum(listed_blueprint.values())} "
+            f"occurrences but the raw-count table totals {blueprint_total}"
+        )
+    if blueprint_dispositions != documented_blueprint_dispositions:
+        fail("blueprint disposition totals do not match the line inventory")
+    blueprint_reconciled = BLUEPRINT_ROOT.is_dir()
+
+    if blueprint_reconciled:
         blueprint_occurrences: Counter[tuple[str, int, str]] = Counter()
         blueprint_raw: Counter[str] = Counter()
         blueprint_sources: dict[tuple[str, int, str], list[tuple[str, bool]]] = {}
@@ -760,30 +791,14 @@ def main() -> int:
                 blueprint_occurrences[(path.name, line, name)] += 1
                 blueprint_raw[name] += 1
 
-        (
-            listed_blueprint,
-            blueprint_dispositions,
-            blueprint_occurrence_dispositions,
-            blueprint_occurrence_targets,
-        ) = documented_blueprint(text)
         if blueprint_occurrences != listed_blueprint:
             fail(
                 "blueprint inventory mismatch: "
                 f"missing={blueprint_occurrences - listed_blueprint}, "
                 f"extra={listed_blueprint - blueprint_occurrences}"
             )
-        documented_blueprint_raw, blueprint_total = parse_counter_table(
-            text, "| Raw construct | Occurrences |"
-        )
         if blueprint_raw != documented_blueprint_raw:
             fail("blueprint raw-count table does not match the source inventory")
-        documented_blueprint_dispositions, disposition_total = parse_counter_table(
-            text, "| Disposition | Occurrences |"
-        )
-        if blueprint_dispositions != documented_blueprint_dispositions:
-            fail("blueprint disposition totals do not match the line inventory")
-        if blueprint_total != disposition_total:
-            fail("blueprint reconciliation tables have different totals")
         for key, documented_disposition in blueprint_occurrence_dispositions.items():
             actual_targets = frozenset().union(
                 *(
@@ -805,8 +820,9 @@ def main() -> int:
                 )
     else:
         print(
-            "skipping blueprint inventory: "
-            f"{BLUEPRINT_ROOT} is absent (set TENKZ_BLUEPRINT_ROOT to check it)",
+            "NOT RUN: blueprint source reconciliation; "
+            f"{BLUEPRINT_ROOT} is absent (the chapters live in LionSR/TNLean; "
+            "set TENKZ_BLUEPRINT_ROOT to reconcile them)",
             file=sys.stderr,
         )
 
@@ -890,11 +906,14 @@ def main() -> int:
     if not census or tuple(map(int, census.groups())) != actual_census:
         fail(f"fixture consumer census does not match {actual_census}")
 
-    blueprint_count = (
-        sum(blueprint_raw.values()) if BLUEPRINT_ROOT.is_dir() else 0
+    blueprint_status = (
+        f"{blueprint_total} blueprint occurrences reconcile exactly with their sources"
+        if blueprint_reconciled
+        else f"{blueprint_total} documented blueprint occurrences are internally "
+        "consistent (sources not reconciled)"
     )
     print(
-        f"PASS: {blueprint_count} blueprint occurrences and "
+        f"PASS: {blueprint_status}; "
         f"{len(expected_fixtures)} standalone fixtures reconcile exactly"
     )
     return 0
