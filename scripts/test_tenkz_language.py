@@ -666,6 +666,47 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         )
     ):
         raise SystemExit("a body invoked at load was skipped as dormant")
+    installer = (
+        "\\cs_new_protected:Npn \\__tenkz_language_install: "
+        "{ \\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form } "
+        "{ bracket, glow } { form } }"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{installer}\n"):
+        raise SystemExit("an uncalled installer body was counted")
+    if not tenkz_language.alphabet_errors(
+        registry, contract,
+        f"{kernel}\n{installer}\n\\__tenkz_language_install:\n",
+    ):
+        raise SystemExit("an installer invoked at load was skipped as dormant")
+    # An xparse-declared body is a body: its contents are dormant until called.
+    xparse = (
+        "\\NewDocumentCommand \\__tenkz_language_compat: {} "
+        "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{xparse}\n"):
+        raise SystemExit("an uncalled xparse body was counted as a binding")
+    # `\{` is a control symbol, not a group delimiter.
+    escaped = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+        "{ probe .code:n = { \\{ }, form .code:n = { } }\n"
+    )
+    if not any("bound directly" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, escaped
+    )):
+        raise SystemExit("an escaped brace put the entry reader at the wrong depth")
+    # A heading inside a fence is a code sample, not a section of the contract.
+    fenced = (
+        contract + "\n```\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n"
+        "|---|---|\n| routes | `bezier` |\n```\n"
+    )
+    if tenkz_language.alphabet_errors(registry, fenced, kernel):
+        raise SystemExit("a fenced sample was read as the published contract")
+    # The definition token may stand any distance before the name.
+    spaced = f"{kernel}\n\\cs_set_protected:Npn{' ' * 200}\\__tenkz_kernel_route:n #1 {{ }}\n"
+    if not any("times" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, spaced
+    )):
+        raise SystemExit("a definition behind a long gap was not counted")
     # Three more negatives, each a way a valid kernel could be failed.
     for label, benign in (
         (

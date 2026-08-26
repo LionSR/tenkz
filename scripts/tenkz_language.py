@@ -660,8 +660,12 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     than a line it steps over, because a row the contract renders and this
     reader ignores is exactly the drift the gate exists to catch.
     """
+    # A fenced block is a code sample: a heading inside one renders as text,
+    # not as a section of the contract.
+    unfenced = re.sub(r"^```.*?^```", lambda m: "\n" * m.group(0).count("\n"),
+                      text, flags=re.M | re.S)
     sections = list(re.finditer(
-        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} |\Z)", text, re.M | re.S
+        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} |\Z)", unfenced, re.M | re.S
     ))
     if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
@@ -770,12 +774,26 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 # sequence bound by any of them is a definition of it; `cs_generate_variant`
 # is deliberately absent, since it derives a differently-signatured sibling
 # and leaves the base alone.
+def preceded_by_definition(text: str, position: int) -> bool:
+    """Whether a definition token stands immediately before `position`.
+
+    The whitespace between the token and the name is walked rather than
+    bounded: a comment stripped to blanks can leave any amount of it, and a
+    fixed window would miss the token behind a long one.  Only the token
+    itself is then matched, so this stays linear.
+    """
+    cursor = position
+    while cursor > 0 and text[cursor - 1].isspace():
+        cursor -= 1
+    return DEFINITION_TOKEN.search(text[max(0, cursor - 64):cursor]) is not None
+
+
 DEFINITION_TOKEN = re.compile(
     r"\\(?:cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:[A-Za-z]*"
     # `\\ProvideDocumentCommand` leaves an existing command alone, so it
     # binds nothing when one is already defined and is not counted.
     r"|(?:New|Renew|Declare)DocumentCommand"
-    r"|let|[egx]?def)\s*$"
+    r"|let|[egx]?def)$"
 )
 
 
@@ -814,7 +832,7 @@ def macro_definitions(text: str, macro: str) -> list[int]:
     """
     offsets: list[int] = []
     for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
-        if DEFINITION_TOKEN.search(text[max(0, match.start() - 80):match.start()]):
+        if preceded_by_definition(text, match.start()):
             offsets.append(match.start())
     # A `:c` assignment names its target as text, so no backslashed occurrence
     # of the macro appears at the binding site at all.
@@ -902,7 +920,11 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
 
 def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     """The words a `\\__tenkz_kernel_choice:nnnn` table accepts for one key."""
-    dormant = macro_body_spans(text)
+    bodies = named_macro_bodies(text)
+    dormant = [
+        (begin, end) for begin, end, name in bodies
+        if not runs_at_load(text, name, bodies)
+    ]
     matches = [
         call for call in re.finditer(
             r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
@@ -935,9 +957,19 @@ def named_macro_bodies(text: str) -> list[tuple[int, int, str]]:
     """Each macro definition's body span, with the name it defines."""
     spans: list[tuple[int, int, str]] = []
     for match in re.finditer(
-        r"\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*\\([A-Za-z_@]+(?::[a-zA-Z]*)?)", text
+        r"(?:\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*"
+        r"|\\(?:New|Renew|Provide|Declare)DocumentCommand\s*)"
+        r"\\([A-Za-z_@]+(?::[a-zA-Z]*)?)", text
     ):
+        # An xparse declaration puts its argument specification between the
+        # name and the body, so the body is the group after that one.
         brace = text.find("{", match.end())
+        if "DocumentCommand" in match.group(0) and brace >= 0:
+            try:
+                _spec, after = _group(text, brace)
+                brace = text.find("{", after)
+            except ValueError:
+                brace = -1
         if brace < 0:
             continue
         try:
@@ -984,7 +1016,19 @@ def top_level_entries(block: str) -> list[str]:
     entries: list[str] = []
     depth = 0
     current: list[str] = []
+    escaped = False
     for character in block:
+        if escaped:
+            escaped = False
+            current.append(character)
+            continue
+        if character == "\\":
+            # `\{` and `\}` are control symbols, not group delimiters, and
+            # counting them would put the reader at the wrong depth for every
+            # entry after them.
+            escaped = True
+            current.append(character)
+            continue
         if character == "{":
             depth += 1
         elif character == "}":
@@ -1008,7 +1052,7 @@ def runs_at_load(text: str, macro: str, bodies: list[tuple[int, int, str]]) -> b
     than failing a kernel TeX accepts.
     """
     for call in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
-        if DEFINITION_TOKEN.search(text[max(0, call.start() - 80):call.start()]):
+        if preceded_by_definition(text, call.start()):
             continue
         if not any(begin <= call.start() < end for begin, end, _ in bodies):
             return True
