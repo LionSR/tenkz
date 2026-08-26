@@ -37,6 +37,28 @@ def main() -> int:
         pass
     else:
         raise SystemExit("a manual naming no version was not refused")
+    # Metadata that reaches no page is metadata the manual does not carry.
+    commented = build.MANUAL.read_text(encoding="utf-8")
+    commented = commented.replace(
+        "  {\\small manual for \\pkg{} version 0.7\\par}",
+        "  % {\\small manual for \\pkg{} version 0.7\\par}",
+    )
+    try:
+        build.manual_version(commented)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("a commented-out version line was read as the manual's")
+    commented_date = build.MANUAL.read_text(encoding="utf-8").replace(
+        "  {The TNLean project \\quad---\\quad July 2026\\par}",
+        "  % {The TNLean project \\quad---\\quad July 2026\\par}",
+    )
+    try:
+        build.manual_dateline(commented_date)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("a commented-out date line was read as the manual's")
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:

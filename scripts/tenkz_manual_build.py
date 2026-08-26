@@ -26,6 +26,7 @@ import tempfile
 from pathlib import Path
 
 from tenkz_audit import Audit
+from tenkzlib.texcase import strip_comments
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "tex" / "tenkz" / "tenkz.sty"
@@ -51,8 +52,14 @@ def package_release() -> tuple[str, str]:
 
 
 def manual_version(text: str | None = None) -> str:
-    """The version the manual's title page names for the package."""
+    """The version the manual's title page names for the package.
+
+    Read from the source with its comments blanked: a commented-out line
+    reaches no page, so a release gate that accepted one would pass on a
+    manual whose printed title page names no version at all.
+    """
     text = MANUAL.read_text(encoding="utf-8") if text is None else text
+    text = strip_comments(text)
     match = re.search(r"manual for \\pkg\{\} version ([0-9.]+)", text)
     if match is None:
         raise ValueError("manual2.tex names no package version on its title page")
@@ -60,8 +67,12 @@ def manual_version(text: str | None = None) -> str:
 
 
 def manual_dateline(text: str | None = None) -> str:
-    """The title page's month and year, as `tenkz_ctan.py sync` reads it."""
+    """The title page's month and year, as `tenkz_ctan.py sync` reads it.
+
+    Comments are blanked first, for the reason `manual_version` records.
+    """
     text = MANUAL.read_text(encoding="utf-8") if text is None else text
+    text = strip_comments(text)
     match = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", text)
     if match is None:
         raise ValueError("manual2.tex has no title-page date line")

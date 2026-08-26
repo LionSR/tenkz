@@ -1999,7 +1999,9 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
         path = ROOT / relative
         return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
 
-    manual = text("docs/tenkz/manual2.tex")
+    # Comments blanked: a commented-out line reaches no page, so it is not
+    # the release metadata the manual carries (LionSR/tenkz#8 review).
+    manual = strip_comments(text("docs/tenkz/manual2.tex"))
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
     dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)
