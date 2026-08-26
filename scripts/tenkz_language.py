@@ -58,6 +58,13 @@ ALPHABET_REACHED_FROM = {
 # rewritten to an unrestricted `.code:n` handler it would accept anything,
 # while its call site and word list read unchanged.
 CHOICE_HELPER = "__tenkz_kernel_choice:nnnn"
+# The helpers whose calls this gate already reads: the choice helper's word
+# lists, and the side installer, which is checked to bind its key and call its
+# parser.  A call to any other key-installing helper is a binding this gate
+# has not accounted for.
+SANCTIONED_INSTALLERS = frozenset({
+    "__tenkz_kernel_choice:nnnn", "__tenkz_kernel_side:nn",
+})
 # l3keys properties that decorate a key without installing the code that
 # accepts its value.  Everything else replaces the handler.
 ORTHOGONAL_PROPERTIES = frozenset({
@@ -647,9 +654,14 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     than a line it steps over, because a row the contract renders and this
     reader ignores is exactly the drift the gate exists to catch.
     """
-    section = re.search(r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} )", text, re.M | re.S)
-    if section is None:
+    sections = list(re.finditer(r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} )", text, re.M | re.S))
+    if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
+    # Two sections are two contracts, and a reader of the first would not see
+    # the second even though the document publishes both.
+    if len(sections) > 1:
+        raise ValueError(f"LANGUAGE-1.0 has {len(sections)} section 2.8s")
+    section = sections[0]
     alphabets: dict[str, list[str]] = {}
     seen_header = False
     seen_delimiter = False
@@ -877,6 +889,32 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     return [word.strip() for word in words.split(",") if word.strip()]
 
 
+def key_installing_helpers(text: str) -> list[str]:
+    """Kernel helpers whose body binds their second argument in their first.
+
+    `\\__tenkz_kernel_value:nnn { scope } { key } { stage }` installs a
+    handler as surely as a literal `\\keys_define:nn` block does, so a call to
+    one is a binding of that key.  The choice helper is excluded: its calls
+    are the sanctioned ones this gate already reads.
+    """
+    helpers: list[str] = []
+    for match in re.finditer(
+        r"\\cs_new_protected:Npn\s*\\(__tenkz_kernel_[A-Za-z_]*:[a-zA-Z]+)", text
+    ):
+        name = match.group(1)
+        if name in SANCTIONED_INSTALLERS:
+            continue
+        try:
+            body = macro_body(text, name, match.start())
+        except ValueError:
+            continue
+        if re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}", body) and re.search(
+            r"#2\s*\.[a-z_]+:", body
+        ):
+            helpers.append(name)
+    return helpers
+
+
 def key_definitions(text: str, scope: str, key: str) -> int:
     """How many times `key` is bound in `scope`, by any spelling.
 
@@ -886,6 +924,14 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     Counting only calls to the helper would read that override as absent.
     """
     bindings = 0
+    # A kernel helper that binds its second argument in its first installs a
+    # handler as surely as a literal block does.
+    for helper in key_installing_helpers(text):
+        bindings += len(re.findall(
+            r"\\" + re.escape(helper) + r"\s*\{\s*" + re.escape(scope)
+            + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
+            text,
+        ))
     # `\\keys_define` has argument variants, and a generated one installs the
     # same handler, so the operation is matched by name rather than by one
     # signature.
@@ -939,9 +985,21 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
             continue
         # A key may be assigned more than once inside one block, and l3keys
         # installs the last, so every assignment is collected.
+        # A key may be assigned more than once inside one block, and l3keys
+        # installs the last, so every assignment is collected.  A property
+        # other than `.code:n` installs a handler this reader cannot read --
+        # `.tl_set:N` accepts any value -- and saying so is the honest answer.
         for binding in re.finditer(
-            r"(?:\A|,)\s*" + re.escape(key) + r"\s*\.code:n\s*=\s*", block
+            r"(?:\A|,)\s*" + re.escape(key) + r"\s*\.([a-z_]+):[A-Za-z]*\s*=\s*",
+            block,
         ):
+            if binding.group(1) in ORTHOGONAL_PROPERTIES:
+                continue
+            if binding.group(1) != "code":
+                raise ValueError(
+                    f"{scope}:{key} is bound with .{binding.group(1)}, whose "
+                    "handler this gate cannot read"
+                )
             body, _ = _group(block, binding.end())
             bodies.append(body)
     if not bodies:

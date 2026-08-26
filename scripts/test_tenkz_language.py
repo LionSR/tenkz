@@ -492,6 +492,41 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
         if not any(expected in error for error in errors):
             raise SystemExit(f"{label} was not reported; errors: {errors}")
+    for label, seeded_kernel, expected in (
+        (
+            "a key installed through a kernel helper",
+            f"{kernel}\n\\__tenkz_kernel_value:nnn {{ tenkz-kernel-mark }} "
+            "{ form } { form }\n",
+            "bound directly",
+        ),
+        (
+            "the route key bound with a handler this gate cannot read",
+            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-wire }} "
+            r"{ route .tl_set:N = \l_tmpa_tl }" "\n",
+            "cannot read",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # The sanctioned installers must not report: the four side keys are
+    # installed by the helper this gate checks separately.
+    if any(
+        "past the installer" in error
+        for error in tenkz_language.alphabet_errors(registry, contract, kernel)
+    ):
+        raise SystemExit("the sanctioned side installer was read as an override")
+    duplicated = (
+        contract
+        + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
+        "| routes | `bezier` |\n\n## 99. A closing heading\n"
+    )
+    if not any("section 2.8s" in error for error in tenkz_language.alphabet_errors(
+        registry, duplicated, kernel
+    )):
+        raise SystemExit("a second section 2.8 was accepted")
     # Prose immediately after the last row ends the table, blank line or not,
     # and must not be reported as an interruption.
     unspaced = contract.replace(
