@@ -1985,6 +1985,13 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
         report.failures.append(f"{case.name} failed the event audit:\n{tail}")
 
 
+def executed_tex(source: str, source_dir: Path) -> str:
+    """`source` with comments and everything TeX never executes blanked."""
+    from tenkz_manual_doctest import _mask_inert_tex
+
+    return _mask_inert_tex(strip_comments(source), source_dir)
+
+
 def release_sync(release: Release) -> list[tuple[str, str]]:
     """What each release artifact currently says about its version and date.
 
@@ -1999,9 +2006,10 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
         path = ROOT / relative
         return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
 
-    # Comments blanked: a commented-out line reaches no page, so it is not
-    # the release metadata the manual carries (LionSR/tenkz#8 review).
-    manual = strip_comments(text("docs/tenkz/manual2.tex"))
+    # Inert source blanked, exactly as `tenkz_manual_build.py` does it: a line
+    # that is commented, or in a branch TeX never takes, reaches no page and is
+    # not the release metadata the manual carries (LionSR/tenkz#8 review).
+    manual = executed_tex(text("docs/tenkz/manual2.tex"), ROOT / "docs" / "tenkz")
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
     dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)

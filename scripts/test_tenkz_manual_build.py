@@ -123,6 +123,23 @@ def main() -> int:
         raise SystemExit(
             f"the commented previous declaration was read instead of the active one: {read}"
         )
+    # A declaration TeX never takes is no declaration at all, on the package
+    # side exactly as on the manual's.
+    buried = package_source.replace(declaration, f"\\iffalse\n{declaration}\n\\fi")
+    if buried == package_source:
+        raise SystemExit("could not bury the package declaration")
+    with tempfile.TemporaryDirectory(prefix="tenkz-package-branch-") as tmp:
+        path = Path(tmp) / "tenkz.sty"
+        path.write_text(buried, encoding="utf-8")
+        build.PACKAGE = path
+        try:
+            build.package_release()
+        except ValueError:
+            pass
+        else:
+            raise SystemExit("a declaration in a false branch was read as the package's")
+        finally:
+            build.PACKAGE = original
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:

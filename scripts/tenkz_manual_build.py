@@ -69,12 +69,14 @@ UNRESOLVED = re.compile(
 def package_release() -> tuple[str, str]:
     """The `\\ProvidesPackage` date (YYYY/MM/DD) and version of tenkz.sty.
 
-    Comments are blanked first: a release bump that leaves the previous
-    declaration commented above the active one would otherwise be read from
-    the dead line, and the build would date and name the PDF as the release
-    it is not.
+    Inert source is blanked first, for the reason `executed_manual` records:
+    a previous declaration left commented -- or wrapped in `\\iffalse` -- above
+    the active one would otherwise be read from the dead line, and the build
+    would date and name the PDF as a release it is not.
     """
-    text = strip_comments(PACKAGE.read_text(encoding="utf-8"))
+    text = _mask_inert_tex(
+        strip_comments(PACKAGE.read_text(encoding="utf-8")), PACKAGE.parent
+    )
     match = re.search(
         r"\\ProvidesPackage\s*\{tenkz\}\s*\[(\d{4}/\d{2}/\d{2})\s+v(\S+)", text
     )
