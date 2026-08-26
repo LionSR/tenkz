@@ -438,6 +438,38 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     )
     if tenkz_language.alphabet_errors(registry, contract, orthogonal):
         raise SystemExit("an orthogonal key property was reported as an override")
+    import re as _re
+
+    for label, seeded_kernel, expected in (
+        (
+            "a call to a longer control sequence",
+            kernel.replace(
+                r"route .code:n    = { \__tenkz_kernel_route:n {#1} }",
+                r"route .code:n    = { \__tenkz_kernel_route:n_unchecked {#1} }",
+                1,
+            ),
+            "no longer calls it",
+        ),
+        (
+            "an unknown-word handler that does not refuse",
+            _re.sub(
+                r"(#2 / unknown \.code:n =\s*)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}",
+                r"\1{ }", kernel, count=1,
+            ),
+            "does not refuse",
+        ),
+        (
+            "a handler-setting property outside any allowlist",
+            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+            r"{ form .tl_set:N = \l_tmpa_tl }" "\n",
+            "bound directly",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
 
 
 def main() -> int:

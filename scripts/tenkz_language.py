@@ -54,6 +54,11 @@ ALPHABET_REACHED_FROM = {
 # rewritten to an unrestricted `.code:n` handler it would accept anything,
 # while its call site and word list read unchanged.
 CHOICE_HELPER = "__tenkz_kernel_choice:nnnn"
+# l3keys properties that decorate a key without installing the code that
+# accepts its value.  Everything else replaces the handler.
+ORTHOGONAL_PROPERTIES = frozenset({
+    "default", "initial", "value_required", "value_forbidden", "groups", "usage",
+})
 # Each choice-table alphabet is also a registry enum row, and the two must
 # name the same words: the registry is what the documents and tools read,
 # the choice table is what the parser accepts.
@@ -876,16 +881,17 @@ def key_definitions(text: str, scope: str, key: str) -> int:
             continue
         if named.strip() != scope:
             continue
-        # Only the properties that install a handler count: `.default:n` and
-        # its like change what a key does with a value without replacing the
-        # code that accepts one, so counting them would report an override
-        # where there is none.
-        if re.search(
+        # Read the other way round: a property binds the key unless it is one
+        # of the few that only decorate it.  An allowlist of handler-setting
+        # properties would miss the next spelling -- `.tl_set:N` accepts any
+        # value where `.choices:nn` accepted a list -- and l3keys has more of
+        # them than a gate should try to enumerate.
+        for property_match in re.finditer(
             r"(?:\A|,)\s*" + re.escape(key) + r"\s*(?:/[^,\s]*)?\s*"
-            r"\.(?:code|choices|choice|meta|multichoice|multichoices|cs_set)",
-            body,
+            r"\.([a-z_]+):", body,
         ):
-            bindings += 1
+            if property_match.group(1) not in ORTHOGONAL_PROPERTIES:
+                bindings += 1
     return bindings
 
 
@@ -973,7 +979,9 @@ def alphabet_errors(
             # The caller's own body, not a window around it: a window wide
             # enough to reach the call is wide enough to contain the parser's
             # own definition, which would satisfy the test by itself.
-            if f"\\{called}" not in body:
+            if not re.search(
+                r"\\" + re.escape(called) + r"(?![A-Za-z_:])", body
+            ):
                 errors.append(
                     f"alphabet {alphabet!r}: {called} is defined but "
                     f"{site if kind == 'macro' else ':'.join(site)} no longer "
@@ -996,10 +1004,24 @@ def alphabet_errors(
                     f"{CHOICE_HELPER} no longer installs a choice table, so the "
                     "word lists it is given do not bound what the parser accepts"
                 )
-            if "unknown .code:n" not in helper.replace("~", " ").replace("/", " "):
+            unknown = re.search(
+                r"#2\s*/\s*unknown\s*\.code:n\s*=\s*", helper
+            )
+            if unknown is None:
                 errors.append(
-                    f"{CHOICE_HELPER} no longer refuses an unknown word"
+                    f"{CHOICE_HELPER} installs no handler for an unknown word"
                 )
+            else:
+                try:
+                    handler, _ = _group(helper, unknown.end())
+                except ValueError:
+                    handler = ""
+                if not REFUSAL.search(handler):
+                    errors.append(
+                        f"{CHOICE_HELPER}'s unknown-word handler does not "
+                        "refuse, so a value outside the list completes in "
+                        "silence"
+                    )
     for alphabet, (scope, key) in ALPHABET_CHOICES.items():
         direct = key_definitions(kernel_text, scope, key)
         if direct:
