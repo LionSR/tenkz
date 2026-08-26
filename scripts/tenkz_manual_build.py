@@ -145,8 +145,10 @@ def requested_inputs() -> set[str]:
             if not path.is_file():
                 continue
             body = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
-            for match in re.finditer(r"\\(?:input|include)\s*\{([^}]*)\}", body):
-                asked = match.group(1).strip()
+            for match in re.finditer(
+                r"\\(?:input|include)\s*(?:\{([^}]*)\}|([^\s{}\\]+))", body
+            ):
+                asked = (match.group(1) or match.group(2) or "").strip()
                 # A name TeX builds at run time (`\jobname.exa`) is not a file
                 # this reader can name, and the generated files it stands for
                 # are written into the build directory anyway.
@@ -319,54 +321,14 @@ def audit_direct_pictures(work: Path, epoch: int, engine: str) -> int:
     return len(pictures)
 
 
-def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[str]]:
-    """Compile the manual in `work`; return the PDF bytes and audit lines."""
-    work.mkdir(parents=True, exist_ok=True)
-    for name in MANUAL_SOURCES:
-        source = MANUAL_DIR / name
-        if not source.exists():
-            raise FileNotFoundError(f"manual source {source} is missing")
-        if source.is_dir():
-            shutil.copytree(source, work / name)
-        else:
-            shutil.copy2(source, work / name)
-    env = os.environ.copy()
-    env["SOURCE_DATE_EPOCH"] = str(epoch)
-    env["FORCE_SOURCE_DATE"] = "1"
-    # Only the package tree is reachable: the manual's own directory is
-    # deliberately not on the path, so a stale generated file there cannot
-    # leak into the build.
-    # The trailing empty element restores kpathsea's own directories, which
-    # the manual needs for tikz, hobby, and spath3 -- and which would also
-    # answer a tenkz file this tree forgot, from whatever version the machine
-    # has installed.  The engine's input record, not the exit status, says
-    # where the runtime came from.
-    env["TEXINPUTS"] = f"{ROOT / 'tex' / 'tenkz'}//:"
-    engine_log = work / "manual2.log"
-    for number in range(1, MAXIMUM_PASSES + 1):
-        run = subprocess.run(
-            [
-                engine, "-interaction=nonstopmode", "-halt-on-error",
-                "-recorder", "manual2.tex",
-            ],
-            cwd=work,
-            env=env,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=600,
-        )
-        if run.returncode:
-            tail = "\n".join(run.stdout.splitlines()[-40:])
-            raise RuntimeError(f"manual pass {number} failed in {work}:\n{tail}")
-        transcript = engine_log.read_text(encoding="utf-8", errors="replace")
-        if number >= MINIMUM_PASSES and not RERUN.search(transcript):
-            break
-    else:
-        raise RuntimeError(
-            f"the manual still asked for a rerun after {MAXIMUM_PASSES} passes; "
-            "its cross-references do not settle"
-        )
+def foreign_inputs(work: Path, engine: str) -> list[str]:
+    """Document sources the engine opened from outside this tree.
+
+    Read from the recorder rather than the exit status: the search path ends
+    in an empty element, which restores the installation's own directories --
+    needed for tikz, hobby, and spath3, and equally able to answer a file this
+    checkout no longer carries, identically in both builds.
+    """
     package_tree = (ROOT / "tex" / "tenkz").resolve()
     record = work / "manual2.fls"
     if not record.is_file():
@@ -424,10 +386,68 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
         )
         or Path(opened).suffix in {".tex", ".sty"} and not at_home(opened)
     })
-    if foreign:
+    return foreign
+
+
+def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[str]]:
+    """Compile the manual in `work`; return the PDF bytes and audit lines."""
+    work.mkdir(parents=True, exist_ok=True)
+    for name in MANUAL_SOURCES:
+        source = MANUAL_DIR / name
+        if not source.exists():
+            raise FileNotFoundError(f"manual source {source} is missing")
+        if source.is_dir():
+            shutil.copytree(source, work / name)
+        else:
+            shutil.copy2(source, work / name)
+    env = os.environ.copy()
+    env["SOURCE_DATE_EPOCH"] = str(epoch)
+    env["FORCE_SOURCE_DATE"] = "1"
+    # Only the package tree is reachable: the manual's own directory is
+    # deliberately not on the path, so a stale generated file there cannot
+    # leak into the build.
+    # The trailing empty element restores kpathsea's own directories, which
+    # the manual needs for tikz, hobby, and spath3 -- and which would also
+    # answer a tenkz file this tree forgot, from whatever version the machine
+    # has installed.  The engine's input record, not the exit status, says
+    # where the runtime came from.
+    env["TEXINPUTS"] = f"{ROOT / 'tex' / 'tenkz'}//:"
+    engine_log = work / "manual2.log"
+    # Each invocation rewrites the job's recorder, so a file opened only on an
+    # earlier pass leaves no trace in the last one.  Every pass is read before
+    # the next begins.
+    def audit_record(number: int) -> None:
+        foreign = foreign_inputs(work, engine)
+        if foreign:
+            raise RuntimeError(
+                f"pass {number} loaded document sources from outside this "
+                "tree:\n  " + "\n  ".join(foreign)
+            )
+
+    for number in range(1, MAXIMUM_PASSES + 1):
+        run = subprocess.run(
+            [
+                engine, "-interaction=nonstopmode", "-halt-on-error",
+                "-recorder", "manual2.tex",
+            ],
+            cwd=work,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=600,
+        )
+        if run.returncode:
+            tail = "\n".join(run.stdout.splitlines()[-40:])
+            raise RuntimeError(f"manual pass {number} failed in {work}:\n{tail}")
+        audit_record(number)
+        transcript = engine_log.read_text(encoding="utf-8", errors="replace")
+        if number >= MINIMUM_PASSES and not RERUN.search(transcript):
+            break
+    else:
         raise RuntimeError(
-            "the manual loaded tenkz runtime files from outside this tree:\n  "
-            + "\n  ".join(foreign)
+            f"the manual still asked for a rerun after {MAXIMUM_PASSES} passes; "
+            "its cross-references do not settle"
         )
     # A missing target leaves `??` on the page and leaves the engine's status
     # at zero, so a release artifact needs the transcript read, not the exit
