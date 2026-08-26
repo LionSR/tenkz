@@ -152,6 +152,33 @@ def main() -> int:
             _date, read = build.package_release()
         finally:
             build.PACKAGE = original
+    # Two declarations in one file: one of them is dead, and which one TeX
+    # takes is a question this reader should not have to answer.
+    doubled = package_source.replace(
+        declaration, f"\\iftrue\\else\n{declaration.replace('v' + version, 'v0.6')}\n\\fi\n{declaration}", 1
+    )
+    if doubled == package_source:
+        raise SystemExit("could not double the package declaration")
+    with tempfile.TemporaryDirectory(prefix="tenkz-package-two-") as tmp:
+        path = Path(tmp) / "tenkz.sty"
+        path.write_text(doubled, encoding="utf-8")
+        build.PACKAGE = path
+        try:
+            build.package_release()
+        except ValueError as error:
+            if "declarations" not in str(error):
+                raise SystemExit(f"two declarations failed for another reason: {error}")
+        else:
+            raise SystemExit("a dead declaration beside the live one was accepted")
+        finally:
+            build.PACKAGE = original
+    # Every name the manual asks for is guarded, whether or not the copy has
+    # it: an `\input` committed without its file is the case that matters.
+    requested = build.requested_inputs()
+    if "ch-catalogue.tex" not in requested:
+        raise SystemExit(f"the manual's requested inputs look wrong: {sorted(requested)}")
+    if any("\\" in name for name in requested):
+        raise SystemExit("a run-time input name leaked into the guarded set")
     if read != "9.9":
         raise SystemExit(
             f"the commented previous declaration was read instead of the active one: {read}"

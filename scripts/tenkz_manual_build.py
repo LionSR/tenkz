@@ -75,9 +75,19 @@ def package_release() -> tuple[str, str]:
     the active one would otherwise be read from the dead line, and the build
     would date and name the PDF as a release it is not.
     """
-    text = _mask_inert_tex(
-        strip_comments(PACKAGE.read_text(encoding="utf-8")), PACKAGE.parent
-    )
+    raw = PACKAGE.read_text(encoding="utf-8")
+    text = _mask_inert_tex(strip_comments(raw), PACKAGE.parent)
+    declaration = r"\\ProvidesPackage\s*\{tenkz\}\s*\["
+    # Masking removes what TeX never reaches, but it recognises `\iffalse` and
+    # not an inactive `\else` arm, and teaching it every conditional shape is
+    # a losing race.  One declaration in the file is the property that makes
+    # the question moot: a dead one beside the live one is refused outright.
+    written = len(re.findall(declaration, strip_comments(raw)))
+    if written > 1:
+        raise ValueError(
+            f"tenkz.sty writes {written} \\ProvidesPackage declarations; only "
+            "one can be the release"
+        )
     match = re.search(
         r"\\ProvidesPackage\s*\{tenkz\}\s*\[(\d{4}/\d{2}/\d{2})\s+v(\S+)", text
     )
@@ -97,14 +107,24 @@ def package_release() -> tuple[str, str]:
 TEXMF_VARIABLES = ("TEXMFDIST", "TEXMFLOCAL", "TEXMFHOME", "TEXMFSYSCONFIG")
 
 
-def tex_installation_roots() -> tuple[Path, ...]:
-    """The installation's own texmf trees, empty when they cannot be asked."""
-    if shutil.which("kpsewhich") is None:
+def tex_installation_roots(engine: str | None = None) -> tuple[Path, ...]:
+    """The installation's own texmf trees, empty when they cannot be asked.
+
+    Asked of the engine's own installation when one is named: a `--engine`
+    from another tree would otherwise be audited against whatever `kpsewhich`
+    happens to be on PATH, and its own trees would read as foreign.
+    """
+    beside = Path(engine).with_name("kpsewhich") if engine else None
+    query = (
+        str(beside) if beside is not None and beside.is_file()
+        else shutil.which("kpsewhich")
+    )
+    if query is None:
         return ()
     roots: list[Path] = []
     for variable in TEXMF_VARIABLES:
         run = subprocess.run(
-            ["kpsewhich", f"-var-value={variable}"],
+            [query, f"-var-value={variable}"],
             text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60,
         )
         value = run.stdout.strip()
@@ -113,6 +133,28 @@ def tex_installation_roots() -> tuple[Path, ...]:
             if root.exists():
                 roots.append(root.resolve())
     return tuple(roots)
+
+
+def requested_inputs() -> set[str]:
+    """Every file name the manual's own sources `\\input`, with `.tex` added."""
+    requested: set[str] = set()
+    for name in MANUAL_SOURCES:
+        root = MANUAL_DIR / name
+        paths = root.rglob("*.tex") if root.is_dir() else [root]
+        for path in paths:
+            if not path.is_file():
+                continue
+            body = strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+            for match in re.finditer(r"\\(?:input|include)\s*\{([^}]*)\}", body):
+                asked = match.group(1).strip()
+                # A name TeX builds at run time (`\jobname.exa`) is not a file
+                # this reader can name, and the generated files it stands for
+                # are written into the build directory anyway.
+                if "\\" in asked or not asked:
+                    continue
+                stem = Path(asked).name
+                requested.add(stem if stem.endswith(".tex") else f"{stem}.tex")
+    return requested
 
 
 def recorded_inputs(record: Path) -> list[str]:
@@ -349,6 +391,10 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
         )
         if path.is_file()
     }
+    # The names the manual asks for, whether or not the copy has them: an
+    # `\input` committed without its file is exactly the case where the
+    # basename is absent from `own`, and an installation tree would answer it.
+    own |= requested_inputs()
     # Anything read from the build directory is the copy, and anything from
     # the package tree is the tree under review.  The read-only distribution
     # is the third legitimate home: the manual needs tikz, hobby, and spath3.
@@ -357,7 +403,7 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     # build knows the name: an `\input` committed without its file would
     # otherwise be served by an older installed sibling, in both builds
     # alike, and the byte comparison would agree about the wrong document.
-    installation = tex_installation_roots()
+    installation = tex_installation_roots(engine)
     def at_home(opened: str) -> bool:
         resolved = (work / opened).resolve()
         return any(
