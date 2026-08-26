@@ -84,6 +84,18 @@ jobs:
       - name: Compile tenkz manual examples standalone
         run: python3 scripts/tenkz_manual_doctest.py
 
+      - name: Build the tenkz manual reproducibly
+        run: |
+          python3 scripts/test_tenkz_manual_build.py
+          python3 scripts/tenkz_manual_build.py check --require-engine
+
+      - name: Upload the manual
+        uses: actions/upload-artifact@v4
+        with:
+          name: tenkz-manual
+          path: output/pdf/tenkz-manual.pdf
+          retention-days: 30
+
       # The language test compiles refusals and event-equivalence probes, so
       # it runs after the engine is installed rather than skipping them.
       - name: Test the tenkz language registry and its alphabets
