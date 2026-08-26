@@ -243,6 +243,19 @@ def test_document_only_blueprint_gates_fire() -> None:
         "a row it cannot read",
         "migration row with an extra cell",
     )
+    # The migration table's own order: header, separator, then definitions.
+    _expect_document_failure(
+        text.replace("| Code | Required 1.0 target |\n", "", 1),
+        "separator precedes its header",
+        "migration table with no header",
+    )
+    # A blueprint occurrence is a public-surface construct, so `P-none` --
+    # "the file has no such construct" -- cannot be its target.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `P-none`", 1),
+        "no public-surface construct",
+        "P-none on a blueprint occurrence",
+    )
     # A repeated component in one target set survives the frozenset.
     _expect_document_failure(
         text.replace("`tenkz` → `P-grid`", "`tenkz` → `P-grid+P-grid`", 1),

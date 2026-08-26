@@ -617,16 +617,27 @@ def migration_codes(text: str) -> frozenset[str]:
     """The codes the document's own migration table defines."""
     body = section(text, "### Migration target codes", "## ")
     rows: list[str] = []
+    seen_header = False
     seen_separator = False
     for line in body.splitlines():
         if not line.startswith("|"):
             continue
         if set(line) <= set("|-: "):
             require_separator(line, 2, "the migration table")
+            if not seen_header:
+                fail("the migration table's separator precedes its header")
             seen_separator = True
             continue
         if re.match(r"\|\s*Code\s*\|\s*Required 1\.0 target\s*\|$", line):
+            if seen_header:
+                fail("the migration table has two header rows")
+            seen_header = True
             continue
+        # A definition standing before the header and separator is a row of a
+        # table Markdown does not render, and reading it would accept a
+        # section that no longer forms one.
+        if not seen_separator:
+            fail(f"the migration table has a row before its separator: {line!r}")
         # A malformed definition is unreferenced today and would disappear
         # unnoticed, taking the code it should have defined with it.
         # The whole row, not its opening: a definition that lost its target
@@ -638,6 +649,8 @@ def migration_codes(text: str) -> frozenset[str]:
         if match is None or not match.group(2).strip():
             fail(f"the migration table has a row it cannot read: {line!r}")
         rows.append(match.group(1))
+    if not seen_header:
+        fail("the migration table has no header row")
     if not seen_separator:
         fail("the migration table has no separator row")
     repeated = sorted({code for code in rows if rows.count(code) > 1})
@@ -1035,6 +1048,13 @@ def main() -> int:
                 f"{key[0]}:{key[1]} {key[2]} mixes preserve and non-preserve "
                 f"targets {sorted(codes)}, which the source classifier never "
                 "produces"
+            )
+        # Every inventory key names a public-surface occurrence, and `P-none`
+        # says the file carries none, so the two cannot both be true.
+        if "P-none" in codes:
+            fail(
+                f"{key[0]}:{key[1]} {key[2]} is targeted `P-none`, which says "
+                "the file has no public-surface construct"
             )
         implied = target_disposition(codes)
         if implied != blueprint_occurrence_dispositions[key]:
