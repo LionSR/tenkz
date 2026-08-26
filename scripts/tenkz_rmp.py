@@ -628,13 +628,9 @@ def validate_source_placements(targets: Sequence[Target], paper: Path) -> None:
             f"manifest has {published} published targets; the source paper has "
             f"{expected_published} distinct graphics"
         )
-    expected_workbench = FROZEN_TARGET_COUNT - expected_published
-    workbench = sum(target.corpus == "author-workbench" for target in targets)
-    if workbench != expected_workbench:
-        fail(
-            f"manifest has {workbench} author-workbench targets; "
-            f"the frozen remainder is {expected_workbench}"
-        )
+    # The frozen target count and the published count together fix the
+    # author-workbench remainder, so a check on it could never report
+    # (LionSR/tenkz#6).
 
 
 def case_headers(lines: list[str], *, path: Path) -> dict[str, str]:

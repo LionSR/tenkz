@@ -205,20 +205,12 @@ for source_name, adopted_path in standalone.items():
     if adopted_path != expected_path:
         fail(f"{source_name} adopted_path must be {expected_path}, got {adopted_path!r}")
 
-support_records = [record for record in records if record["disposition"] == "support"]
-support_paths = {record["adopted_path"] for record in support_records}
-actual_support = {
-    path.relative_to(repo).as_posix()
-    for path in corpus.glob("*.inc") if path.is_file()
-}
-if support_paths != actual_support:
-    fail(
-        "support include census disagrees with PROVENANCE.tsv: expected "
-        f"{sorted(support_paths)!r}, found {sorted(actual_support)!r}"
-    )
-if any(not path.startswith("tests/tenkz/") or not path.endswith(".inc")
-       for path in support_paths):
-    fail("support adopted_path must name a tests/tenkz/*.inc file")
+# The provenance census admits no support disposition, so an include file
+# beside the fixtures is one the manifest cannot describe (LionSR/tenkz#6).
+stray_includes = sorted(path.name for path in corpus.glob("*.inc") if path.is_file())
+if stray_includes:
+    fail("standalone corpus carries include files PROVENANCE.tsv cannot "
+         "describe: " + ", ".join(stray_includes))
 if any(record["adopted_path"] != "-" for record in records
        if record["disposition"] == "excluded"):
     fail("excluded PROVENANCE.tsv rows must use '-' as adopted_path")
@@ -237,9 +229,9 @@ tracked_fixtures = {
     if Path(line).parent == Path("tests/tenkz")
     and line.endswith((".tex", ".inc"))
 }
-actual_fixtures = {
-    f"tests/tenkz/{name}" for name in actual_tex
-} | actual_support
+# No include file survives the refusal above, so the tracked census is the
+# .tex fixtures alone; a tracked .inc still reports as missing on disk.
+actual_fixtures = {f"tests/tenkz/{name}" for name in actual_tex}
 if tracked_fixtures != actual_fixtures:
     missing = sorted(actual_fixtures - tracked_fixtures)
     stale = sorted(tracked_fixtures - actual_fixtures)

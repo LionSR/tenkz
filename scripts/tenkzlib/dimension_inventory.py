@@ -1396,7 +1396,17 @@ def validate_rmp_dimension_gate(
     *,
     inventory_path: Path | None = None,
 ) -> DimensionReport:
-    """Run aggregate ownership and exact-site checks as one production gate."""
+    """Run aggregate ownership and exact-site checks as one production gate.
+
+    While the case ceilings stand at zero (`dimensions.py`), the aggregate
+    check refuses every active dimension before the inventory is collected,
+    so the actual inventory that reaches the exact-site check is always
+    empty.  What the exact-site check still refuses on that input is a
+    committed inventory that names a case: the file and the corpus must
+    agree that there is nothing to own.  Anchor, vector, and site-count
+    drift become reportable here only when a ceiling rises above zero
+    (LionSR/tenkz#6 records this as the step's live input space).
+    """
     paths = tuple(case_paths)
     report = collect_dimension_report(repo, paths)
     validate_dimension_report(report)

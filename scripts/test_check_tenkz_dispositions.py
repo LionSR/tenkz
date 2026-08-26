@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 import sys
 import tempfile
 from pathlib import Path
@@ -15,7 +16,295 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import check_tenkz_dispositions as guard
 
 
+def test_document_gates_fire_on_seeded_tables() -> None:
+    """LionSR/tenkz#6: the document-only checks refuse a seeded edit by name."""
+    text = guard.DOCUMENT.read_text()
+    seeded = text.replace("| preserve | 9 |", "| preserve | 9 |\n| bogus | 1 |", 1)
+    assert seeded != text, "the standalone fixture table no longer has the preserve row"
+    try:
+        guard.parse_fixture_table(seeded)
+    except SystemExit as error:
+        assert "unknown dispositions: ['bogus']" in str(error), error
+    else:
+        raise AssertionError("an unknown disposition word in the fixture table passed")
+    raw_body = guard.section(text, "| Raw construct | Occurrences |")
+    total_row = next(row for row in raw_body.splitlines() if row.startswith("| **Total**"))
+    seeded_total = text.replace(total_row, total_row.replace("**", "*9*", 1), 1)
+    assert seeded_total != text
+    _, before = guard.parse_counter_table(text, "| Raw construct | Occurrences |")
+    try:
+        guard.parse_counter_table(seeded_total, "| Raw construct | Occurrences |")
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("a mangled blueprint total row was parsed as valid")
+    assert before == sum(guard.documented_blueprint(text)[0].values())
+
+
+def _expect_document_failure(seeded: str, expected: str, name: str) -> None:
+    """Run the whole checker against a seeded document and require it to fail."""
+    original = guard.DOCUMENT
+    with tempfile.TemporaryDirectory(prefix="tenkz-disposition-seed-") as tmp:
+        path = Path(tmp) / "DISPOSITIONS.md"
+        path.write_text(seeded, encoding="utf-8")
+        guard.DOCUMENT = path
+        try:
+            guard.main()
+        except SystemExit as error:
+            if expected not in str(error):
+                raise AssertionError(f"seed {name!r} failed for another reason: {error}")
+        else:
+            raise AssertionError(f"seed {name!r} passed the checker")
+        finally:
+            guard.DOCUMENT = original
+
+
+def test_document_only_blueprint_gates_fire() -> None:
+    """LionSR/tenkz#6: the checks that run without the chapter sources fire.
+
+    Every seed below keeps the totals adding up, which is what the blueprint
+    reconciliation looked like while it was skipped entirely, and each is run
+    through the whole checker rather than through one function.
+    """
+    text = guard.DOCUMENT.read_text()
+    if guard.BLUEPRINT_ROOT.is_dir():
+        print("SKIP: blueprint sources present; the document-only path is not taken")
+        return
+    guard.main()
+
+    # A construct moved between raw rows: both totals stay where they were.
+    _expect_document_failure(
+        text.replace("| `tenkz` | 188 |", "| `tenkz` | 187 |", 1)
+            .replace("| `tntree` | 11 |", "| `tntree` | 12 |", 1),
+        "raw-count table does not match the line inventory",
+        "construct moved between raw rows",
+    )
+    # One occurrence inventoried twice, with the totals raised to match.
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` | L228 ", "| `ch03_single.tex` | L228, 228 ", 1)
+            .replace("| `tenkz` | 188 |", "| `tenkz` | 189 |", 1)
+            .replace("| **Total** | **199** |", "| **Total** | **200** |")
+            .replace("| preserve | 188 |", "| preserve | 189 |", 1),
+        "more than once",
+        "occurrence listed twice",
+    )
+    # A target code the migration table does not define.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `BOGUS`", 1),
+        "unknown target code",
+        "unknown target code",
+    )
+    # A preserve entry pointed at a redraw target.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `R-free`", 1),
+        "imply redraw",
+        "preserve entry with a redraw target",
+    )
+    # A second occurrence written in a spelling the grammar does not read,
+    # which leaves every counter where it was.
+    _expect_document_failure(
+        text.replace(
+            "| `ch03_single.tex` | L228 `tenkz` → `P-grid` |",
+            "| `ch03_single.tex` | L228 `tenkz` → `P-grid`; L229 tenkz -> P-grid |",
+            1,
+        ),
+        "the occurrence grammar does not read",
+        "cell text outside the grammar",
+    )
+    # A migration code outside P/C/R would be filed as preserve by default.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` |", "| `X-grid` | A typo. |\n| `P-none` |", 1
+        ),
+        "outside P/C/R",
+        "migration code outside the three families",
+    )
+    # A deleted zero row is not a zero: the totals do not move.
+    _expect_document_failure(
+        text.replace("| `tenkzcd` | 0 |\n", "", 1),
+        "every tracked construct row",
+        "deleted zero ratchet row",
+    )
+    # A repeated row overwrites the earlier one and the total still adds up.
+    _expect_document_failure(
+        text.replace("| preserve | 9 |", "| preserve | 999 |\n| preserve | 9 |", 1),
+        "more than once",
+        "duplicate fixture disposition row",
+    )
+    _expect_document_failure(
+        text.replace("| `tntree` | 11 |", "| `tntree` | 999 |\n| `tntree` | 11 |", 1),
+        "more than once",
+        "duplicate blueprint raw row",
+    )
+    # The fixture ratchet must be consulted, not merely declared.
+    _expect_document_failure(
+        text.replace("| `tnpic` | 0 |\n| `tntree` | 0 |\n", "| `tntree` | 0 |\n", 1),
+        "fixture raw-count table must carry",
+        "deleted fixture zero ratchet row",
+    )
+    # A malformed row naming the header word is still a data row.
+    _expect_document_failure(
+        text.replace("| preserve | 9 |", "| bogusDisposition | 1 |\n| preserve | 9 |", 1),
+        "unknown dispositions",
+        "row containing the header word",
+    )
+    # A repeated migration code makes the canonical table ambiguous.
+    _expect_document_failure(
+        text.replace("| `P-none` |", "| `P-grid` | A contradictory second row. |\n| `P-none` |", 1),
+        "more than once",
+        "duplicate migration code",
+    )
+    # A counter row the grammar cannot read leaves every number in place.
+    _expect_document_failure(
+        text.replace("| `tntree` | 11 |", "| `bogus` | eleven |\n| `tntree` | 11 |", 1),
+        "a row it cannot read",
+        "unreadable counter row",
+    )
+    # Source lines are one-based, so `L0` names nothing.
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` | L228 ", "| `ch03_single.tex` | L0 ", 1),
+        "the occurrence grammar does not read",
+        "zero line number",
+    )
+    # A malformed definition in the canonical table, unreferenced today.
+    _expect_document_failure(
+        text.replace("| `C-picture` |", "| `C-pictur3` |", 1),
+        "a row it cannot read",
+        "malformed migration definition",
+    )
+    # A target set mixing preserve with a codemod code: the source classifier
+    # drops every P- code as soon as another family is present, so no source
+    # produces this, yet reading the strongest family alone accepts it.
+    _expect_document_failure(
+        text.replace("`tntree` → `C-tree`", "`tntree` → `P-grid+C-tree`", 1),
+        "mixes preserve and non-preserve",
+        "mixed preserve and codemod targets",
+    )
+    # An unreadable row standing before the first valid entry is still a row.
+    _expect_document_failure(
+        text.replace("| `tenkz` | 188 |", "| `bogus` | eleven |\n| `tenkz` | 188 |", 1),
+        "a row it cannot read",
+        "unreadable counter row before the first entry",
+    )
+    # A mistyped source name would drop its occurrences from the inventory,
+    # and the totals could then be lowered to agree.
+    # The separator is checked, not assumed to be wherever it should be.
+    _expect_document_failure(
+        text.replace(
+            "| Raw construct | Occurrences |\n|---|---:|",
+            "| Raw construct | Occurrences |\n| bogus | eleven |", 1,
+        ),
+        "unexpected header row",
+        "separator replaced by a data row",
+    )
+    # The fixture table's own header is checked, not assumed.
+    _expect_document_failure(
+        text.replace(
+            "### Fixture raw-count reconciliation\n\n| Raw construct | Occurrences |",
+            "### Fixture raw-count reconciliation\n\n| bogus | eleven |", 1,
+        ),
+        "unexpected header row",
+        "fixture header replaced by a data row",
+    )
+    _expect_document_failure(
+        text.replace("| `P-grid` |", "|\n| `P-grid` |", 1),
+        "separator",
+        "migration table separator",
+    )
+    # A separator must form a two-column table, not merely be made of the
+    # characters one is made of.
+    _expect_document_failure(
+        text.replace("| Raw construct | Occurrences |\n|---|---:|", "| Raw construct | Occurrences |\n|", 1),
+        "separator that forms no table",
+        "separator that forms no table",
+    )
+    # Deleting an unreferenced canonical code costs nothing without the pin.
+    _expect_document_failure(
+        text.replace(
+            "| `C-picture` | Expand `\\tnpic` to a scoped `tenkz` picture term. |\n", "", 1
+        ),
+        "codes moved",
+        "deleted migration definition",
+    )
+    # The inventory header names the columns the cells are read into.
+    _expect_document_failure(
+        text.replace(
+            "| Source | Preserve | Codemod | Redraw |", "| Source | bogus |", 1
+        ),
+        "inventory header reads",
+        "shortened inventory header",
+    )
+    # A description carrying a cell separator grows the row a third cell.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` | Keep the fixture; it has no tenkz public-surface construct. |",
+            "| `P-none` | Keep the fixture. | EXTRA |", 1,
+        ),
+        "a row it cannot read",
+        "migration row with an extra cell",
+    )
+    # The migration table's own order: header, separator, then definitions.
+    _expect_document_failure(
+        text.replace("| Code | Required 1.0 target |\n", "", 1),
+        "separator precedes its header",
+        "migration table with no header",
+    )
+    # A blueprint occurrence is a public-surface construct, so `P-none` --
+    # "the file has no such construct" -- cannot be its target.
+    _expect_document_failure(
+        text.replace("L228 `tenkz` → `P-grid`", "L228 `tenkz` → `P-none`", 1),
+        "no public-surface construct",
+        "P-none on a blueprint occurrence",
+    )
+    # A repeated component in one target set survives the frozenset.
+    _expect_document_failure(
+        text.replace("`tenkz` → `P-grid`", "`tenkz` → `P-grid+P-grid`", 1),
+        "spells a target more than once",
+        "repeated target component",
+    )
+    # Every table must have a separator of its own width.
+    _expect_document_failure(
+        text.replace("| `ch02_mps.tex` |", "|\n| `ch02_mps.tex` |", 1),
+        "separator",
+        "blueprint inventory separator",
+    )
+    # A canonical definition that lost its target prose still defines a code.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` | Keep the fixture; it has no tenkz public-surface construct. |",
+            "| `P-none` |", 1,
+        ),
+        "a row it cannot read",
+        "migration definition with no target prose",
+    )
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` |", "| `ch03_single.tx` |", 1)
+            .replace("| `tenkz` | 188 |", "| `tenkz` | 187 |", 1)
+            .replace("| **Total** | **199** |", "| **Total** | **198** |")
+            .replace("| preserve | 188 |", "| preserve | 187 |", 1),
+        "a row it cannot read",
+        "mistyped inventory source name",
+    )
+
+
+def test_fixture_table_reads_every_row() -> None:
+    """A row the grammar cannot read is refused rather than skipped."""
+    text = guard.DOCUMENT.read_text()
+    for seed in ("| BOGUS | 1 |", "| bogus-value | 1 |"):
+        seeded = text.replace("| preserve | 9 |", f"| preserve | 9 |\n{seed}", 1)
+        assert seeded != text
+        try:
+            guard.parse_fixture_table(seeded)
+        except SystemExit as error:
+            assert "unknown dispositions" in str(error), (seed, str(error))
+        else:
+            raise AssertionError(f"the fixture table accepted {seed!r}")
+
+
 def main() -> int:
+    test_document_gates_fire_on_seeded_tables()
+    test_document_only_blueprint_gates_fire()
+    test_fixture_table_reads_every_row()
     tombstones = (
         r"\begin{tenkzfree}\end{tenkzfree}",
         r"\tnghost{}",
