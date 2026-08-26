@@ -655,13 +655,23 @@ def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
     result: Counter[str] = Counter()
     total: int | None = None
     started = False
+    seen_header = False
     for row in section(text, heading).splitlines():
         if started and not row.strip():
             break
+        if not row.startswith("|"):
+            continue
+        # The table's own header and its rule are the only exempt rows.  Every
+        # other row must be readable, including one standing before the first
+        # valid entry: skipping it would leave the counter and the total where
+        # they were and the table would still add up.
+        if not seen_header:
+            seen_header = True
+            continue
+        if set(row) <= set("|-: "):
+            continue
         match = re.match(r"\| `?([^|`]+?)`? \| \**([0-9]+)\** \|$", row)
-        # A row the grammar cannot read leaves the counter and the total where
-        # they were, so it must be refused rather than stepped over.
-        if started and match is None and row.startswith("|") and not set(row) <= set("|-: "):
+        if match is None:
             fail(f"counter table below {heading} has a row it cannot read: {row!r}")
         started |= bool(match)
         label = match.group(1).strip().strip("*") if match else ""
@@ -733,10 +743,21 @@ def documented_blueprint(
     dispositions: Counter[str] = Counter()
     disposition_by_occurrence: dict[tuple[str, int, str], str] = {}
     targets_by_occurrence: dict[tuple[str, int, str], frozenset[str]] = {}
+    started = False
     for row in body.splitlines():
-        cells = [cell.strip() for cell in row.split("|")[1:-1]]
-        if len(cells) != 4 or not re.fullmatch(r"`[^`]+\.tex`", cells[0]):
+        if not row.startswith("|"):
+            if started:
+                break
             continue
+        cells = [cell.strip() for cell in row.split("|")[1:-1]]
+        if set(row) <= set("|-: ") or cells[:1] == ["Source"]:
+            continue
+        # A row the grammar cannot read is refused rather than skipped: a
+        # mistyped source name would otherwise drop its occurrences from the
+        # inventory and the totals could be lowered to agree.
+        if len(cells) != 4 or not re.fullmatch(r"`[^`]+\.tex`", cells[0]):
+            fail(f"blueprint inventory has a row it cannot read: {row!r}")
+        started = True
         filename = cells[0].strip("`")
         for disposition, cell in zip(DISPOSITIONS, cells[1:]):
             # The grammar must consume the whole cell: a second occurrence

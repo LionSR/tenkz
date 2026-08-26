@@ -180,6 +180,22 @@ def test_document_only_blueprint_gates_fire() -> None:
         "mixes preserve and non-preserve",
         "mixed preserve and codemod targets",
     )
+    # An unreadable row standing before the first valid entry is still a row.
+    _expect_document_failure(
+        text.replace("| `tenkz` | 188 |", "| `bogus` | eleven |\n| `tenkz` | 188 |", 1),
+        "a row it cannot read",
+        "unreadable counter row before the first entry",
+    )
+    # A mistyped source name would drop its occurrences from the inventory,
+    # and the totals could then be lowered to agree.
+    _expect_document_failure(
+        text.replace("| `ch03_single.tex` |", "| `ch03_single.tx` |", 1)
+            .replace("| `tenkz` | 188 |", "| `tenkz` | 187 |", 1)
+            .replace("| **Total** | **199** |", "| **Total** | **198** |")
+            .replace("| preserve | 188 |", "| preserve | 187 |", 1),
+        "a row it cannot read",
+        "mistyped inventory source name",
+    )
 
 
 def test_fixture_table_reads_every_row() -> None:
