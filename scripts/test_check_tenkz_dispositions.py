@@ -188,6 +188,24 @@ def test_document_only_blueprint_gates_fire() -> None:
     )
     # A mistyped source name would drop its occurrences from the inventory,
     # and the totals could then be lowered to agree.
+    # The separator is checked, not assumed to be wherever it should be.
+    _expect_document_failure(
+        text.replace(
+            "| Raw construct | Occurrences |\n|---|---:|",
+            "| Raw construct | Occurrences |\n| bogus | eleven |", 1,
+        ),
+        "no separator row",
+        "separator replaced by a data row",
+    )
+    # A canonical definition that lost its target prose still defines a code.
+    _expect_document_failure(
+        text.replace(
+            "| `P-none` | Keep the fixture; it has no tenkz public-surface construct. |",
+            "| `P-none` |", 1,
+        ),
+        "a row it cannot read",
+        "migration definition with no target prose",
+    )
     _expect_document_failure(
         text.replace("| `ch03_single.tex` |", "| `ch03_single.tx` |", 1)
             .replace("| `tenkz` | 188 |", "| `tenkz` | 187 |", 1)

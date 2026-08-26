@@ -615,8 +615,11 @@ def migration_codes(text: str) -> frozenset[str]:
             continue
         # A malformed definition is unreferenced today and would disappear
         # unnoticed, taking the code it should have defined with it.
-        match = re.match(r"\| `([A-Za-z]+-[a-z]+)` \|", line)
-        if match is None:
+        # The whole row, not its opening: a definition that lost its target
+        # prose, or grew a third cell, still defines a code and would go on
+        # being referenced with nothing said about what it requires.
+        match = re.fullmatch(r"\| `([A-Za-z]+-[a-z]+)` \| (.+?) \|", line.rstrip())
+        if match is None or not match.group(2).strip():
             fail(f"the migration table has a row it cannot read: {line!r}")
         rows.append(match.group(1))
     repeated = sorted({code for code in rows if rows.count(code) > 1})
@@ -652,39 +655,57 @@ def section(text: str, heading: str, next_heading: str | None = None) -> str:
 
 
 def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
+    """Read a two-column counter table, refusing any row it cannot read.
+
+    The table's shape is checked, not assumed: an optional header row, then a
+    separator, then data rows.  `section` consumes the heading for some
+    callers and not for others, so the separator is what the reader keys on
+    rather than a positional guess -- a row standing where the separator
+    should be is a row, and reading it is the point.
+    """
     result: Counter[str] = Counter()
     total: int | None = None
     started = False
-    seen_header = False
+    seen_separator = False
+    rows = 0
     for row in section(text, heading).splitlines():
         if started and not row.strip():
             break
         if not row.startswith("|"):
             continue
-        # The table's own header and its rule are the only exempt rows.  Every
-        # other row must be readable, including one standing before the first
-        # valid entry: skipping it would leave the counter and the total where
-        # they were and the table would still add up.
-        if not seen_header:
-            seen_header = True
-            continue
+        rows += 1
         if set(row) <= set("|-: "):
+            if seen_separator:
+                fail(f"counter table below {heading} has two separator rows")
+            seen_separator = True
+            continue
+        # Before the separator there is at most the table's own header.
+        if not seen_separator:
+            if rows > 1:
+                fail(
+                    f"counter table below {heading} has no separator row; "
+                    f"found {row!r}"
+                )
             continue
         match = re.match(r"\| `?([^|`]+?)`? \| \**([0-9]+)\** \|$", row)
+        # A row the grammar cannot read leaves the counter and the total where
+        # they were, so it must be refused rather than stepped over.
         if match is None:
             fail(f"counter table below {heading} has a row it cannot read: {row!r}")
-        started |= bool(match)
-        label = match.group(1).strip().strip("*") if match else ""
-        if match and label.lower() == "total":
+        started = True
+        label = match.group(1).strip().strip("*")
+        if label.lower() == "total":
             if total is not None:
                 fail(f"counter table below {heading} lists more than one Total row")
             total = int(match.group(2))
-        elif match:
+        else:
             # A repeated label would overwrite its earlier row and, with the
             # total left alone, the table would still add up.
             if label in result:
                 fail(f"counter table below {heading} lists {label!r} more than once")
             result[label] = int(match.group(2))
+    if not seen_separator:
+        fail(f"counter table below {heading} has no separator row")
     if not result:
         fail(f"could not parse counter table below {heading}")
     if total is None or total != sum(result.values()):
