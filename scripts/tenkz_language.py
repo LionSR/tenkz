@@ -621,9 +621,13 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
         # Every row of the table is read before any of it is validated: a row
         # whose cell opens with bare text is exactly the drift this gate is
         # for, and a reader that only matches well-formed rows cannot see it.
-        if not line.startswith("|"):
+        # Markdown allows up to three spaces of indentation before a table
+        # row, and the rendered contract shows an indented row as part of the
+        # table, so the reader must see it too.
+        row = line[:3].lstrip(" ") + line[3:]
+        if not row.startswith("|"):
             continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
         if len(cells) != 2 or set(cells[0]) <= {"-", ":"} or cells[0] == "Alphabet":
             continue
         name, cell = cells
@@ -644,9 +648,24 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 
 def kernel_case_words(text: str, macro: str) -> list[str]:
     """The ``\\str_case`` branch words of one kernel parser, in file order."""
-    start = text.find(f"\\cs_new_protected:Npn \\{macro} ")
-    if start < 0:
+    # Any definition form installs the body TeX executes, and a later one
+    # wins, so a reader pinned to the first would compare branches the parser
+    # no longer has.
+    definitions = list(
+        re.finditer(
+            r"\\cs_(?:new|set|gset)(?:_protected)?:Np[nx]\s*\\"
+            + re.escape(macro) + r"(?![A-Za-z_:])",
+            text,
+        )
+    )
+    if not definitions:
         raise ValueError(f"kernel defines no parser {macro}")
+    if len(definitions) > 1:
+        raise ValueError(
+            f"kernel defines {macro} {len(definitions)} times; "
+            "the last would decide what the parser accepts"
+        )
+    start = definitions[0].start()
     end = text.find("\\cs_new_protected:Npn", start + 1)
     body = text[start : end if end > 0 else None]
     case = re.search(r"\\str_case:[A-Za-z]+\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body)

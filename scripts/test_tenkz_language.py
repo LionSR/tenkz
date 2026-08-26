@@ -183,6 +183,24 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     errors = tenkz_language.alphabet_errors(dropped_registry, contract, dropped)
     if not any("recording word" in error for error in errors):
         raise SystemExit(f"a retired recording word was not reported; errors: {errors}")
+    # Markdown renders a row indented by up to three spaces as part of the
+    # table, so a reader that required column zero would not see it.
+    indented = contract.replace(
+        "| routes | `straight` `orth` `arc` |",
+        "| routes | `straight` `orth` `arc` |\n   | routes | `straight` |",
+    )
+    assert indented != contract
+    errors = tenkz_language.alphabet_errors(registry, indented, kernel)
+    if not any("twice" in error for error in errors):
+        raise SystemExit(f"an indented duplicate row was skipped; errors: {errors}")
+    # A parser redefined later is the body TeX runs; reading the first would
+    # compare an alphabet the kernel no longer accepts.
+    redefined = kernel + (
+        "\n\\cs_set_protected:Npn \\__tenkz_kernel_route:n #1 { }\n"
+    )
+    errors = tenkz_language.alphabet_errors(registry, contract, redefined)
+    if not any("times" in error for error in errors):
+        raise SystemExit(f"a redefined parser was not reported; errors: {errors}")
 
 
 def main() -> int:
