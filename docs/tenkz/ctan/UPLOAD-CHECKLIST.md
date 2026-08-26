@@ -27,11 +27,14 @@ named by `RELEASE-POLICY.md` §3 may change it.
 - [ ] `python3 scripts/tenkz_ctan.py sync` shows the version and date the
       release artifacts agree on. Disagreement is the release-preparation
       change's work, not the archive builder's.
-- [ ] The manual is built reproducibly and is ready to be carried by the
-      archive. Open work: the archive currently stages no manual, because
-      its reproducible build is not finished. CTAN expects documentation in
-      the package, so this is the last blocking item before an upload, not a
-      refinement.
+- [ ] `python3 scripts/tenkz_manual_build.py check --require-engine` passes:
+      two isolated builds under the package's `SOURCE_DATE_EPOCH` agree byte
+      for byte, the event stream audits clean, and the title page names the
+      package's month and year. The PDF it installs at
+      `output/pdf/tenkz-manual.pdf` is the documentation the upload carries.
+      Open work: the archive builder does not yet stage that PDF; staging it
+      is the release-preparation change's work, after the manual's content
+      sign-off (LionSR/tenkz#12).
 
 ## 2. Building the archive
 
