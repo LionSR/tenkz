@@ -41,3 +41,7 @@ tests/tenkz/release-harness/__pycache__/
 .DS_Store
 Thumbs.db
 *.bak*
+
+# Local-only benchmark inputs (not redistributed)
+/References/
+/Papers/
