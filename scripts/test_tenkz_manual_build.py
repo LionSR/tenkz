@@ -109,6 +109,21 @@ def main() -> int:
         except ValueError:
             continue
         raise SystemExit(f"two active release lines were accepted: {line!r}")
+    # Every rerun spelling the manual's packages use, and the warnings that
+    # leave a settled document wrong rather than unsettled.
+    for warning in (
+        "Package longtable Warning: Table widths have changed. Rerun LaTeX.",
+        "LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.",
+    ):
+        if not build.RERUN.search(warning):
+            raise SystemExit(f"a rerun request was not recognised: {warning!r}")
+    for warning in (
+        "LaTeX Warning: There were multiply-defined labels.",
+        "LaTeX Warning: Label `x' multiply defined.",
+        "LaTeX Warning: There were undefined references.",
+    ):
+        if not build.UNRESOLVED.search(warning):
+            raise SystemExit(f"a reference warning was not recognised: {warning!r}")
     # A version is read whole and then required to be one, on both sides: a
     # numeric prefix match would call `0.7-beta` equal to the package's `0.7`
     # while the page says otherwise.
@@ -172,6 +187,18 @@ def main() -> int:
     epoch = build.source_date_epoch("2026/07/22")
     if epoch != 1784678400:
         raise SystemExit(f"SOURCE_DATE_EPOCH for 2026/07/22 read {epoch}")
+    # The rendered page is what the release metadata is finally held to, so
+    # its reader is exercised against a page that says the wrong thing.
+    pdf = build.DEFAULT_OUTPUT
+    if shutil.which("pdftotext") is not None and pdf.is_file():
+        if build.rendered_metadata_errors(pdf, version, build.manual_dateline()):
+            raise SystemExit("the installed manual's title page disagrees with the source")
+        wrong = build.rendered_metadata_errors(pdf, "9.9", build.manual_dateline())
+        if not any("version" in error for error in wrong):
+            raise SystemExit("a version absent from the rendered page was not reported")
+        stale = build.rendered_metadata_errors(pdf, version, "June 1999")
+        if not any("date" in error for error in stale):
+            raise SystemExit("a date absent from the rendered page was not reported")
     if shutil.which("xelatex") is None:
         print("PASS: manual build gates fire on seeded input; SKIP: xelatex not found")
         return 0

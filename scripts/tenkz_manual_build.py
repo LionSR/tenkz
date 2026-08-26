@@ -62,7 +62,8 @@ RERUN = re.compile(
 )
 UNRESOLVED = re.compile(
     r"There were undefined references|Citation `[^']*' on page|"
-    r"Reference `[^']*' on page [0-9]+ undefined"
+    r"Reference `[^']*' on page [0-9]+ undefined|"
+    r"There were multiply-defined labels|multiply defined"
 )
 
 
@@ -86,6 +87,18 @@ def package_release() -> tuple[str, str]:
     if not VERSION.fullmatch(version):
         raise ValueError(f"tenkz.sty names a version this reader cannot read: {version!r}")
     return match.group(1), version
+
+
+def tex_distribution_root() -> Path | None:
+    """The read-only TeX distribution tree, or None when it cannot be asked."""
+    if shutil.which("kpsewhich") is None:
+        return None
+    run = subprocess.run(
+        ["kpsewhich", "-var-value=TEXMFDIST"],
+        text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60,
+    )
+    value = run.stdout.strip()
+    return Path(value).resolve() if run.returncode == 0 and value else None
 
 
 def recorded_inputs(record: Path) -> list[str]:
@@ -322,13 +335,30 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
         )
         if path.is_file()
     }
+    # Anything read from the build directory is the copy, and anything from
+    # the package tree is the tree under review.  The read-only distribution
+    # is the third legitimate home: the manual needs tikz, hobby, and spath3.
+    # A document source from anywhere else -- a personal or local texmf tree
+    # -- is the installation answering for this build, whether or not this
+    # build knows the name: an `\input` committed without its file would
+    # otherwise be served by an older installed sibling, in both builds
+    # alike, and the byte comparison would agree about the wrong document.
+    distribution = tex_distribution_root()
+    def at_home(opened: str) -> bool:
+        resolved = (work / opened).resolve()
+        if any(resolved.is_relative_to(home) for home in homes):
+            return True
+        return distribution is not None and resolved.is_relative_to(distribution)
+
     foreign = sorted({
         opened
         for opened in recorded_inputs(record)
-        if (Path(opened).name.startswith("tenkz") or Path(opened).name in own)
-        and not any(
-            (work / opened).resolve().is_relative_to(home) for home in homes
+        if (
+            Path(opened).name.startswith("tenkz")
+            or Path(opened).name in own
+            or Path(opened).suffix in {".tex", ".sty"}
         )
+        and not at_home(opened)
     })
     if foreign:
         raise RuntimeError(
@@ -380,6 +410,47 @@ def compare(first: bytes, second: bytes) -> list[str]:
         f"the two manual builds differ: {sha256(first)} vs {sha256(second)} "
         f"({len(first)} and {len(second)} bytes; first difference at byte {prefix})"
     ]
+
+
+def rendered_title_page(pdf: Path) -> str:
+    """The text of the built manual's first page.
+
+    Every reader above works on source, and source can carry a version or a
+    date that no page shows -- commented, in a branch TeX does not take, or
+    qualified by markup a source pattern stops at.  The rendered page settles
+    all of them at once, so it is what the release metadata is finally held
+    to.
+    """
+    run = subprocess.run(
+        ["pdftotext", "-f", "1", "-l", "1", str(pdf), "-"],
+        text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120,
+    )
+    if run.returncode:
+        raise RuntimeError(f"could not read the manual's title page:\n{run.stdout}")
+    return run.stdout
+
+
+def rendered_metadata_errors(pdf: Path, version: str, dateline: str) -> list[str]:
+    """The title page must say the release the source claims, once."""
+    if shutil.which("pdftotext") is None:
+        return []
+    page = rendered_title_page(pdf)
+    errors: list[str] = []
+    for what, expected in (("version", f"version {version}"), ("date", dateline)):
+        found = page.count(expected)
+        if found != 1:
+            errors.append(
+                f"the rendered title page shows the {what} {expected!r} "
+                f"{found} time(s), not once"
+            )
+    # A qualifier the source readers stop at still reaches the page.
+    qualified = re.search(r"version\s+" + re.escape(version) + r"(\S+)", page)
+    if qualified:
+        errors.append(
+            f"the rendered title page qualifies the version: "
+            f"{qualified.group(0)!r}"
+        )
+    return errors
 
 
 def install(data: bytes, output: Path) -> None:
@@ -434,6 +505,13 @@ def main() -> int:
                 print(f"tenkz-manual: {exc}", file=sys.stderr)
                 return 1
             direct = audit_direct_pictures(work / "direct", epoch, engine)
+            rendered = rendered_metadata_errors(
+                work / "manual2.pdf", version, manual_dateline()
+            )
+            if rendered:
+                for error in rendered:
+                    print(f"tenkz-manual: {error}", file=sys.stderr)
+                return 1
             pdfs.append(pdf)
             print(
                 f"build {number}: {sha256(pdf)} ({len(pdf)} bytes, "
