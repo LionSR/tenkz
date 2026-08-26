@@ -667,11 +667,16 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     alphabets: dict[str, list[str]] = {}
     seen_header = False
     seen_delimiter = False
+    ended = False
     header_width = 0
     for line in section.group(1).splitlines():
         # Markdown allows up to three spaces of indentation before a row, and
         # renders it inside the table, so the reader must see it there too.
         row = line[:3].lstrip(" ") + line[3:]
+        if ended and row.startswith("|"):
+            raise ValueError(
+                f"section 2.8 carries a second table below its first: {row!r}"
+            )
         if not row.startswith("|"):
             # Markdown ends the table at the first line that is not a row, so
             # prose after the last row simply ends it -- with or without a
@@ -680,14 +685,24 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
             # its rows.
             if seen_delimiter:
                 if alphabets:
-                    break
+                    # The table has ended.  What follows is prose -- and must
+                    # stay prose: a second table below it would be a second
+                    # contract in the same section.
+                    ended = True
+                    continue
                 if row.strip():
                     raise ValueError(
                         f"section 2.8's table is empty and interrupted by "
                         f"{row!r}"
                     )
             continue
-        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+        # One leading and one trailing border pipe, not every pipe: `||`
+        # ends of a row are empty cells, and stripping them would read a
+        # differently shaped table as the one expected here.
+        trimmed = row.strip()
+        body_cells = trimmed[1:] if trimmed.startswith("|") else trimmed
+        body_cells = body_cells[:-1] if body_cells.endswith("|") else body_cells
+        cells = [cell.strip() for cell in body_cells.split("|")]
         if not seen_header:
             seen_header = True
             header_width = len(cells)
@@ -920,7 +935,8 @@ def key_installing_helpers(text: str) -> list[str]:
     """
     helpers: list[str] = []
     for match in re.finditer(
-        r"\\cs_new_protected:Npn\s*\\(__tenkz_kernel_[A-Za-z_]*:[a-zA-Z]+)", text
+        r"\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*"
+        r"\\(__tenkz_kernel_[A-Za-z_]*:[a-zA-Z]+)", text
     ):
         name = match.group(1)
         if name in SANCTIONED_INSTALLERS:
@@ -969,23 +985,38 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     Counting only calls to the helper would read that override as absent.
     """
     bindings = 0
+    dormant = macro_body_spans(text)
     # A kernel helper that binds its second argument in its first installs a
-    # handler as surely as a literal block does.
+    # handler as surely as a literal block does -- when it is called at load,
+    # not from inside another macro's body.
     for helper in key_installing_helpers(text):
-        bindings += len(re.findall(
-            r"\\" + re.escape(helper) + r"\s*\{\s*" + re.escape(scope)
-            + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
-            text,
-        ))
+        bindings += sum(
+            1 for call in re.finditer(
+                r"\\" + re.escape(helper) + r"\s*\{\s*" + re.escape(scope)
+                + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
+                text,
+            )
+            if not any(begin <= call.start() < end for begin, end in dormant)
+        )
     # `\\keys_define` has argument variants, and a generated one installs the
     # same handler, so the operation is matched by name rather than by one
     # signature.
     for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
+        # A block inside a macro body runs when that macro is called, not at
+        # load, so counting it would report a binding TeX never installs.
+        if any(begin <= match.start() < end for begin, end in dormant):
+            continue
         try:
             named, offset = _group(text, match.end())
             body, _ = _group(text, offset)
         except ValueError:
-            continue
+            # A scope this reader cannot read -- an unbraced variable from a
+            # `:Vn` variant -- is reported, not skipped: a skip here is a
+            # binding the gate never sees.
+            raise ValueError(
+                f"a \\keys_define call near offset {match.start()} takes a "
+                "scope this reader cannot read"
+            )
         if named.strip() != scope:
             continue
         # Read the other way round: a property binds the key unless it is one
@@ -995,7 +1026,7 @@ def key_definitions(text: str, scope: str, key: str) -> int:
         # them than a gate should try to enumerate.
         for entry in top_level_entries(body):
             property_match = re.match(
-                r"\s*" + re.escape(key) + r"\s*(?:/[^\s]*)?\s*\.([a-z_]+):", entry
+                r"\s*" + re.escape(key) + r"\s*(?:/\s*[^.\s]+\s*)*\.([a-z_]+):", entry
             )
             if property_match and property_match.group(1) not in ORTHOGONAL_PROPERTIES:
                 bindings += 1
@@ -1020,6 +1051,9 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
     rewire the key while the original binding went on satisfying the check.
     """
     bodies: list[str] = []
+    # A helper call binds the key as surely as a literal block does; the route
+    # reader must count them for the same reason the override audit does.
+    installed = key_definitions(text, scope, key)
     dormant = macro_body_spans(text)
     for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
         # A block inside a macro body runs when that macro is called, not at
@@ -1030,7 +1064,13 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
             named, offset = _group(text, match.end())
             block, _ = _group(text, offset)
         except ValueError:
-            continue
+            # A call whose scope this reader cannot read -- an unbraced
+            # variable from a `:Vn` variant -- is reported, not skipped: a
+            # skip here is a binding the gate never sees.
+            raise ValueError(
+                f"a \\keys_define call near offset {match.start()} takes a scope "
+                "this reader cannot read"
+            )
         if named.strip() != scope:
             continue
         # A key may be assigned more than once inside one block, and l3keys
@@ -1054,6 +1094,11 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
             bodies.append(body)
     if not bodies:
         raise ValueError(f"no .code:n binding for {scope}:{key}")
+    if installed > len(bodies):
+        raise ValueError(
+            f"{scope}:{key} is bound {installed} times, at least one through "
+            "a key-installing helper; the last would be the effective handler"
+        )
     if len(bodies) > 1:
         raise ValueError(
             f"{scope}:{key} is bound {len(bodies)} times; the last would be "

@@ -560,6 +560,58 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     )
     if tenkz_language.alphabet_errors(registry, contract, nested):
         raise SystemExit("a nested comma was read as a top-level key assignment")
+    for label, seeded_kernel, expected in (
+        (
+            "a route binding installed through a helper",
+            f"{kernel}\n\\__tenkz_kernel_value:nnn {{ tenkz-kernel-wire }} "
+            "{ route } { route }\n",
+            "key-installing helper",
+        ),
+        (
+            "an installer declared with another definition form",
+            f"{kernel}\n\\cs_new:Npn \\__tenkz_kernel_alt:nn #1#2 "
+            "{ \\keys_define:nn {#1} { #2 .code:n = { } } }\n"
+            "\\__tenkz_kernel_alt:nn { tenkz-kernel-mark } { form }\n",
+            "bound directly",
+        ),
+        (
+            "an override whose key path carries spaces",
+            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+            "{ form / unknown .code:n = { } }\n",
+            "bound directly",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # The dormant-block exclusion belongs to both scanners, not one.
+    for name in ("__tenkz_language_dormant_a:", "__tenkz_language_dormant_b:"):
+        sleeping = (
+            f"{kernel}\n\\cs_new_protected:Npn \\{name} "
+            "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }\n"
+        )
+        if tenkz_language.alphabet_errors(registry, contract, sleeping):
+            raise SystemExit(f"a dormant block was counted as a binding for {name}")
+    # Only the table's border pipes are stripped: `||` ends are empty cells.
+    bordered = contract.replace(
+        "| routes | `straight` `orth` `arc` |",
+        "|| routes | `straight` `orth` `arc` ||", 1,
+    )
+    if not tenkz_language.alphabet_errors(registry, bordered, kernel):
+        raise SystemExit("a differently bordered row was read as the expected shape")
+    # A second table below the first section 2.8 table is a second contract.
+    second_table = contract.replace(
+        "This table holds the words",
+        "| Alphabet | Words |\n|---|---|\n| routes | `bezier` |\n\n"
+        "This table holds the words", 1,
+    )
+    if second_table != contract and not any(
+        "second table" in error
+        for error in tenkz_language.alphabet_errors(registry, second_table, kernel)
+    ):
+        raise SystemExit("a second table inside section 2.8 was accepted")
     duplicated = (
         contract
         + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
