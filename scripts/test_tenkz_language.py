@@ -707,6 +707,40 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         registry, contract, spaced
     )):
         raise SystemExit("a definition behind a long gap was not counted")
+    binding = "\\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } }"
+    for label, benign in (
+        (
+            "an uncalled :Nn helper body",
+            f"{kernel}\n\\cs_new:Nn \\__tenkz_language_nn: {{ {binding} }}\n",
+        ),
+        (
+            "a control sequence named as an N argument",
+            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_ref: "
+            f"{{ {binding} }}\n\\cs_if_exist:NTF \\__tenkz_language_ref: {{ }} {{ }}\n",
+        ),
+        (
+            "a case table nested in a branch action",
+            kernel.replace(
+                r"{straight} { \__tenkz_kernel_route_keep: }",
+                r"{straight} { \str_case:nnF {x} { {q} {} } { } "
+                r"\__tenkz_kernel_route_keep: }", 1,
+            ),
+        ),
+    ):
+        if benign == kernel:
+            raise SystemExit(f"negative {label!r} changed nothing")
+        if tenkz_language.alphabet_errors(registry, contract, benign):
+            raise SystemExit(f"{label} was reported")
+    # A level-one heading closes the section as surely as the others.
+    appendix = contract.replace(
+        "## 3. Addresses",
+        "# Appendix\n\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
+        "| routes | `bezier` |\n\n## 3. Addresses", 1,
+    )
+    if appendix != contract and not tenkz_language.alphabet_errors(
+        registry, appendix, kernel
+    ):
+        raise SystemExit("a section 2.8 under a level-one heading was not seen")
     # Three more negatives, each a way a valid kernel could be failed.
     for label, benign in (
         (

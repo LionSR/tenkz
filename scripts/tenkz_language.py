@@ -665,7 +665,7 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     unfenced = re.sub(r"^```.*?^```", lambda m: "\n" * m.group(0).count("\n"),
                       text, flags=re.M | re.S)
     sections = list(re.finditer(
-        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} |\Z)", unfenced, re.M | re.S
+        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", unfenced, re.M | re.S
     ))
     if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
@@ -774,6 +774,17 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 # sequence bound by any of them is a definition of it; `cs_generate_variant`
 # is deliberately absent, since it derives a differently-signatured sibling
 # and leaves the base alone.
+REFERENCE_TOKEN = re.compile(r"\\[a-zA-Z_@]+:[a-zA-Z]*N[a-zA-Z]*$")
+
+
+def preceded_by_reference(text: str, position: int) -> bool:
+    """Whether the control sequence at `position` is an `N` argument."""
+    cursor = position
+    while cursor > 0 and text[cursor - 1].isspace():
+        cursor -= 1
+    return REFERENCE_TOKEN.search(text[max(0, cursor - 64):cursor]) is not None
+
+
 def preceded_by_definition(text: str, position: int) -> bool:
     """Whether a definition token stands immediately before `position`.
 
@@ -854,7 +865,19 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             "the last would decide what the parser accepts"
         )
     body = macro_body(text, macro, definitions[0])
-    cases = list(re.finditer(r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body))
+    found = list(re.finditer(r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body))
+    # A table inside another table's branch action is that branch's business;
+    # only the outermost ones are acceptance paths of this parser.
+    nested: set[int] = set()
+    for outer in found:
+        try:
+            _branches, after = _group(body, outer.end())
+        except ValueError:
+            continue
+        for inner in found:
+            if outer.end() <= inner.start() < after:
+                nested.add(inner.start())
+    cases = [case for case in found if case.start() not in nested]
     if not cases:
         raise ValueError(f"parser {macro} has no \\str_case")
     # A second table in the same body is a second acceptance path, and its
@@ -957,9 +980,9 @@ def named_macro_bodies(text: str) -> list[tuple[int, int, str]]:
     """Each macro definition's body span, with the name it defines."""
     spans: list[tuple[int, int, str]] = []
     for match in re.finditer(
-        r"(?:\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*"
+        r"(?:\\cs_(?:new|set|gset)[a-z_]*:(?:Np[nx]|Nn|Nx|cn|cx)\s*"
         r"|\\(?:New|Renew|Provide|Declare)DocumentCommand\s*)"
-        r"\\([A-Za-z_@]+(?::[a-zA-Z]*)?)", text
+        r"\\?\{?\s*([A-Za-z_@]+(?::[a-zA-Z]*)?)\s*\}?", text
     ):
         # An xparse declaration puts its argument specification between the
         # name and the body, so the body is the group after that one.
@@ -1053,6 +1076,12 @@ def runs_at_load(text: str, macro: str, bodies: list[tuple[int, int, str]]) -> b
     """
     for call in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
         if preceded_by_definition(text, call.start()):
+            continue
+        # `\cs_if_exist:NTF \helper:` names the control sequence, it does not
+        # run it, and neither does any other function taking it as an `N`
+        # argument.  Reading a reference as a call would make a dormant body
+        # look live and count the bindings inside it.
+        if preceded_by_reference(text, call.start()):
             continue
         if not any(begin <= call.start() < end for begin, end, _ in bodies):
             return True
