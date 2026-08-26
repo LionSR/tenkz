@@ -652,6 +652,33 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     ):
         if tenkz_language.alphabet_errors(registry, contract, benign):
             raise SystemExit(f"{label} was reported as a binding")
+    # Three more negatives, each a way a valid kernel could be failed.
+    for label, benign in (
+        (
+            "a side installer call inside a macro body",
+            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_sleep_side: "
+            "{ \\__tenkz_kernel_side:nn { tenkz-kernel-picture } { west } }\n",
+        ),
+        (
+            "a ProvideDocumentCommand that binds nothing",
+            f"{kernel}\n\\ProvideDocumentCommand \\__tenkz_kernel_route:n {{m}} {{ }}\n",
+        ),
+    ):
+        if tenkz_language.alphabet_errors(registry, contract, benign):
+            raise SystemExit(f"{label} was reported as a binding")
+    # An enum is a set of words; the helper dispatches on the word, not on its
+    # position, so a reordered row is the same alphabet.
+    reordered = [
+        tenkz_language.Entry(
+            entry.kind,
+            (*entry.fields[:2], "enum(prose|label|enclosure|bracket)", *entry.fields[3:]),
+        )
+        if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
+        else entry
+        for entry in registry
+    ]
+    if tenkz_language.alphabet_errors(reordered, contract, kernel):
+        raise SystemExit("a reordered enum row was reported as drift")
     # A blank line ends the table, so rows below it are not its rows.
     blanked = contract.replace(
         "| Alphabet | Words |\n|---|---|\n", "| Alphabet | Words |\n|---|---|\n\n", 1

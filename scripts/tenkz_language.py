@@ -772,7 +772,9 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
 # and leaves the base alone.
 DEFINITION_TOKEN = re.compile(
     r"\\(?:cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:[A-Za-z]*"
-    r"|(?:New|Renew|Provide|Declare)DocumentCommand"
+    # `\\ProvideDocumentCommand` leaves an existing command alone, so it
+    # binds nothing when one is already defined and is not counted.
+    r"|(?:New|Renew|Declare)DocumentCommand"
     r"|let|[egx]?def)\s*$"
 )
 
@@ -1184,10 +1186,18 @@ def alphabet_errors(
                     # The installer must still be called for each side, or
                     # that key is simply not installed and its alphabet is
                     # not the picture's.
-                    installs = len(re.findall(
-                        r"\\__tenkz_kernel_side:nn\s*\{\s*tenkz-kernel-picture\s*\}"
-                        r"\s*\{\s*" + word + r"\s*\}", kernel_text,
-                    ))
+                    sleeping = macro_body_spans(kernel_text)
+                    installs = sum(
+                        1 for call in re.finditer(
+                            r"\\__tenkz_kernel_side:nn\s*\{\s*tenkz-kernel-picture"
+                            r"\s*\}\s*\{\s*" + word + r"\s*\}", kernel_text,
+                        )
+                        # A call inside a macro body installs nothing until
+                        # that macro runs.
+                        if not any(
+                            begin <= call.start() < end for begin, end in sleeping
+                        )
+                    )
                     if installs != 1:
                         errors.append(
                             f"alphabet {alphabet!r}: tenkz-kernel-picture:{word} "
@@ -1287,7 +1297,9 @@ def alphabet_errors(
                 errors.append(
                     f"alphabet {alphabet!r}: {':'.join(registry_key)} is not an enum"
                 )
-            elif enum.group(1).split("|") != words:
+            # The helper dispatches on the word, not on its position, so
+            # the two lists must hold the same words -- not in the same order.
+            elif sorted(enum.group(1).split("|")) != sorted(words):
                 errors.append(
                     f"alphabet {alphabet!r}: the registry row "
                     f"{':'.join(registry_key)} reads {value_type} but the parser "
