@@ -194,14 +194,28 @@ def test_document_only_blueprint_gates_fire() -> None:
             "| Raw construct | Occurrences |\n|---|---:|",
             "| Raw construct | Occurrences |\n| bogus | eleven |", 1,
         ),
-        "no separator row",
+        "unexpected header row",
         "separator replaced by a data row",
+    )
+    # The fixture table's own header is checked, not assumed.
+    _expect_document_failure(
+        text.replace(
+            "### Fixture raw-count reconciliation\n\n| Raw construct | Occurrences |",
+            "### Fixture raw-count reconciliation\n\n| bogus | eleven |", 1,
+        ),
+        "unexpected header row",
+        "fixture header replaced by a data row",
+    )
+    _expect_document_failure(
+        text.replace("| `P-grid` |", "|\n| `P-grid` |", 1),
+        "separator",
+        "migration table separator",
     )
     # A separator must form a two-column table, not merely be made of the
     # characters one is made of.
     _expect_document_failure(
         text.replace("| Raw construct | Occurrences |\n|---|---:|", "| Raw construct | Occurrences |\n|", 1),
-        "forms no two-column table",
+        "separator that forms no table",
         "separator that forms no table",
     )
     # Deleting an unreferenced canonical code costs nothing without the pin.
@@ -211,6 +225,18 @@ def test_document_only_blueprint_gates_fire() -> None:
         ),
         "codes moved",
         "deleted migration definition",
+    )
+    # A repeated component in one target set survives the frozenset.
+    _expect_document_failure(
+        text.replace("`tenkz` → `P-grid`", "`tenkz` → `P-grid+P-grid`", 1),
+        "spells a target more than once",
+        "repeated target component",
+    )
+    # Every table must have a separator of its own width.
+    _expect_document_failure(
+        text.replace("| `ch02_mps.tex` |", "|\n| `ch02_mps.tex` |", 1),
+        "separator",
+        "blueprint inventory separator",
     )
     # A canonical definition that lost its target prose still defines a code.
     _expect_document_failure(

@@ -617,8 +617,13 @@ def migration_codes(text: str) -> frozenset[str]:
     """The codes the document's own migration table defines."""
     body = section(text, "### Migration target codes", "## ")
     rows: list[str] = []
+    seen_separator = False
     for line in body.splitlines():
-        if not line.startswith("|") or set(line) <= set("|-: "):
+        if not line.startswith("|"):
+            continue
+        if set(line) <= set("|-: "):
+            require_separator(line, 2, "the migration table")
+            seen_separator = True
             continue
         if re.match(r"\|\s*Code\s*\|\s*Required 1\.0 target\s*\|$", line):
             continue
@@ -631,6 +636,8 @@ def migration_codes(text: str) -> frozenset[str]:
         if match is None or not match.group(2).strip():
             fail(f"the migration table has a row it cannot read: {line!r}")
         rows.append(match.group(1))
+    if not seen_separator:
+        fail("the migration table has no separator row")
     repeated = sorted({code for code in rows if rows.count(code) > 1})
     if repeated:
         fail(f"the migration table defines a code more than once: {repeated}")
@@ -671,7 +678,33 @@ def section(text: str, heading: str, next_heading: str | None = None) -> str:
     return result
 
 
-def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
+def separator_columns(row: str) -> int | None:
+    """The column count of a Markdown separator row, or None if it is not one.
+
+    A row made of the characters a separator uses is not a separator: `|` on
+    its own forms no table, and neither does one whose cells are bare colons.
+    """
+    stripped = row.rstrip()
+    if not stripped.startswith("|") or set(stripped) - set("|-: "):
+        return None
+    cells = stripped.strip("|").split("|")
+    if not cells or not all(re.fullmatch(r"\s*:?-+:?\s*", cell) for cell in cells):
+        return None
+    return len(cells)
+
+
+def require_separator(row: str, columns: int, where: str) -> None:
+    """Refuse a separator that does not form a table of `columns` columns."""
+    found = separator_columns(row)
+    if found is None:
+        fail(f"{where} has a separator that forms no table: {row!r}")
+    if found != columns:
+        fail(f"{where} has a {found}-column separator against {columns} columns")
+
+
+def parse_counter_table(
+    text: str, heading: str, header: str | None = None
+) -> tuple[Counter[str], int]:
     """Read a two-column counter table, refusing any row it cannot read.
 
     The table's shape is checked, not assumed: an optional header row, then a
@@ -694,21 +727,29 @@ def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
         # A separator is two delimiter cells, not any arrangement of the
         # characters one is made of: `|` alone forms no table.
         if set(row) <= set("|-: "):
-            if not re.fullmatch(r"\|(?:\s*:?-+:?\s*\|){2}", row.rstrip()):
-                fail(
-                    f"counter table below {heading} has a separator that forms "
-                    f"no two-column table: {row!r}"
-                )
+            require_separator(row, 2, f"counter table below {heading}")
             if seen_separator:
                 fail(f"counter table below {heading} has two separator rows")
             seen_separator = True
             continue
-        # Before the separator there is at most the table's own header.
+        # Before the separator there is at most the table's own header, and it
+        # must be the header this table has: any other row there is a data row
+        # standing where the header belongs, and reading it is the point.
         if not seen_separator:
             if rows > 1:
                 fail(
                     f"counter table below {heading} has no separator row; "
                     f"found {row!r}"
+                )
+            # `section` consumes the heading when the caller names the header
+            # row itself, and leaves it when the caller names a `###` heading.
+            # Either way the row standing before the separator must be the
+            # header this table has, or it is a data row being skipped.
+            expected = header if header is not None else heading
+            if row.rstrip() != expected.rstrip():
+                fail(
+                    f"counter table below {heading} has an unexpected header "
+                    f"row: {row!r}"
                 )
             continue
         match = re.match(r"\| `?([^|`]+?)`? \| \**([0-9]+)\** \|$", row)
@@ -742,6 +783,7 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
     body = body.split("\n\n", 1)[0]
     files: Counter[str] = Counter()
     total: int | None = None
+    seen_separator = False
     for row in body.splitlines():
         total_match = re.match(r"\| \*\*Total\*\* \| \*\*([0-9]+)\*\* \|$", row)
         if total_match:
@@ -749,7 +791,11 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
                 fail("standalone fixture table lists more than one Total row")
             total = int(total_match.group(1))
             continue
-        if not row.startswith("|") or set(row) <= set("|-: "):
+        if not row.startswith("|"):
+            continue
+        if set(row) <= set("|-: "):
+            require_separator(row, 2, "the standalone fixture table")
+            seen_separator = True
             continue
         if re.match(r"\|\s*Disposition\s*\|\s*Fixtures\s*\|$", row):
             continue
@@ -765,6 +811,8 @@ def parse_fixture_table(text: str) -> tuple[Counter[str], int]:
         files[label] = int(match.group(2))
     # Since the S4 surface swap every codemod and redraw fixture has left the
     # corpus, so the table may carry the preserve row alone.
+    if not seen_separator:
+        fail("the standalone fixture table has no separator row")
     if not files:
         fail("could not parse standalone fixture reconciliation table")
     unknown = sorted(set(files) - set(DISPOSITIONS))
@@ -789,13 +837,18 @@ def documented_blueprint(
     disposition_by_occurrence: dict[tuple[str, int, str], str] = {}
     targets_by_occurrence: dict[tuple[str, int, str], frozenset[str]] = {}
     started = False
+    seen_separator = False
     for row in body.splitlines():
         if not row.startswith("|"):
             if started:
                 break
             continue
         cells = [cell.strip() for cell in row.split("|")[1:-1]]
-        if set(row) <= set("|-: ") or cells[:1] == ["Source"]:
+        if set(row) <= set("|-: "):
+            require_separator(row, 4, "the blueprint inventory")
+            seen_separator = True
+            continue
+        if cells[:1] == ["Source"]:
             continue
         # A row the grammar cannot read is refused rather than skipped: a
         # mistyped source name would otherwise drop its occurrences from the
@@ -827,9 +880,15 @@ def documented_blueprint(
                     listed[key] += 1
                     dispositions[disposition] += 1
                     disposition_by_occurrence[key] = disposition
-                    targets_by_occurrence[key] = frozenset(
-                        use.group(3).split("+")
-                    )
+                    components = use.group(3).split("+")
+                    if len(components) != len(set(components)):
+                        fail(
+                            f"{filename}:{line} {use.group(2)} spells a target "
+                            f"more than once: {use.group(3)!r}"
+                        )
+                    targets_by_occurrence[key] = frozenset(components)
+    if not seen_separator:
+        fail("the blueprint inventory has no separator row")
     return (
         listed,
         dispositions,
@@ -1077,7 +1136,7 @@ def main() -> int:
         fail("fixture disposition totals do not match the fixture lists")
     fixture_heading = "### Fixture raw-count reconciliation"
     documented_fixture_raw, _fixture_raw_total = parse_counter_table(
-        text, fixture_heading
+        text, fixture_heading, "| Raw construct | Occurrences |"
     )
     if set(documented_fixture_raw) != FIXTURE_RAW_LABELS:
         fail(
