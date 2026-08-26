@@ -788,6 +788,17 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             "fallback, so an unmatched value is accepted in silence"
         )
     branches, after = _group(body, cases[0].end())
+    # `TF` takes the matched branch first and the unmatched branch second, so
+    # the group that must refuse is the second one; reading the first would
+    # accept a table that errors on every documented word and passes every
+    # undocumented one.
+    if signature.endswith("TF"):
+        matched, after = _group(body, after)
+        if REFUSAL.search(matched):
+            raise ValueError(
+                f"parser {macro} refuses in the branch it takes when a word "
+                "matches"
+            )
     fallback, _ = _group(body, after)
     if not REFUSAL.search(fallback):
         raise ValueError(
@@ -826,8 +837,8 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     """The words a `\\__tenkz_kernel_choice:nnnn` table accepts for one key."""
     matches = list(
         re.finditer(
-            r"\\__tenkz_kernel_choice:nnnn\s*\{\s*" + re.escape(scope) + r"\s*\}"
-            r"\s*\{\s*" + re.escape(key) + r"\s*\}",
+            r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
+            + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
             text,
         )
     )
@@ -857,7 +868,7 @@ def key_definitions(text: str, scope: str, key: str) -> int:
     # `\\keys_define` has argument variants, and a generated one installs the
     # same handler, so the operation is matched by name rather than by one
     # signature.
-    for match in re.finditer(r"\\keys_define:[nVvexoc]{2}\s*", text):
+    for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
         try:
             named, offset = _group(text, match.end())
             body, _ = _group(text, offset)
@@ -865,7 +876,15 @@ def key_definitions(text: str, scope: str, key: str) -> int:
             continue
         if named.strip() != scope:
             continue
-        if re.search(r"(?:\A|,)\s*" + re.escape(key) + r"\s*(?:/[^,]*?)?\s*\.", body):
+        # Only the properties that install a handler count: `.default:n` and
+        # its like change what a key does with a value without replacing the
+        # code that accepts one, so counting them would report an override
+        # where there is none.
+        if re.search(
+            r"(?:\A|,)\s*" + re.escape(key) + r"\s*(?:/[^,\s]*)?\s*"
+            r"\.(?:code|choices|choice|meta|multichoice|multichoices|cs_set)",
+            body,
+        ):
             bindings += 1
     return bindings
 
@@ -888,7 +907,7 @@ def key_binding_body(text: str, scope: str, key: str) -> str:
     rewire the key while the original binding went on satisfying the check.
     """
     bodies: list[str] = []
-    for match in re.finditer(r"\\keys_define:[nVvexoc]{2}\s*", text):
+    for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
         try:
             named, offset = _group(text, match.end())
             block, _ = _group(text, offset)

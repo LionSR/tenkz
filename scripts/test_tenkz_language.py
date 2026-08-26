@@ -403,6 +403,41 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         registry, interrupted, kernel
     )):
         raise SystemExit("an interrupted alphabet table was accepted")
+    for label, seeded_kernel, expected in (
+        (
+            "a TF table whose refusal is in the matched branch",
+            kernel.replace(
+                r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
+                r"\str_case:VnTF \l__tenkz_kernel_list_item_tl", 1,
+            ),
+            "refuses in the branch it takes",
+        ),
+        (
+            "a variant call to the choice helper",
+            f"{kernel}\n\\__tenkz_kernel_choice:nnnx {{ tenkz-kernel-mark }} "
+            "{ form } { bracket, enclosure, label, prose, glow } { form }\n",
+            "choice tables",
+        ),
+        (
+            "a keys_define:nf override",
+            f"{kernel}\n\\keys_define:nf {{ tenkz-kernel-mark }} "
+            "{ form .code:n = { } }\n",
+            "bound directly",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    # `.default:n` changes the value a key takes without an explicit one; it
+    # installs no handler, so reporting it as an override would be wrong.
+    orthogonal = (
+        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
+        "{ form .default:n = label }\n"
+    )
+    if tenkz_language.alphabet_errors(registry, contract, orthogonal):
+        raise SystemExit("an orthogonal key property was reported as an override")
 
 
 def main() -> int:
