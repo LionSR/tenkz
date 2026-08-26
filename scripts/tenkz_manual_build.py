@@ -117,10 +117,16 @@ def executed_manual(text: str | None = None) -> str:
 def manual_version(text: str | None = None) -> str:
     """The version the manual's title page names for the package."""
     text = executed_manual(text)
-    match = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", text)
-    if match is None:
+    matches = re.findall(r"manual for \\pkg\{\} version ([^\\}]*)", text)
+    if not matches:
         raise ValueError("manual2.tex names no package version on its title page")
-    version = match.group(1).strip()
+    # Two active lines are two claims, and the page shows both.
+    if len(matches) > 1:
+        raise ValueError(
+            f"manual2.tex names {len(matches)} package versions on its title "
+            f"page: {[value.strip() for value in matches]}"
+        )
+    version = matches[0].strip()
     if not VERSION.fullmatch(version):
         raise ValueError(
             f"manual2.tex names a version this reader cannot read: {version!r}"
@@ -134,10 +140,15 @@ def manual_dateline(text: str | None = None) -> str:
     Inert source is blanked first, for the reason `executed_manual` records.
     """
     text = executed_manual(text)
-    match = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", text)
-    if match is None:
+    matches = re.findall(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", text)
+    if not matches:
         raise ValueError("manual2.tex has no title-page date line")
-    return match.group(1).strip()
+    if len(matches) > 1:
+        raise ValueError(
+            f"manual2.tex has {len(matches)} title-page date lines: "
+            f"{[value.strip() for value in matches]}"
+        )
+    return matches[0].strip()
 
 
 def source_date_epoch(date: str) -> int:
@@ -296,10 +307,25 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     # tenkz file from anywhere else is the installation answering for this
     # tree, which is what the record exists to catch.
     homes = (package_tree, work.resolve())
+    # Every file this build copied in, by basename.  A chapter or a generated
+    # reference does not begin with `tenkz`, and if one were missing from the
+    # copy an older installed sibling would answer for it through the same
+    # restored search path -- identically in both builds, so the byte
+    # comparison would agree about the wrong document.
+    own = {
+        path.name
+        for name in MANUAL_SOURCES
+        for path in (
+            (MANUAL_DIR / name).rglob("*")
+            if (MANUAL_DIR / name).is_dir()
+            else [MANUAL_DIR / name]
+        )
+        if path.is_file()
+    }
     foreign = sorted({
         opened
         for opened in recorded_inputs(record)
-        if Path(opened).name.startswith("tenkz")
+        if (Path(opened).name.startswith("tenkz") or Path(opened).name in own)
         and not any(
             (work / opened).resolve().is_relative_to(home) for home in homes
         )

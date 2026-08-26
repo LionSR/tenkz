@@ -91,6 +91,24 @@ def main() -> int:
     direct = build.direct_pictures()
     if len(direct) != 2:
         raise SystemExit(f"the manual's own picture count moved: {len(direct)}")
+    # Two active lines are two claims, and the page shows both.
+    title_version = next(row for row in source.splitlines() if f"version {manual}" in row)
+    title_date = next(
+        row for row in source.splitlines()
+        if "quad---" in row and "TNLean project" in row
+    )
+    for reader, line in (
+        (build.manual_version, title_version),
+        (build.manual_dateline, title_date),
+    ):
+        doubled = source.replace(line, f"{line}\n{line}", 1)
+        if doubled == source:
+            raise SystemExit(f"could not double {line!r}")
+        try:
+            reader(doubled)
+        except ValueError:
+            continue
+        raise SystemExit(f"two active release lines were accepted: {line!r}")
     # A version is read whole and then required to be one, on both sides: a
     # numeric prefix match would call `0.7-beta` equal to the package's `0.7`
     # while the page says otherwise.
