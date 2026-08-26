@@ -89,16 +89,30 @@ def package_release() -> tuple[str, str]:
     return match.group(1), version
 
 
-def tex_distribution_root() -> Path | None:
-    """The read-only TeX distribution tree, or None when it cannot be asked."""
+# Every tree an installation legitimately answers from.  `hobby` and
+# `spath3` are separate CTAN packages and may be installed in a site or
+# personal tree rather than the distribution's own, so all of them count as
+# installation homes -- what must not come from any of them is this
+# repository's own material, which the name and inventory tests catch.
+TEXMF_VARIABLES = ("TEXMFDIST", "TEXMFLOCAL", "TEXMFHOME", "TEXMFSYSCONFIG")
+
+
+def tex_installation_roots() -> tuple[Path, ...]:
+    """The installation's own texmf trees, empty when they cannot be asked."""
     if shutil.which("kpsewhich") is None:
-        return None
-    run = subprocess.run(
-        ["kpsewhich", "-var-value=TEXMFDIST"],
-        text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60,
-    )
-    value = run.stdout.strip()
-    return Path(value).resolve() if run.returncode == 0 and value else None
+        return ()
+    roots: list[Path] = []
+    for variable in TEXMF_VARIABLES:
+        run = subprocess.run(
+            ["kpsewhich", f"-var-value={variable}"],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60,
+        )
+        value = run.stdout.strip()
+        if run.returncode == 0 and value:
+            root = Path(value)
+            if root.exists():
+                roots.append(root.resolve())
+    return tuple(roots)
 
 
 def recorded_inputs(record: Path) -> list[str]:
@@ -343,22 +357,26 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     # build knows the name: an `\input` committed without its file would
     # otherwise be served by an older installed sibling, in both builds
     # alike, and the byte comparison would agree about the wrong document.
-    distribution = tex_distribution_root()
+    installation = tex_installation_roots()
     def at_home(opened: str) -> bool:
         resolved = (work / opened).resolve()
-        if any(resolved.is_relative_to(home) for home in homes):
-            return True
-        return distribution is not None and resolved.is_relative_to(distribution)
+        return any(
+            resolved.is_relative_to(home) for home in (*homes, *installation)
+        )
 
     foreign = sorted({
         opened
         for opened in recorded_inputs(record)
         if (
+            # This repository's own material must come from this repository,
+            # from whichever tree an installed copy might sit in.
             Path(opened).name.startswith("tenkz")
             or Path(opened).name in own
-            or Path(opened).suffix in {".tex", ".sty"}
         )
-        and not at_home(opened)
+        and not any(
+            (work / opened).resolve().is_relative_to(home) for home in homes
+        )
+        or Path(opened).suffix in {".tex", ".sty"} and not at_home(opened)
     })
     if foreign:
         raise RuntimeError(
@@ -430,9 +448,16 @@ def rendered_title_page(pdf: Path) -> str:
     return run.stdout
 
 
-def rendered_metadata_errors(pdf: Path, version: str, dateline: str) -> list[str]:
+def rendered_metadata_errors(
+    pdf: Path, version: str, dateline: str, *, required: bool = False
+) -> list[str]:
     """The title page must say the release the source claims, once."""
     if shutil.which("pdftotext") is None:
+        # This is the only check that reads what a reader sees, so a release
+        # build may not skip it.
+        if required:
+            return ["pdftotext is not installed, so the rendered title page "
+                    "cannot be read"]
         return []
     page = rendered_title_page(pdf)
     errors: list[str] = []
@@ -444,11 +469,16 @@ def rendered_metadata_errors(pdf: Path, version: str, dateline: str) -> list[str
                 f"{found} time(s), not once"
             )
     # A qualifier the source readers stop at still reaches the page.
-    qualified = re.search(r"version\s+" + re.escape(version) + r"(\S+)", page)
-    if qualified:
+    # `version 0.7 beta` reads as a qualified version to a person, and the
+    # source pattern that stopped at `\emph` never saw the word.  The rendered
+    # line must end after the version.
+    qualified = re.search(
+        r"version\s+" + re.escape(version) + r"[^\S\n]*(\S.*)?$", page, re.M
+    )
+    if qualified and qualified.group(1):
         errors.append(
             f"the rendered title page qualifies the version: "
-            f"{qualified.group(0)!r}"
+            f"{qualified.group(0).strip()!r}"
         )
     return errors
 
@@ -506,7 +536,8 @@ def main() -> int:
                 return 1
             direct = audit_direct_pictures(work / "direct", epoch, engine)
             rendered = rendered_metadata_errors(
-                work / "manual2.pdf", version, manual_dateline()
+                work / "manual2.pdf", version, manual_dateline(),
+                required=args.require_engine,
             )
             if rendered:
                 for error in rendered:
