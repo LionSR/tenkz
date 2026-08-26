@@ -45,6 +45,15 @@ DISPOSITION_FAMILY = {"P": "preserve", "C": "codemod", "R": "redraw"}
 # removing one is an edit to this checker and gets read.
 BLUEPRINT_RAW_LABELS = frozenset({"tenkz", "tenkzcd", "tenkzplanes", "tnpic", "tntree"})
 FIXTURE_RAW_LABELS = frozenset({"tenkz", "tenkzeq", "tnpic", "tntree"})
+# The canonical migration vocabulary of `### Migration target codes`.  Only
+# three are referenced by the inventories today, so the rest are readable
+# only here: deleting one would otherwise cost nothing.
+MIGRATION_CODE_SET = frozenset({
+    "P-grid", "P-none",
+    "C-declare", "C-picture", "C-tree", "C-policy", "C-frame", "C-record",
+    "C-species", "C-switch",
+    "R-free", "R-cd", "R-lattice", "R-plane", "R-record",
+})
 MIGRATION_CODES: frozenset[str] = frozenset()
 # Retired spellings, read from the registry's tombstone rows: a command row
 # names a command that no longer exists, a `key=value` row a word struck from
@@ -632,6 +641,14 @@ def migration_codes(text: str) -> frozenset[str]:
     stray = sorted(code for code in codes if code.split("-", 1)[0] not in DISPOSITION_FAMILY)
     if stray:
         fail(f"the migration table defines codes outside P/C/R: {stray}")
+    # The inventories reference three of these today, so deleting any of the
+    # others would pass every check that reads them.  The canonical set is
+    # pinned, and changing it is an edit to this checker that gets read.
+    if codes != MIGRATION_CODE_SET:
+        fail(
+            "the migration table's codes moved: "
+            f"{sorted(codes)} against {sorted(MIGRATION_CODE_SET)}"
+        )
     return codes
 
 
@@ -674,7 +691,14 @@ def parse_counter_table(text: str, heading: str) -> tuple[Counter[str], int]:
         if not row.startswith("|"):
             continue
         rows += 1
+        # A separator is two delimiter cells, not any arrangement of the
+        # characters one is made of: `|` alone forms no table.
         if set(row) <= set("|-: "):
+            if not re.fullmatch(r"\|(?:\s*:?-+:?\s*\|){2}", row.rstrip()):
+                fail(
+                    f"counter table below {heading} has a separator that forms "
+                    f"no two-column table: {row!r}"
+                )
             if seen_separator:
                 fail(f"counter table below {heading} has two separator rows")
             seen_separator = True

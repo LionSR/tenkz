@@ -197,6 +197,21 @@ def test_document_only_blueprint_gates_fire() -> None:
         "no separator row",
         "separator replaced by a data row",
     )
+    # A separator must form a two-column table, not merely be made of the
+    # characters one is made of.
+    _expect_document_failure(
+        text.replace("| Raw construct | Occurrences |\n|---|---:|", "| Raw construct | Occurrences |\n|", 1),
+        "forms no two-column table",
+        "separator that forms no table",
+    )
+    # Deleting an unreferenced canonical code costs nothing without the pin.
+    _expect_document_failure(
+        text.replace(
+            "| `C-picture` | Expand `\\tnpic` to a scoped `tenkz` picture term. |\n", "", 1
+        ),
+        "codes moved",
+        "deleted migration definition",
+    )
     # A canonical definition that lost its target prose still defines a code.
     _expect_document_failure(
         text.replace(
