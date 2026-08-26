@@ -140,6 +140,49 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     errors = tenkz_language.alphabet_errors(registry, loose, kernel)
     if not any("cannot name" in error for error in errors):
         raise SystemExit(f"loose text in an alphabet cell was ignored; errors: {errors}")
+    # A row whose cell opens with bare text is read like any other row: a
+    # reader that only matched well-formed cells would not see it at all.
+    bare = contract.replace(
+        "| routes | `straight` `orth` `arc` |",
+        "| routes | `straight` `orth` `arc` |\n| weights | thin thick |",
+    )
+    assert bare != contract
+    errors = tenkz_language.alphabet_errors(registry, bare, kernel)
+    if not any("cannot name" in error for error in errors):
+        raise SystemExit(f"a bare-text alphabet row was skipped; errors: {errors}")
+    # A second choice table for one key decides what the parser accepts, so
+    # reading the first would report a stale alphabet as current.
+    twice = kernel.replace(
+        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
+        "  { bracket, enclosure, label, prose }\n",
+        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
+        "  { bracket, enclosure, label, prose }\n"
+        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
+        "  { bracket, enclosure, label, prose, glow }\n",
+    )
+    assert twice != kernel
+    errors = tenkz_language.alphabet_errors(registry, contract, twice)
+    if not any("choice tables" in error for error in errors):
+        raise SystemExit(f"a second choice table was not reported; errors: {errors}")
+    # The recording word is subtracted from the comparison, so its removal
+    # would otherwise leave both lists agreeing and the table silent.
+    dropped = kernel.replace(
+        "  { bracket, enclosure, label, prose }\n",
+        "  { bracket, enclosure, label }\n",
+    )
+    dropped_registry = [
+        tenkz_language.Entry(
+            entry.kind,
+            (*entry.fields[:2], "enum(bracket|enclosure|label)", *entry.fields[3:]),
+        )
+        if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
+        else entry
+        for entry in registry
+    ]
+    assert dropped != kernel
+    errors = tenkz_language.alphabet_errors(dropped_registry, contract, dropped)
+    if not any("recording word" in error for error in errors):
+        raise SystemExit(f"a retired recording word was not reported; errors: {errors}")
 
 
 def main() -> int:

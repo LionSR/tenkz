@@ -617,13 +617,20 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     if section is None:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
     alphabets: dict[str, list[str]] = {}
-    for row in re.finditer(r"^\|\s*([^|`]+?)\s*\|\s*(`[^|]*)\|", section.group(1), re.M):
-        name = row.group(1)
+    for line in section.group(1).splitlines():
+        # Every row of the table is read before any of it is validated: a row
+        # whose cell opens with bare text is exactly the drift this gate is
+        # for, and a reader that only matches well-formed rows cannot see it.
+        if not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) != 2 or set(cells[0]) <= {"-", ":"} or cells[0] == "Alphabet":
+            continue
+        name, cell = cells
         # One row per alphabet: a second row for one name would let a
         # conflicting definition stand unread above the canonical one.
         if name in alphabets:
             raise ValueError(f"section 2.8 lists {name!r} twice")
-        cell = row.group(2).strip()
         # The cell is backticked words and the space between them, nothing
         # else: bare text beside them would read as a word to a person and be
         # invisible to `findall`, which is the drift this gate exists to catch.
@@ -669,14 +676,24 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
 
 def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     """The words a `\\__tenkz_kernel_choice:nnnn` table accepts for one key."""
-    match = re.search(
-        r"\\__tenkz_kernel_choice:nnnn\s*\{\s*" + re.escape(scope) + r"\s*\}"
-        r"\s*\{\s*" + re.escape(key) + r"\s*\}",
-        text,
+    matches = list(
+        re.finditer(
+            r"\\__tenkz_kernel_choice:nnnn\s*\{\s*" + re.escape(scope) + r"\s*\}"
+            r"\s*\{\s*" + re.escape(key) + r"\s*\}",
+            text,
+        )
     )
-    if match is None:
+    if not matches:
         raise ValueError(f"kernel installs no choice table for {scope}:{key}")
-    words, _ = _group(text, match.end())
+    # Every invocation installs its choices with `\keys_define:nn`, so a second
+    # one silently decides what the parser accepts while a reader of the first
+    # sees the stale list.  One definition per key, or the gate says so.
+    if len(matches) > 1:
+        raise ValueError(
+            f"kernel installs {len(matches)} choice tables for {scope}:{key}; "
+            "the last would decide what the parser accepts"
+        )
+    words, _ = _group(text, matches[0].end())
     return [word.strip() for word in words.split(",") if word.strip()]
 
 
@@ -731,11 +748,17 @@ def alphabet_errors(
                     f"{':'.join(registry_key)} reads {value_type} but the parser "
                     f"accepts {', '.join(words)}"
                 )
-        accepted[alphabet] = [
-            word
-            for word in words
-            if word not in ALPHABET_RECORDING_WORDS.get(alphabet, set())
-        ]
+        recording = ALPHABET_RECORDING_WORDS.get(alphabet, set())
+        # Subtracting a word the acceptor no longer has would hide its
+        # removal: the two lists would agree and the table would be silent,
+        # while the contract still promises the spelling.
+        missing = sorted(recording - set(words))
+        if missing:
+            errors.append(
+                f"alphabet {alphabet!r}: the recording word(s) {', '.join(missing)} "
+                "left the parser but the contract still carries them"
+            )
+        accepted[alphabet] = [word for word in words if word not in recording]
     for alphabet in sorted(set(accepted) | set(contract)):
         if alphabet not in contract:
             errors.append(f"alphabet {alphabet!r} is accepted but has no section 2.8 row")
