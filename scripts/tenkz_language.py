@@ -623,7 +623,15 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
         # conflicting definition stand unread above the canonical one.
         if name in alphabets:
             raise ValueError(f"section 2.8 lists {name!r} twice")
-        alphabets[name] = re.findall(r"`([^`]+)`", row.group(2))
+        cell = row.group(2).strip()
+        # The cell is backticked words and the space between them, nothing
+        # else: bare text beside them would read as a word to a person and be
+        # invisible to `findall`, which is the drift this gate exists to catch.
+        if not re.fullmatch(r"(?:`[^`]+`\s*)+", cell):
+            raise ValueError(
+                f"section 2.8 row {name!r} has words this reader cannot name: {cell!r}"
+            )
+        alphabets[name] = re.findall(r"`([^`]+)`", cell)
     return alphabets
 
 

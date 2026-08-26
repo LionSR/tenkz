@@ -130,15 +130,22 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     errors = tenkz_language.alphabet_errors(registry, contract, unreadable)
     if not any("cannot name" in error for error in errors):
         raise SystemExit(f"an unreadable branch key was skipped; errors: {errors}")
+    # A word written beside the backticked ones reads as part of the alphabet
+    # on the page and would otherwise be dropped in silence.
+    loose = contract.replace(
+        "| routes | `straight` `orth` `arc` |",
+        "| routes | `straight` `orth` `arc` bezier |",
+    )
+    assert loose != contract
+    errors = tenkz_language.alphabet_errors(registry, loose, kernel)
+    if not any("cannot name" in error for error in errors):
+        raise SystemExit(f"loose text in an alphabet cell was ignored; errors: {errors}")
 
 
 def main() -> int:
     run("python3", "scripts/tenkz_language.py", "check")
     registry = tenkz_language.load_registry()
     alphabet_gate_fails_when_seeded(registry)
-    if shutil.which("xelatex") is None:
-        print("PASS: registry and seeded alphabet drift; SKIP: xelatex not found")
-        return 0
     mpo_preludes = [
         entry.fields
         for entry in registry
@@ -190,6 +197,16 @@ def main() -> int:
             raise SystemExit(
                 f"the registry validator accepted a {declaration_class} prelude"
             )
+    # Everything above is Python over the registry and the contract, and runs
+    # anywhere; from here on every check compiles.  The skip belongs here so a
+    # machine without TeX still reports the drift the alphabet gate exists for
+    # rather than passing on the first missing engine (LionSR/tenkz#7).
+    if shutil.which("xelatex") is None:
+        print(
+            "PASS: registry, alphabet drift, prelude inventory, and generated "
+            "reference; SKIP: xelatex not found, so the compile probes did not run"
+        )
+        return 0
     for declaration_class, name, descriptor in (
         ("atom", "mpo-command-leak", "skin=box"),
         ("species", "mpo-species-leak", "hue=source:red"),
