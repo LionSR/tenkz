@@ -24,66 +24,39 @@ ALIASES = ROOT / "docs/tenkz/chapters2/generated-language-aliases.tex"
 CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
 KERNEL = ROOT / "tex/tenkz/tenkz-kernel.code.tex"
 
-# The closed alphabets of LANGUAGE-1.0 section 2.8, each paired with the one
-# place that accepts its words.  Three are kernel parsers whose \str_case
-# branches are the alphabet; the fourth is the registry's own enum.  The
-# census meters count keys, not the words inside a closed alphabet (issue
-# LionSR/tenkz#7), so this check is what keeps the contract's table and the
-# implementation from drifting apart in either direction.
+# The closed alphabets of LANGUAGE-1.0 section 2.8, each paired with the place
+# that accepts its words.  The census meters count keys, not the words inside a
+# closed alphabet (LionSR/tenkz#7), so this is what keeps the contract's table
+# and the implementation from drifting apart in either direction.
+#
+# What this gate states, and no more: the words the contract publishes are the
+# words the acceptor holds.  It does not prove that the acceptor is reached, or
+# that a handler forwards its argument, or what a kernel deliberately rewritten
+# to defeat it would do -- those are the corpus, probe, and review suites'
+# business, and a static reader that claimed them would be claiming more than
+# it can check.
 ALPHABET_PARSERS = {
     "side policy": "__tenkz_kernel_side_policy:nn",
     "routes": "__tenkz_kernel_route:n",
     "default skins": "__tenkz_kernel_skin_base_aux:nN",
 }
 ALPHABET_CHOICES = {"mark forms": ("tenkz-kernel-mark", "form")}
-# A parser's branches are the accepted alphabet only while the parser is what
-# the surface reaches.  Each entry names the text that must still carry a call
-# to it: the key binding for a directly wired parser, the installing helper's
-# body for the others.  This proves the one link that the rest of the gate
-# rests on, not the whole runtime path.
-# The side words are installed on the picture scope by a helper, so the
-# generated keys are what a later block would rebind; each is checked in
-# addition to the installer.
-SIDE_KEYS = ("west", "east", "north", "south")
-ALPHABET_REACHED_FROM = {
-    "routes": ("key", "__tenkz_kernel_route:n", ("tenkz-kernel-wire", "route")),
-    "side policy": (
-        "macro", "__tenkz_kernel_side_policy:nn", "__tenkz_kernel_side:nn",
-    ),
-    "default skins": (
-        "macro", "__tenkz_kernel_skin_base_aux:nN", "__tenkz_kernel_skin_base:nN",
-    ),
-}
-# The helper that installs a choice table must still install a *choice* table:
-# rewritten to an unrestricted `.code:n` handler it would accept anything,
-# while its call site and word list read unchanged.
-CHOICE_HELPER = "__tenkz_kernel_choice:nnnn"
-# The helpers whose calls this gate already reads: the choice helper's word
-# lists, and the side installer, which is checked to bind its key and call its
-# parser.  A call to any other key-installing helper is a binding this gate
-# has not accounted for.
-# Each sanctioned installer is sanctioned only for the scope and keys this
-# gate already reads it for.  The same helper aimed elsewhere -- the side
-# installer at `tenkz-kernel-mark:form`, say -- is an override like any other.
-SANCTIONED_INSTALLERS = {
-    "__tenkz_kernel_choice:nnnn": (("tenkz-kernel-mark", "form"),),
-    "__tenkz_kernel_side:nn": tuple(
-        ("tenkz-kernel-picture", word) for word in ("west", "east", "north", "south")
-    ),
-}
-# l3keys properties that decorate a key without installing the code that
-# accepts its value.  Everything else replaces the handler.
-ORTHOGONAL_PROPERTIES = frozenset({
-    "default", "initial", "value_required", "value_forbidden", "groups", "usage",
-})
-# Each choice-table alphabet is also a registry enum row, and the two must
-# name the same words: the registry is what the documents and tools read,
-# the choice table is what the parser accepts.
+# Each choice-table alphabet is also a registry enum row, and the two must name
+# the same words: the registry is what the documents and tools read, the choice
+# table is what the parser accepts.
 ALPHABET_ENUMS = {"mark forms": ("kernel-mark", "form")}
-# The contract's table holds the words that put ink on the page; `prose`
-# is the recording row the sugar ledger keeps (SHRINK 2026-08-11) and is
-# subtracted here, the one place the difference is spelled.
+# The contract's table holds the words that put ink on the page; `prose` is the
+# recording row the sugar ledger keeps (SHRINK 2026-08-11), subtracted here,
+# the one place the difference is spelled.
 ALPHABET_RECORDING_WORDS = {"mark forms": {"prose"}}
+# expl3's error-raising operations: any of them in a branch means the word is
+# refused rather than accepted.
+REFUSAL = re.compile(r"\\msg_(?:[a-z_]*_)?(?:error|fatal|critical)(?::|\s)")
+# The spellings that install a body under a name.  A parser bound more than
+# once is reported rather than resolved.
+DEFINITION_TOKEN = re.compile(
+    r"\\(?:cs_(?:new|set|gset)[a-z_]*:[A-Za-z]*|let|[egx]?def)\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -654,112 +627,51 @@ def tombstone_errors(
 def contract_alphabets(text: str) -> dict[str, list[str]]:
     """Read the section 2.8 table: one row per alphabet, words in backticks.
 
-    The reader is total over the table: the header and its delimiter are the
-    only rows it skips, and every other row must be one alphabet name and a
-    cell of backticked words.  A row it cannot account for is an error rather
-    than a line it steps over, because a row the contract renders and this
-    reader ignores is exactly the drift the gate exists to catch.
+    The reader is total over the table -- the header and its delimiter are the
+    only rows it skips, and any other row must be one alphabet name and a cell
+    of backticked words.  A row it cannot account for is an error, because a
+    row the contract renders and this reader ignores is the drift the gate is
+    for.
     """
-    # A fenced block is a code sample: a heading inside one renders as text,
-    # not as a section of the contract.
-    unfenced = re.sub(r"^```.*?^```", lambda m: "\n" * m.group(0).count("\n"),
-                      text, flags=re.M | re.S)
     sections = list(re.finditer(
-        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", unfenced, re.M | re.S
+        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", text, re.M | re.S
     ))
     if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
-    # Two sections are two contracts, and a reader of the first would not see
-    # the second even though the document publishes both.
     if len(sections) > 1:
         raise ValueError(f"LANGUAGE-1.0 has {len(sections)} section 2.8s")
-    section = sections[0]
     alphabets: dict[str, list[str]] = {}
     seen_header = False
     seen_delimiter = False
-    ended = False
-    header_width = 0
-    for line in section.group(1).splitlines():
-        # Markdown allows up to three spaces of indentation before a row, and
-        # renders it inside the table, so the reader must see it there too.
-        row = line[:3].lstrip(" ") + line[3:]
-        if ended and row.startswith("|"):
-            raise ValueError(
-                f"section 2.8 carries a second table below its first: {row!r}"
-            )
-        if not row.startswith("|"):
-            # Markdown ends the table at the first line that is not a row, so
-            # prose after the last row simply ends it -- with or without a
-            # blank line between.  Before any row has been read, though, the
-            # table is empty and whatever pipe-prefixed lines follow are not
-            # its rows.
-            if seen_delimiter:
-                if not row.strip():
-                    # A blank line ends the table, with or without rows above
-                    # it; reading on would take later pipe-prefixed lines for
-                    # rows of a table Markdown has already closed.
-                    ended = True
-                    continue
-                if alphabets:
-                    # The table has ended.  What follows is prose -- and must
-                    # stay prose: a second table below it would be a second
-                    # contract in the same section.
-                    ended = True
-                    continue
-                if row.strip():
-                    raise ValueError(
-                        f"section 2.8's table is empty and interrupted by "
-                        f"{row!r}"
-                    )
+    for line in sections[0].group(1).splitlines():
+        if not line.startswith("|"):
+            if seen_delimiter and alphabets:
+                break  # the table has ended
             continue
-        # One leading and one trailing border pipe, not every pipe: `||`
-        # ends of a row are empty cells, and stripping them would read a
-        # differently shaped table as the one expected here.
-        trimmed = row.strip()
-        body_cells = trimmed[1:] if trimmed.startswith("|") else trimmed
-        body_cells = body_cells[:-1] if body_cells.endswith("|") else body_cells
-        cells = [cell.strip() for cell in body_cells.split("|")]
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
         if not seen_header:
             seen_header = True
-            header_width = len(cells)
-            if header_width != 2:
-                raise ValueError(
-                    f"section 2.8 header has {header_width} cell(s), not two"
-                )
-            # The labels say what the rows below mean.  Renamed, the same rows
-            # would be read as an alphabet table while the contract rendered
-            # something else.
             if [cell.lower() for cell in cells] != ["alphabet", "words"]:
-                raise ValueError(
-                    f"section 2.8 header reads {cells!r}, not "
-                    "['Alphabet', 'Words']"
-                )
+                raise ValueError(f"section 2.8 header reads {cells!r}")
             continue
         if not seen_delimiter:
-            # Markdown wants at least three hyphens in a delimiter cell;
-            # `|-|-|` renders as text, not as the table read below.
             if not all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
-                raise ValueError(f"section 2.8 has no delimiter row; found {row!r}")
-            # A delimiter of a different width does not form the two-column
-            # table the rows are read as, so the shape is checked, not just
-            # the characters.
-            if len(cells) != header_width:
+                raise ValueError(f"section 2.8 has no delimiter row; found {line!r}")
+            # A delimiter of another width does not form the two-column table
+            # the rows below are read as.
+            if len(cells) != 2:
                 raise ValueError(
-                    f"section 2.8 delimiter has {len(cells)} cell(s) against a "
-                    f"{header_width}-cell header"
+                    f"section 2.8 delimiter has {len(cells)} cell(s), not two"
                 )
             seen_delimiter = True
             continue
         if len(cells) != 2 or not cells[0]:
-            raise ValueError(f"section 2.8 has a row this reader cannot name: {row!r}")
+            raise ValueError(f"section 2.8 has a row this reader cannot name: {line!r}")
         name, cell = cells
-        # One row per alphabet: a second row for one name would let a
-        # conflicting definition stand unread above the canonical one.
         if name in alphabets:
             raise ValueError(f"section 2.8 lists {name!r} twice")
-        # The cell is backticked words and the space between them, nothing
-        # else: bare text beside them would read as a word to a person and be
-        # invisible to `findall`.
+        # Backticked words and the space between them, nothing else: bare text
+        # beside them reads as a word to a person and is invisible to findall.
         if not re.fullmatch(r"(?:`[^`]+`\s*)+", cell):
             raise ValueError(
                 f"section 2.8 row {name!r} has words this reader cannot name: {cell!r}"
@@ -770,88 +682,33 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     return alphabets
 
 
-# expl3 and TeX spellings that install a body under a name.  A control
-# sequence bound by any of them is a definition of it; `cs_generate_variant`
-# is deliberately absent, since it derives a differently-signatured sibling
-# and leaves the base alone.
-REFERENCE_TOKEN = re.compile(r"\\[a-zA-Z_@]+:[a-zA-Z]*N[a-zA-Z]*$")
+def macro_definitions(text: str, macro: str) -> list[int]:
+    """Offsets at which `macro` is bound, in file order.
 
-
-def preceded_by_reference(text: str, position: int) -> bool:
-    """Whether the control sequence at `position` is an `N` argument."""
-    cursor = position
-    while cursor > 0 and text[cursor - 1].isspace():
-        cursor -= 1
-    return REFERENCE_TOKEN.search(text[max(0, cursor - 64):cursor]) is not None
-
-
-def preceded_by_definition(text: str, position: int) -> bool:
-    """Whether a definition token stands immediately before `position`.
-
-    The whitespace between the token and the name is walked rather than
-    bounded: a comment stripped to blanks can leave any amount of it, and a
-    fixed window would miss the token behind a long one.  Only the token
-    itself is then matched, so this stays linear.
+    Every occurrence is classified by the control sequence before it, so a
+    replacement spelt `\\cs_set:Nn` counts as a definition just as
+    `\\cs_new_protected:Npn` does.  TeX runs the last body installed, so a
+    reader pinned to the first would compare an alphabet the parser no longer
+    has.
     """
-    cursor = position
-    while cursor > 0 and text[cursor - 1].isspace():
-        cursor -= 1
-    return DEFINITION_TOKEN.search(text[max(0, cursor - 64):cursor]) is not None
-
-
-DEFINITION_TOKEN = re.compile(
-    r"\\(?:cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:[A-Za-z]*"
-    # `\\ProvideDocumentCommand` leaves an existing command alone, so it
-    # binds nothing when one is already defined and is not counted.
-    r"|(?:New|Renew|Declare)DocumentCommand"
-    r"|let|[egx]?def)$"
-)
-
-
-# expl3's error-raising operations, `\\msg_expandable_error` included: any of
-# them in a branch means the word is refused, not accepted.
-REFUSAL = re.compile(r"\\msg_(?:[a-z_]*_)?(?:error|fatal|critical)(?::|\s)")
-NAME_DEFINITION = re.compile(
-    r"\\cs_(?:new|set|gset|undefine|gundefine)[a-z_]*:c[A-Za-z]*\s*\{\s*([^}]*?)\s*\}"
-)
+    offsets: list[int] = []
+    for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
+        cursor = match.start()
+        while cursor > 0 and text[cursor - 1].isspace():
+            cursor -= 1
+        if DEFINITION_TOKEN.search(text[max(0, cursor - 64):cursor]):
+            offsets.append(match.start())
+    return offsets
 
 
 def macro_body(text: str, macro: str, start: int) -> str:
-    """The balanced replacement text of the definition beginning at `start`.
-
-    Reading to the next `\\cs_new_protected:Npn` instead would swallow any
-    helper declared with another spelling, and attribute its tables to this
-    parser.
-    """
+    """The balanced replacement text of the definition beginning at `start`."""
     cursor = text.index(macro, start) + len(macro)
     brace = text.find("{", cursor)
     if brace < 0:
         raise ValueError(f"definition of {macro} has no body")
     body, _ = _group(text, brace)
     return body
-
-
-def macro_definitions(text: str, macro: str) -> list[int]:
-    """Offsets at which `macro` is bound, in file order.
-
-    Every occurrence is classified by the control sequence that precedes it,
-    so a replacement spelt `\\cs_set:Nn` or `\\cs_set_eq:NN` counts as one
-    definition just as `\\cs_new_protected:Npn` does, and so does a removal
-    spelt `\\cs_undefine:N` -- after it the original body is not what runs
-    either.  TeX runs the last binding, so a reader of the first would
-    compare an alphabet the parser no longer has.
-    """
-    offsets: list[int] = []
-    for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
-        if preceded_by_definition(text, match.start()):
-            offsets.append(match.start())
-    # A `:c` assignment names its target as text, so no backslashed occurrence
-    # of the macro appears at the binding site at all.
-    offsets.extend(
-        match.start() for match in NAME_DEFINITION.finditer(text)
-        if match.group(1) == macro
-    )
-    return sorted(offsets)
 
 
 def kernel_case_words(text: str, macro: str) -> list[str]:
@@ -861,57 +718,30 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
         raise ValueError(f"kernel defines no parser {macro}")
     if len(definitions) > 1:
         raise ValueError(
-            f"kernel defines {macro} {len(definitions)} times; "
-            "the last would decide what the parser accepts"
+            f"kernel defines {macro} {len(definitions)} times; the last would "
+            "decide what the parser accepts"
         )
     body = macro_body(text, macro, definitions[0])
-    found = list(re.finditer(r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body))
-    # A table inside another table's branch action is that branch's business;
-    # only the outermost ones are acceptance paths of this parser.
-    nested: set[int] = set()
-    for outer in found:
-        try:
-            _branches, after = _group(body, outer.end())
-        except ValueError:
-            continue
-        for inner in found:
-            if outer.end() <= inner.start() < after:
-                nested.add(inner.start())
-    cases = [case for case in found if case.start() not in nested]
+    cases = list(re.finditer(
+        r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body
+    ))
     if not cases:
         raise ValueError(f"parser {macro} has no \\str_case")
-    # A second table in the same body is a second acceptance path, and its
-    # words would never be compared against the contract.
-    if len(cases) > 1:
-        raise ValueError(
-            f"parser {macro} has {len(cases)} case tables; only the first "
-            "would be read as its alphabet"
-        )
-    # A closed alphabet is closed by its fallback: without one, a value
-    # outside the list completes silently and the branches describe nothing.
     signature = cases[0].group(1)
-    if not signature.endswith("F") and not signature.endswith("TF"):
+    # A closed alphabet is closed by its fallback: without one, a value outside
+    # the list completes in silence and the branches describe nothing.
+    if not signature.endswith("F"):
         raise ValueError(
             f"parser {macro} matches with \\str_case:{signature}, which has no "
             "fallback, so an unmatched value is accepted in silence"
         )
     branches, after = _group(body, cases[0].end())
-    # `TF` takes the matched branch first and the unmatched branch second, so
-    # the group that must refuse is the second one; reading the first would
-    # accept a table that errors on every documented word and passes every
-    # undocumented one.
     if signature.endswith("TF"):
-        matched, after = _group(body, after)
-        if REFUSAL.search(matched):
-            raise ValueError(
-                f"parser {macro} refuses in the branch it takes when a word "
-                "matches"
-            )
+        _matched, after = _group(body, after)
     fallback, _ = _group(body, after)
     if not REFUSAL.search(fallback):
         raise ValueError(
-            f"parser {macro} has a fallback that does not refuse an unmatched "
-            "value"
+            f"parser {macro} has a fallback that does not refuse an unmatched value"
         )
     words: list[str] = []
     offset = 0
@@ -921,47 +751,32 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
         if offset >= len(branches):
             return words
         word, offset = _group(branches, offset)
-        # A branch key is one word of a closed alphabet.  Anything else --
-        # a spelling this reader cannot name, an expansion, a nested group --
-        # is reported rather than skipped, because a branch dropped here is a
-        # word the gate would never compare (LionSR/tenkz#7).
+        # A branch key is one word of a closed alphabet.  Anything else is
+        # reported rather than skipped: a branch dropped here is a word the
+        # gate would never compare.
         if not re.fullmatch(r"[a-z][a-z0-9-]*", word.strip()):
             raise ValueError(
                 f"parser {macro} has a branch key this reader cannot name: "
                 f"{word.strip()!r}"
             )
         action, offset = _group(branches, offset)
-        # A label whose branch refuses is not an accepted word: the contract
-        # would promise a spelling the parser answers with a diagnostic.
+        # A label whose branch refuses is not an accepted word.
         if REFUSAL.search(action):
             raise ValueError(
-                f"parser {macro} lists {word.strip()!r} as a case but its "
-                "branch refuses the word"
+                f"parser {macro} lists {word.strip()!r} as a case but its branch "
+                "refuses the word"
             )
         words.append(word.strip())
 
 
 def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
-    """The words a `\\__tenkz_kernel_choice:nnnn` table accepts for one key."""
-    bodies = named_macro_bodies(text)
-    dormant = [
-        (begin, end) for begin, end, name in bodies
-        if not runs_at_load(text, name, bodies)
-    ]
-    matches = [
-        call for call in re.finditer(
-            r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
-            + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
-            text,
-        )
-        # A call inside a macro body installs nothing until that macro runs.
-        if not any(begin <= call.start() < end for begin, end in dormant)
-    ]
+    """The words a `\\__tenkz_kernel_choice` table accepts for one key."""
+    matches = list(re.finditer(
+        r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
+        + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}", text,
+    ))
     if not matches:
         raise ValueError(f"kernel installs no choice table for {scope}:{key}")
-    # Every invocation installs its choices with `\keys_define:nn`, so a second
-    # one silently decides what the parser accepts while a reader of the first
-    # sees the stale list.  One definition per key, or the gate says so.
     if len(matches) > 1:
         raise ValueError(
             f"kernel installs {len(matches)} choice tables for {scope}:{key}; "
@@ -969,273 +784,6 @@ def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
         )
     words, _ = _group(text, matches[0].end())
     return [word.strip() for word in words.split(",") if word.strip()]
-
-
-def macro_body_spans(text: str) -> list[tuple[int, int]]:
-    """The replacement-text spans of every macro definition in `text`."""
-    return [(begin, end) for begin, end, _name in named_macro_bodies(text)]
-
-
-def named_macro_bodies(text: str) -> list[tuple[int, int, str]]:
-    """Each macro definition's body span, with the name it defines."""
-    spans: list[tuple[int, int, str]] = []
-    for match in re.finditer(
-        r"(?:\\cs_(?:new|set|gset)[a-z_]*:(?:Np[nx]|Nn|Nx|cn|cx)\s*"
-        r"|\\(?:New|Renew|Provide|Declare)DocumentCommand\s*)"
-        r"\\?\{?\s*([A-Za-z_@]+(?::[a-zA-Z]*)?)\s*\}?", text
-    ):
-        # An xparse declaration puts its argument specification between the
-        # name and the body, so the body is the group after that one.
-        brace = text.find("{", match.end())
-        if "DocumentCommand" in match.group(0) and brace >= 0:
-            try:
-                _spec, after = _group(text, brace)
-                brace = text.find("{", after)
-            except ValueError:
-                brace = -1
-        if brace < 0:
-            continue
-        try:
-            body, end = _group(text, brace)
-        except ValueError:
-            continue
-        spans.append((brace, end, match.group(1)))
-    return spans
-
-
-def key_installing_helpers(text: str) -> list[str]:
-    """Kernel helpers whose body binds their second argument in their first.
-
-    `\\__tenkz_kernel_value:nnn { scope } { key } { stage }` installs a
-    handler as surely as a literal `\\keys_define:nn` block does, so a call to
-    one is a binding of that key.  The choice helper is excluded: its calls
-    are the sanctioned ones this gate already reads.
-    """
-    helpers: list[str] = []
-    for match in re.finditer(
-        r"\\cs_(?:new|set|gset)[a-z_]*:Np[nx]\s*"
-        r"\\(__tenkz_kernel_[A-Za-z_]*:[a-zA-Z]+)", text
-    ):
-        name = match.group(1)
-
-        try:
-            body = macro_body(text, name, match.start())
-        except ValueError:
-            continue
-        if re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}", body) and re.search(
-            r"#2\s*\.[a-z_]+:", body
-        ):
-            helpers.append(name)
-    return helpers
-
-
-def top_level_entries(block: str) -> list[str]:
-    """The comma-separated entries of one l3keys block, brace depth respected.
-
-    A nested handler body may itself contain `, key .code:n = ...`, and a
-    comma inside braces is not a separator of the outer block -- reading it as
-    one reports a rebinding that is not there.
-    """
-    entries: list[str] = []
-    depth = 0
-    current: list[str] = []
-    escaped = False
-    for character in block:
-        if escaped:
-            escaped = False
-            current.append(character)
-            continue
-        if character == "\\":
-            # `\{` and `\}` are control symbols, not group delimiters, and
-            # counting them would put the reader at the wrong depth for every
-            # entry after them.
-            escaped = True
-            current.append(character)
-            continue
-        if character == "{":
-            depth += 1
-        elif character == "}":
-            depth -= 1
-        if character == "," and depth == 0:
-            entries.append("".join(current))
-            current = []
-            continue
-        current.append(character)
-    entries.append("".join(current))
-    return entries
-
-
-def runs_at_load(text: str, macro: str, bodies: list[tuple[int, int, str]]) -> bool:
-    """Whether `macro` is called from outside every macro body.
-
-    A definition inside a body executes when that body does, so a body that
-    something calls at load installs its keys at load.  This follows one link,
-    not the whole call graph: a macro called only from another dormant macro
-    reads as dormant, which is the safe direction -- it under-reports rather
-    than failing a kernel TeX accepts.
-    """
-    for call in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
-        if preceded_by_definition(text, call.start()):
-            continue
-        # `\cs_if_exist:NTF \helper:` names the control sequence, it does not
-        # run it, and neither does any other function taking it as an `N`
-        # argument.  Reading a reference as a call would make a dormant body
-        # look live and count the bindings inside it.
-        if preceded_by_reference(text, call.start()):
-            continue
-        if not any(begin <= call.start() < end for begin, end, _ in bodies):
-            return True
-    return False
-
-
-def key_definitions(text: str, scope: str, key: str) -> int:
-    """How many times `key` is bound in `scope`, by any spelling.
-
-    The helper installs its choices with `\\keys_define:nn`, and so can any
-    later code: a direct `key .code:n = { ... }` in the same scope replaces
-    the handler and can accept words the helper's list does not carry.
-    Counting only calls to the helper would read that override as absent.
-    """
-    bindings = 0
-    bodies = named_macro_bodies(text)
-    # A body that something calls at load installs its keys at load, so only
-    # the bodies nothing reaches are dormant.
-    dormant = [
-        (begin, end) for begin, end, name in bodies
-        if not runs_at_load(text, name, bodies)
-    ]
-    # A kernel helper that binds its second argument in its first installs a
-    # handler as surely as a literal block does -- when it is called at load,
-    # not from inside another macro's body.
-    for helper in key_installing_helpers(text):
-        if (scope, key) in SANCTIONED_INSTALLERS.get(helper, ()):
-            continue
-        bindings += sum(
-            1 for call in re.finditer(
-                r"\\" + re.escape(helper) + r"\s*\{\s*" + re.escape(scope)
-                + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}",
-                text,
-            )
-            if not any(begin <= call.start() < end for begin, end in dormant)
-        )
-    # `\\keys_define` has argument variants, and a generated one installs the
-    # same handler, so the operation is matched by name rather than by one
-    # signature.
-    for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
-        # A block inside a macro body runs when that macro is called, not at
-        # load, so counting it would report a binding TeX never installs.
-        if any(begin <= match.start() < end for begin, end in dormant):
-            continue
-        try:
-            named, offset = _group(text, match.end())
-            body, _ = _group(text, offset)
-        except ValueError:
-            # A scope this reader cannot read -- an unbraced variable from a
-            # `:Vn` variant -- is reported, not skipped: a skip here is a
-            # binding the gate never sees.
-            raise ValueError(
-                f"a \\keys_define call near offset {match.start()} takes a "
-                "scope this reader cannot read"
-            )
-        if named.strip() != scope:
-            continue
-        # Read the other way round: a property binds the key unless it is one
-        # of the few that only decorate it.  An allowlist of handler-setting
-        # properties would miss the next spelling -- `.tl_set:N` accepts any
-        # value where `.choices:nn` accepted a list -- and l3keys has more of
-        # them than a gate should try to enumerate.
-        for entry in top_level_entries(body):
-            # `form / label .code:n` customises one branch of an existing
-            # choice; the parent key's handler and its alphabet are untouched,
-            # so counting it as an override would report one that is not there.
-            # `form / unknown` is the exception: it replaces the refusal.
-            property_match = re.match(
-                r"\s*" + re.escape(key)
-                + r"\s*(?:/\s*(?P<branch>[^.\s]+)\s*)?\.([a-z_]+):", entry
-            )
-            if property_match and property_match.group("branch") not in (None, "unknown"):
-                continue
-            if property_match and property_match.group(2) not in ORTHOGONAL_PROPERTIES:
-                bindings += 1
-    return bindings
-
-
-def _sole_definition(text: str, macro: str) -> int:
-    """The offset of `macro`'s one definition, or a reason there is not one."""
-    definitions = macro_definitions(text, macro)
-    if not definitions:
-        raise ValueError(f"kernel defines no {macro}")
-    if len(definitions) > 1:
-        raise ValueError(f"kernel defines {macro} {len(definitions)} times")
-    return definitions[0]
-
-
-def key_binding_body(text: str, scope: str, key: str) -> str:
-    """The replacement text bound to `key` in `scope`.
-
-    More than one binding is refused rather than resolved: the last would be
-    the effective handler, and reading the first would let an added block
-    rewire the key while the original binding went on satisfying the check.
-    """
-    bodies: list[str] = []
-    # A helper call binds the key as surely as a literal block does; the route
-    # reader must count them for the same reason the override audit does.
-    installed = key_definitions(text, scope, key)
-    defined = named_macro_bodies(text)
-    dormant = [
-        (begin, end) for begin, end, name in defined
-        if not runs_at_load(text, name, defined)
-    ]
-    for match in re.finditer(r"\\keys_define:[a-zA-Z]{2}\s*", text):
-        # A block inside a macro body runs when that macro is called, not at
-        # load; counting it would report a binding TeX never installs.
-        if any(begin <= match.start() < end for begin, end in dormant):
-            continue
-        try:
-            named, offset = _group(text, match.end())
-            block, _ = _group(text, offset)
-        except ValueError:
-            # A call whose scope this reader cannot read -- an unbraced
-            # variable from a `:Vn` variant -- is reported, not skipped: a
-            # skip here is a binding the gate never sees.
-            raise ValueError(
-                f"a \\keys_define call near offset {match.start()} takes a scope "
-                "this reader cannot read"
-            )
-        if named.strip() != scope:
-            continue
-        # A key may be assigned more than once inside one block, and l3keys
-        # installs the last, so every assignment is collected.
-        # A key may be assigned more than once inside one block, and l3keys
-        # installs the last, so every assignment is collected.  A property
-        # other than `.code:n` installs a handler this reader cannot read --
-        # `.tl_set:N` accepts any value -- and saying so is the honest answer.
-        for entry in top_level_entries(block):
-            binding = re.match(
-                r"\s*" + re.escape(key) + r"\s*\.([a-z_]+):[A-Za-z]*\s*=\s*", entry
-            )
-            if binding is None or binding.group(1) in ORTHOGONAL_PROPERTIES:
-                continue
-            if binding.group(1) != "code":
-                raise ValueError(
-                    f"{scope}:{key} is bound with .{binding.group(1)}, whose "
-                    "handler this gate cannot read"
-                )
-            body, _ = _group(entry, binding.end())
-            bodies.append(body)
-    if not bodies:
-        raise ValueError(f"no .code:n binding for {scope}:{key}")
-    if installed > len(bodies):
-        raise ValueError(
-            f"{scope}:{key} is bound {installed} times, at least one through "
-            "a key-installing helper; the last would be the effective handler"
-        )
-    if len(bodies) > 1:
-        raise ValueError(
-            f"{scope}:{key} is bound {len(bodies)} times; the last would be "
-            "the effective handler"
-        )
-    return bodies[0]
 
 
 def alphabet_errors(
@@ -1259,136 +807,17 @@ def alphabet_errors(
         return [f"alphabet table: {exc}"]
     enums = {
         (scope, name): value_type
-        for kind, (scope, name, value_type, *_rest) in (
-            (entry.kind, entry.fields) for entry in entries if entry.kind == "key"
+        for scope, name, value_type, *_rest in (
+            entry.fields for entry in entries if entry.kind == "key"
         )
     }
     accepted: dict[str, list[str]] = {}
     for alphabet, macro in ALPHABET_PARSERS.items():
-        kind, called, site = ALPHABET_REACHED_FROM[alphabet]
-        try:
-            body = (
-                key_binding_body(kernel_text, *site)
-                if kind == "key"
-                else macro_body(
-                    kernel_text, site, _sole_definition(kernel_text, site)
-                )
-            )
-        except ValueError as exc:
-            errors.append(f"alphabet {alphabet!r}: {exc}")
-        else:
-            if alphabet == "side policy":
-                # The installer must bind the key it is handed, not some
-                # other one while still calling the parser.
-                if not re.search(r"#2\s*\.code:n\s*=\s*", body):
-                    errors.append(
-                        f"alphabet {alphabet!r}: {site} no longer binds the "
-                        "key it is given"
-                    )
-                # A later block rebinding one generated key would leave the
-                # installer untouched and that side accepting anything.
-                for word in SIDE_KEYS:
-                    # The installer must still be called for each side, or
-                    # that key is simply not installed and its alphabet is
-                    # not the picture's.
-                    sleeping = macro_body_spans(kernel_text)
-                    installs = sum(
-                        1 for call in re.finditer(
-                            r"\\__tenkz_kernel_side:nn\s*\{\s*tenkz-kernel-picture"
-                            r"\s*\}\s*\{\s*" + word + r"\s*\}", kernel_text,
-                        )
-                        # A call inside a macro body installs nothing until
-                        # that macro runs.
-                        if not any(
-                            begin <= call.start() < end for begin, end in sleeping
-                        )
-                    )
-                    if installs != 1:
-                        errors.append(
-                            f"alphabet {alphabet!r}: tenkz-kernel-picture:{word} "
-                            f"is installed {installs} time(s), not once"
-                        )
-                    direct = key_definitions(kernel_text, "tenkz-kernel-picture", word)
-                    if direct:
-                        errors.append(
-                            f"alphabet {alphabet!r}: tenkz-kernel-picture:{word} "
-                            f"is bound directly in {direct} block(s), past the "
-                            "installer that reaches the parser"
-                        )
-            # The caller's own body, not a window around it: a window wide
-            # enough to reach the call is wide enough to contain the parser's
-            # own definition, which would satisfy the test by itself.
-            if not re.search(
-                r"\\" + re.escape(called) + r"(?![A-Za-z_:])", body
-            ):
-                errors.append(
-                    f"alphabet {alphabet!r}: {called} is defined but "
-                    f"{site if kind == 'macro' else ':'.join(site)} no longer "
-                    "calls it; its branches are not what the surface accepts"
-                )
         try:
             accepted[alphabet] = kernel_case_words(kernel_text, macro)
         except ValueError as exc:
             errors.append(f"alphabet {alphabet!r}: {exc}")
-    if ALPHABET_CHOICES:
-        try:
-            helper = macro_body(
-                kernel_text, CHOICE_HELPER, _sole_definition(kernel_text, CHOICE_HELPER)
-            )
-        except ValueError as exc:
-            errors.append(f"the choice helper: {exc}")
-        else:
-            scoped = re.search(r"\\keys_define:[a-zA-Z]{2}\s*\{\s*#1\s*\}\s*", helper)
-            if scoped is None:
-                errors.append(
-                    f"{CHOICE_HELPER} no longer installs into the scope it is "
-                    "given, so the call sites this gate reads bind nothing"
-                )
-                block = ""
-            else:
-                try:
-                    block, _ = _group(helper, scoped.end())
-                except ValueError:
-                    block = ""
-            # The choice table must be in that block: installing `#2 .code:n`
-            # into the given scope and the choices into another would satisfy
-            # two independent checks and bound nothing.
-            if ".choices:nn" not in block:
-                errors.append(
-                    f"{CHOICE_HELPER} does not install its choices into the "
-                    "scope it is given"
-                )
-            if ".choices:nn" not in helper:
-                errors.append(
-                    f"{CHOICE_HELPER} no longer installs a choice table, so the "
-                    "word lists it is given do not bound what the parser accepts"
-                )
-            unknown = re.search(
-                r"#2\s*/\s*unknown\s*\.code:n\s*=\s*", helper
-            )
-            if unknown is None:
-                errors.append(
-                    f"{CHOICE_HELPER} installs no handler for an unknown word"
-                )
-            else:
-                try:
-                    handler, _ = _group(helper, unknown.end())
-                except ValueError:
-                    handler = ""
-                if not REFUSAL.search(handler):
-                    errors.append(
-                        f"{CHOICE_HELPER}'s unknown-word handler does not "
-                        "refuse, so a value outside the list completes in "
-                        "silence"
-                    )
     for alphabet, (scope, key) in ALPHABET_CHOICES.items():
-        direct = key_definitions(kernel_text, scope, key)
-        if direct:
-            errors.append(
-                f"alphabet {alphabet!r}: {scope}:{key} is also bound directly "
-                f"in {direct} \\keys_define:nn block(s); the last handler "
-                "installed decides what the parser accepts"
-            )
         try:
             words = kernel_choice_words(kernel_text, scope, key)
         except ValueError as exc:
@@ -1402,8 +831,8 @@ def alphabet_errors(
                 errors.append(
                     f"alphabet {alphabet!r}: {':'.join(registry_key)} is not an enum"
                 )
-            # The helper dispatches on the word, not on its position, so
-            # the two lists must hold the same words -- not in the same order.
+            # The helper dispatches on the word, not its position, so the two
+            # hold the same words rather than the same order.
             elif sorted(enum.group(1).split("|")) != sorted(words):
                 errors.append(
                     f"alphabet {alphabet!r}: the registry row "
@@ -1411,9 +840,7 @@ def alphabet_errors(
                     f"accepts {', '.join(words)}"
                 )
         recording = ALPHABET_RECORDING_WORDS.get(alphabet, set())
-        # Subtracting a word the acceptor no longer has would hide its
-        # removal: the two lists would agree and the table would be silent,
-        # while the contract still promises the spelling.
+        # Subtracting a word the acceptor no longer has would hide its removal.
         missing = sorted(recording - set(words))
         if missing:
             errors.append(
@@ -1436,8 +863,6 @@ def alphabet_errors(
                 f"alphabet {alphabet!r}: accepted but not in section 2.8: {missing}; "
                 f"in section 2.8 but not accepted: {extra}"
             )
-        if sorted(set(contract[alphabet])) != sorted(contract[alphabet]):
-            errors.append(f"alphabet {alphabet!r}: section 2.8 repeats a word")
     return errors
 
 

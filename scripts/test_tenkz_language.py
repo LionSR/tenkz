@@ -54,123 +54,53 @@ def compile_event_source(source: str) -> tuple[subprocess.CompletedProcess[str],
 def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> None:
     """LionSR/tenkz#7: the section 2.8 table and its acceptors pin each other.
 
-    Each seed below is one drift the census meters cannot see: a word added
-    to or struck from the contract's table, a branch added to a kernel
-    parser, and a registry enum that grows.  The unseeded texts pass; every
-    seed must be named by the check, in both directions of the diff.
+    Each seed is a drift the census meters cannot see -- a word added to or
+    struck from the contract, from a kernel parser, from the choice table, or
+    from the registry row -- together with the malformed spellings the readers
+    must refuse rather than skip, and the benign spellings they must not
+    report.  The unseeded texts pass.
     """
     contract = tenkz_language.CONTRACT.read_text(encoding="utf-8")
     kernel = tenkz_language.KERNEL.read_text(encoding="utf-8")
     if tenkz_language.alphabet_errors(registry, contract, kernel):
         raise SystemExit("the alphabet check fails on the unseeded tree")
-    seeds = {
-        "contract gains a route word": (
-            contract.replace("| routes | `straight` `orth` `arc` |",
-                             "| routes | `straight` `orth` `arc` `bezier` |"),
-            kernel, registry, "in section 2.8 but not accepted: bezier",
-        ),
-        "contract drops a skin word": (
-            contract.replace("`triwest` ", ""),
-            kernel, registry, "accepted but not in section 2.8: triwest",
-        ),
-        "kernel gains a side word": (
-            contract,
-            kernel.replace(
-                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
-                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
-                "        {seal}  { \\__tenkz_kernel_stage_put:nn {#1} {none}  }\n",
-            ),
-            registry, "accepted but not in section 2.8: seal",
-        ),
-        "kernel choice table gains a form word": (
-            contract,
-            kernel.replace(
-                "  { bracket, enclosure, label, prose }\n",
-                "  { bracket, enclosure, label, prose, band }\n",
-            ),
-            registry, "accepted but not in section 2.8: band",
-        ),
-        "registry enum drifts from the parser": (
-            contract, kernel,
-            [
-                tenkz_language.Entry(
-                    entry.kind,
-                    (*entry.fields[:2], "enum(bracket|enclosure|label)",
-                     *entry.fields[3:]),
-                )
-                if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
-                else entry
-                for entry in registry
-            ],
-            "the registry row kernel-mark:form reads enum(bracket|enclosure|label) "
-            "but the parser accepts bracket, enclosure, label, prose",
-        ),
-        "contract lists an alphabet twice": (
-            contract.replace(
-                "| routes | `straight` `orth` `arc` |",
-                "| routes | `straight` `orth` |\n| routes | `straight` `orth` `arc` |",
-            ),
-            kernel, registry, "lists 'routes' twice",
-        ),
-    }
-    for name, (seed_contract, seed_kernel, seed_registry, expected) in seeds.items():
-        if seed_contract == contract and seed_kernel == kernel and seed_registry is registry:
-            raise SystemExit(f"seed {name!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(seed_registry, seed_contract, seed_kernel)
+
+    def seeded(contract_text: str, kernel_text: str, entries=None) -> list[str]:
+        return tenkz_language.alphabet_errors(
+            registry if entries is None else entries, contract_text, kernel_text
+        )
+
+    def must_report(label: str, errors: list[str], expected: str) -> None:
         if not any(expected in error for error in errors):
-            raise SystemExit(f"seed {name!r} was not caught; errors: {errors}")
-    # A branch key the reader cannot name is reported rather than skipped, so
-    # a word this gate would never compare cannot slip in silently.
-    unreadable = kernel.replace(
-        "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
-        "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
-        "        {\\l_tenkz_word_tl} { }\n",
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+
+    # Words added or struck, on each side of the comparison.
+    must_report(
+        "a route word added to the contract",
+        seeded(contract.replace("| routes | `straight` `orth` `arc` |",
+                                "| routes | `straight` `orth` `arc` `bezier` |"), kernel),
+        "in section 2.8 but not accepted: bezier",
     )
-    assert unreadable != kernel
-    errors = tenkz_language.alphabet_errors(registry, contract, unreadable)
-    if not any("cannot name" in error for error in errors):
-        raise SystemExit(f"an unreadable branch key was skipped; errors: {errors}")
-    # A word written beside the backticked ones reads as part of the alphabet
-    # on the page and would otherwise be dropped in silence.
-    loose = contract.replace(
-        "| routes | `straight` `orth` `arc` |",
-        "| routes | `straight` `orth` `arc` bezier |",
+    must_report(
+        "a skin word struck from the contract",
+        seeded(contract.replace("`triwest` ", ""), kernel),
+        "accepted but not in section 2.8: triwest",
     )
-    assert loose != contract
-    errors = tenkz_language.alphabet_errors(registry, loose, kernel)
-    if not any("cannot name" in error for error in errors):
-        raise SystemExit(f"loose text in an alphabet cell was ignored; errors: {errors}")
-    # A row whose cell opens with bare text is read like any other row: a
-    # reader that only matched well-formed cells would not see it at all.
-    bare = contract.replace(
-        "| routes | `straight` `orth` `arc` |",
-        "| routes | `straight` `orth` `arc` |\n| weights | thin thick |",
+    must_report(
+        "a side word added to the kernel",
+        seeded(contract, kernel.replace(
+            "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+            "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+            "        {seal}  { \\__tenkz_kernel_stage_put:nn {#1} {none}  }\n")),
+        "accepted but not in section 2.8: seal",
     )
-    assert bare != contract
-    errors = tenkz_language.alphabet_errors(registry, bare, kernel)
-    if not any("cannot name" in error for error in errors):
-        raise SystemExit(f"a bare-text alphabet row was skipped; errors: {errors}")
-    # A second choice table for one key decides what the parser accepts, so
-    # reading the first would report a stale alphabet as current.
-    twice = kernel.replace(
-        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
-        "  { bracket, enclosure, label, prose }\n",
-        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
-        "  { bracket, enclosure, label, prose }\n"
-        "\\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form }\n"
-        "  { bracket, enclosure, label, prose, glow }\n",
+    must_report(
+        "a form word added to the choice table",
+        seeded(contract, kernel.replace("  { bracket, enclosure, label, prose }\n",
+                                        "  { bracket, enclosure, label, prose, band }\n")),
+        "accepted but not in section 2.8: band",
     )
-    assert twice != kernel
-    errors = tenkz_language.alphabet_errors(registry, contract, twice)
-    if not any("choice tables" in error for error in errors):
-        raise SystemExit(f"a second choice table was not reported; errors: {errors}")
-    # The recording word is subtracted from the comparison, so its removal
-    # would otherwise leave both lists agreeing and the table silent.
-    dropped = kernel.replace(
-        "  { bracket, enclosure, label, prose }\n",
-        "  { bracket, enclosure, label }\n",
-    )
-    dropped_registry = [
+    drifted = [
         tenkz_language.Entry(
             entry.kind,
             (*entry.fields[:2], "enum(bracket|enclosure|label)", *entry.fields[3:]),
@@ -179,584 +109,63 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         else entry
         for entry in registry
     ]
-    assert dropped != kernel
-    errors = tenkz_language.alphabet_errors(dropped_registry, contract, dropped)
-    if not any("recording word" in error for error in errors):
-        raise SystemExit(f"a retired recording word was not reported; errors: {errors}")
-    # Markdown renders a row indented by up to three spaces as part of the
-    # table, so a reader that required column zero would not see it.
-    indented = contract.replace(
-        "| routes | `straight` `orth` `arc` |",
-        "| routes | `straight` `orth` `arc` |\n   | routes | `straight` |",
+    must_report(
+        "the registry row drifting from the parser",
+        seeded(contract, kernel, drifted),
+        "but the parser accepts bracket, enclosure, label, prose",
     )
-    assert indented != contract
-    errors = tenkz_language.alphabet_errors(registry, indented, kernel)
-    if not any("twice" in error for error in errors):
-        raise SystemExit(f"an indented duplicate row was skipped; errors: {errors}")
-    # A parser redefined later is the body TeX runs; reading the first would
-    # compare an alphabet the kernel no longer accepts.
-    redefined = kernel + (
-        "\n\\cs_set_protected:Npn \\__tenkz_kernel_route:n #1 { }\n"
+    must_report(
+        "the recording word retired from both acceptors",
+        seeded(contract, kernel.replace("  { bracket, enclosure, label, prose }\n",
+                                        "  { bracket, enclosure, label }\n"), drifted),
+        "recording word",
     )
-    errors = tenkz_language.alphabet_errors(registry, contract, redefined)
-    if not any("times" in error for error in errors):
-        raise SystemExit(f"a redefined parser was not reported; errors: {errors}")
-    # The reader is total over the table and over the parser's bindings: a row
-    # it cannot account for, and any spelling that installs a second body,
-    # are reported rather than stepped over.
-    anchor = "| routes | `straight` `orth` `arc` |"
-    for label, seed in (
-        ("a row with no alphabet name", f"{anchor}\n|  | `bezier` |"),
-        ("a row with an extra cell", f"{anchor}\n| weights | `thin` | `thick` |"),
-    ):
-        errors = tenkz_language.alphabet_errors(
-            registry, contract.replace(anchor, seed), kernel
-        )
-        if not any("cannot name" in error for error in errors):
-            raise SystemExit(f"{label} was skipped; errors: {errors}")
-    for form in (
-        r"\cs_set:Nn", r"\cs_set_eq:NN", r"\cs_gset_protected:Npn", r"\let", r"\def",
-    ):
-        seeded = f"{kernel}\n{form} \\__tenkz_kernel_route:n {{ }}\n"
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded)
-        if not any("times" in error for error in errors):
-            raise SystemExit(f"a parser replaced with {form} was missed; errors: {errors}")
-    # A generated variant derives a sibling and leaves the base alone, so it
-    # is not a second definition and must not be reported as one.
-    variant = f"{kernel}\n\\cs_generate_variant:Nn \\__tenkz_kernel_route:n {{ V }}\n"
-    if any("times" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, variant
-    )):
-        raise SystemExit("a generated variant was counted as a redefinition")
-    # Removing a parser changes what runs as surely as replacing it.
-    undefined = f"{kernel}\n\\cs_undefine:N \\__tenkz_kernel_route:n\n"
-    if not any("times" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, undefined
-    )):
-        raise SystemExit("an undefined parser was not reported")
-    # A key bound directly in its scope replaces the handler the helper
-    # installed, and can then accept words the helper's list does not carry.
-    override = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-        "{ form .code:n = { } }\n"
-    )
-    if not any("bound directly" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, override
-    )):
-        raise SystemExit("a direct key override was not reported")
-    # Another key in the same scope is ordinary and must not report.
-    sibling = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-        "{ species .code:n = { } }\n"
-    )
-    if any("bound directly" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, sibling
-    )):
-        raise SystemExit("binding a sibling key was reported as an override")
-    # The remaining ways a branch list could stop being the accepted alphabet:
-    # the parser bound by name, the key overridden through a variant spelling,
-    # the key rewired past the parser, a branch that refuses its own word, a
-    # second case table, and a delimiter that does not form the table.
-    for label, seeded_kernel, expected in (
-        (
-            "a parser bound by name",
-            f"{kernel}\n\\cs_set:cpn {{ __tenkz_kernel_route:n }} #1 {{ }}\n",
-            "times",
-        ),
-        (
-            "a key overridden through a keys_define variant",
-            f"{kernel}\n\\keys_define:nx {{ tenkz-kernel-mark }} "
-            "{ form .code:n = { } }\n",
-            "bound directly",
-        ),
-        (
-            "the route key rewired past its parser",
-            kernel.replace(
-                r"route .code:n    = { \__tenkz_kernel_route:n {#1} }",
-                r"route .code:n    = { \__tenkz_kernel_stage_put:nn {route} {#1} }",
-            ),
-            "no longer calls it",
-        ),
-        (
-            "a branch that refuses its own word",
-            kernel.replace(
-                r"{arc}      { \__tenkz_kernel_route_keep: }",
-                r"{arc}      { \msg_error:nn {tenkz}{gone} }",
-            ),
-            "branch refuses the word",
-        ),
-        (
-            "a second case table inside one parser",
-            kernel.replace(
-                r"\regex_match:nVTF { \A (?: all | n | e | s | w ) \s+ of \s+ \S }",
-                "\\str_case:nnF {x} { {bezier} {} } { }\n    "
-                r"\regex_match:nVTF { \A (?: all | n | e | s | w ) \s+ of \s+ \S }",
-                1,
-            ),
-            "case tables",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    misshaped = contract.replace(
-        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|---|"
-    )
-    if misshaped == contract:
-        raise SystemExit("the section 2.8 header no longer has its delimiter")
-    errors = tenkz_language.alphabet_errors(registry, misshaped, kernel)
-    if not any("delimiter" in error for error in errors):
-        raise SystemExit(f"a misshaped delimiter was accepted; errors: {errors}")
-    colons = contract.replace(
-        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|:|:|"
-    )
-    if not any("delimiter" in error for error in tenkz_language.alphabet_errors(
-        registry, colons, kernel
-    )):
-        raise SystemExit("a delimiter with no hyphen was accepted")
-    # A parser's branches are its alphabet only while the surface reaches it,
-    # the fallback refuses what the branches do not name, and the helper that
-    # installs a choice list still installs a choice list.
-    for label, seeded_kernel, expected in (
-        (
-            "the side helper stops calling its parser",
-            kernel.replace(
-                r"{ #2 .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
-                r"{ #2 .code:n = { } }", 1,
-            ),
-            "no longer calls it",
-        ),
-        (
-            "the skin helper stops calling its parser",
-            kernel.replace(
-                r"\__tenkz_kernel_skin_base_aux:nN {#1} #2",
-                r"\tl_set:Nn #2 {box}", 1,
-            ),
-            "no longer calls it",
-        ),
-        (
-            "a branch refusing expandably",
-            kernel.replace(
-                r"{arc}      { \__tenkz_kernel_route_keep: }",
-                r"{arc}      { \msg_expandable_error:nnn {a}{b}{c} }",
-            ),
-            "branch refuses the word",
-        ),
-        (
-            "a case operation with no fallback",
-            kernel.replace(
-                r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
-                r"\str_case:Vn \l__tenkz_kernel_list_item_tl", 1,
-            ),
-            "no fallback",
-        ),
-        (
-            "the choice helper made unrestricted",
-            kernel.replace("#2 .choices:nn = {#3}", "#2 .code:n = {#3}", 1),
-            "no longer installs a choice table",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    # An unrelated helper declared after a parser, with a table of its own,
-    # belongs to itself: the body is a balanced group, not everything up to a
-    # sentinel.
-    neighbour = kernel.replace(
-        r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
-        "\\cs_new:Npn \\__tenkz_language_probe: { \\str_case:nn {x} { {q} {} } }\n"
-        r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
-        1,
-    )
-    if neighbour == kernel:
-        raise SystemExit("could not place a neighbouring helper")
-    if tenkz_language.alphabet_errors(registry, contract, neighbour):
-        raise SystemExit(
-            "a neighbouring helper's case table was attributed to the parser"
-        )
-    # A second binding is the effective handler; reading the first would let
-    # the original go on satisfying the check while the key was rewired.
-    rebound = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-wire }} "
-        r"{ route .code:n = { \__tenkz_kernel_stage_put:nn {route} {#1} } }"
-        "\n"
-    )
-    if not any("bound 2 times" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, rebound
-    )):
-        raise SystemExit("a second route binding was not reported")
-    # Markdown ends the table at the first line that is not a row, so reading
-    # past one would take later pipe-prefixed lines for rows of a table the
-    # contract no longer renders.
-    interrupted = contract.replace(
-        "| Alphabet | Words |\n|---|---|\n",
-        "| Alphabet | Words |\n|---|---|\nA sentence interrupts the table.\n",
-        1,
-    )
-    if interrupted == contract:
-        raise SystemExit("could not interrupt the section 2.8 table")
-    if not any("interrupted" in error for error in tenkz_language.alphabet_errors(
-        registry, interrupted, kernel
-    )):
-        raise SystemExit("an interrupted alphabet table was accepted")
-    for label, seeded_kernel, expected in (
-        (
-            "a TF table whose refusal is in the matched branch",
-            kernel.replace(
-                r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
-                r"\str_case:VnTF \l__tenkz_kernel_list_item_tl", 1,
-            ),
-            "refuses in the branch it takes",
-        ),
-        (
-            "a variant call to the choice helper",
-            f"{kernel}\n\\__tenkz_kernel_choice:nnnx {{ tenkz-kernel-mark }} "
-            "{ form } { bracket, enclosure, label, prose, glow } { form }\n",
-            "choice tables",
-        ),
-        (
-            "a keys_define:nf override",
-            f"{kernel}\n\\keys_define:nf {{ tenkz-kernel-mark }} "
-            "{ form .code:n = { } }\n",
-            "bound directly",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    # `.default:n` changes the value a key takes without an explicit one; it
-    # installs no handler, so reporting it as an override would be wrong.
-    orthogonal = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-        "{ form .default:n = label }\n"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, orthogonal):
-        raise SystemExit("an orthogonal key property was reported as an override")
-    import re as _re
 
-    for label, seeded_kernel, expected in (
-        (
-            "a call to a longer control sequence",
-            kernel.replace(
-                r"route .code:n    = { \__tenkz_kernel_route:n {#1} }",
-                r"route .code:n    = { \__tenkz_kernel_route:n_unchecked {#1} }",
-                1,
-            ),
-            "no longer calls it",
-        ),
-        (
-            "an unknown-word handler that does not refuse",
-            _re.sub(
-                r"(#2 / unknown \.code:n =\s*)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}",
-                r"\1{ }", kernel, count=1,
-            ),
-            "does not refuse",
-        ),
-        (
-            "a handler-setting property outside any allowlist",
-            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-            r"{ form .tl_set:N = \l_tmpa_tl }" "\n",
-            "bound directly",
-        ),
+    # Malformed contract spellings the reader must refuse, not step over.
+    anchor = "| routes | `straight` `orth` `arc` |"
+    header = "| Alphabet | Words |\n|---|---|"
+    for label, text, expected in (
+        ("a duplicate alphabet row", contract.replace(anchor, f"{anchor}\n| routes | `straight` |"), "twice"),
+        ("bare text beside the words", contract.replace(anchor, "| routes | `straight` `orth` `arc` bezier |"), "cannot name"),
+        ("a row opening with bare text", contract.replace(anchor, f"{anchor}\n| weights | thin thick |"), "cannot name"),
+        ("a row with no alphabet name", contract.replace(anchor, f"{anchor}\n|  | `bezier` |"), "cannot name"),
+        ("a row with an extra cell", contract.replace(anchor, f"{anchor}\n| weights | `thin` | `thick` |"), "cannot name"),
+        ("a renamed header", contract.replace("| Alphabet | Words |", "| Deprecated | Replacements |", 1), "header reads"),
+        ("a one-cell delimiter", contract.replace(header, "| Alphabet | Words |\n|---|", 1), "delimiter"),
+        ("a delimiter with too few hyphens", contract.replace(header, "| Alphabet | Words |\n|-|-|", 1), "delimiter"),
+        ("a second section 2.8", contract + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n| routes | `bezier` |\n", "section 2.8s"),
     ):
-        if seeded_kernel == kernel:
+        if text == contract:
             raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    for label, seeded_kernel, expected in (
-        (
-            "two assignments of one key in one block",
-            kernel.replace(
-                r"route .code:n    = { \__tenkz_kernel_route:n {#1} } ,",
-                r"route .code:n    = { \__tenkz_kernel_route:n {#1} } , "
-                r"route .code:n = { } ,", 1,
-            ),
-            "bound 2 times",
-        ),
-        (
-            "a generated side key rebound past its installer",
-            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-picture }} "
-            "{ west .code:n = { } }\n",
-            "past the installer",
-        ),
+        must_report(label, seeded(text, kernel), expected)
+
+    # Kernel spellings that change what is accepted.
+    for label, text, expected in (
+        ("a parser replaced by another definition",
+         f"{kernel}\n\\cs_set:Nn \\__tenkz_kernel_route:n {{ }}\n", "times"),
+        ("a parser matching with no fallback",
+         kernel.replace(r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
+                        r"\str_case:Vn \l__tenkz_kernel_list_item_tl", 1), "no fallback"),
+        ("a branch that refuses its own word",
+         kernel.replace(r"{arc}      { \__tenkz_kernel_route_keep: }",
+                        r"{arc}      { \msg_expandable_error:nnn {a}{b}{c} }"),
+         "branch refuses the word"),
+        ("a branch key the reader cannot name",
+         kernel.replace(
+             "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+             "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+             "        {\\l_tenkz_word_tl} { }\n"),
+         "cannot name"),
+        ("a second choice table for one key",
+         f"{kernel}\n\\__tenkz_kernel_choice:nnnx {{ tenkz-kernel-mark }} "
+         "{ form } { bracket, enclosure, label, prose, glow } { form }\n",
+         "choice tables"),
     ):
-        if seeded_kernel == kernel:
+        if text == kernel:
             raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    for label, seeded_kernel, expected in (
-        (
-            "a key installed through a kernel helper",
-            f"{kernel}\n\\__tenkz_kernel_value:nnn {{ tenkz-kernel-mark }} "
-            "{ form } { form }\n",
-            "bound directly",
-        ),
-        (
-            "the route key bound with a handler this gate cannot read",
-            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-wire }} "
-            r"{ route .tl_set:N = \l_tmpa_tl }" "\n",
-            "cannot read",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    # The sanctioned installers must not report: the four side keys are
-    # installed by the helper this gate checks separately.
-    if any(
-        "past the installer" in error
-        for error in tenkz_language.alphabet_errors(registry, contract, kernel)
-    ):
-        raise SystemExit("the sanctioned side installer was read as an override")
-    at_eof = (
-        contract
-        + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
-        "| routes | `bezier` |\n"
-    )
-    if not any("section 2.8s" in error for error in tenkz_language.alphabet_errors(
-        registry, at_eof, kernel
-    )):
-        raise SystemExit("a second section 2.8 at end of file was accepted")
-    short = contract.replace(
-        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|-|-|", 1
-    )
-    if not any("delimiter" in error for error in tenkz_language.alphabet_errors(
-        registry, short, kernel
-    )):
-        raise SystemExit("a delimiter with fewer than three hyphens was accepted")
-    moved = kernel.replace(
-        "\\keys_define:nn {#1}\n      {\n        #2 .choices:nn = {#3}",
-        "\\keys_define:nn {#1}\n      {\n        #2 .code:n = {#3}", 1,
-    )
-    if moved != kernel and not any(
-        "choices into the" in error
-        for error in tenkz_language.alphabet_errors(registry, contract, moved)
-    ):
-        raise SystemExit("choices installed outside the given scope were accepted")
-    # A definition inside a macro body runs when that macro is called, not at
-    # load, so counting it would report a binding TeX never installs.
-    dormant = (
-        f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_dormant: "
-        "{ \\keys_define:nn { tenkz-kernel-wire } { route .code:n = { } } }\n"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, dormant):
-        raise SystemExit("a dormant key definition was counted as a binding")
-    # A comma inside a nested handler body is not a separator of the outer
-    # block, and reading it as one reports a rebinding that is not there.
-    nested = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-        "{ probe .code:n = { \\keys_define:nn {inner} "
-        "{ x .code:n = {a}, form .code:n = {b} } } }\n"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, nested):
-        raise SystemExit("a nested comma was read as a top-level key assignment")
-    for label, seeded_kernel, expected in (
-        (
-            "a route binding installed through a helper",
-            f"{kernel}\n\\__tenkz_kernel_value:nnn {{ tenkz-kernel-wire }} "
-            "{ route } { route }\n",
-            "key-installing helper",
-        ),
-        (
-            "an installer declared with another definition form",
-            f"{kernel}\n\\cs_new:Npn \\__tenkz_kernel_alt:nn #1#2 "
-            "{ \\keys_define:nn {#1} { #2 .code:n = { } } }\n"
-            "\\__tenkz_kernel_alt:nn { tenkz-kernel-mark } { form }\n",
-            "bound directly",
-        ),
-        (
-            "an override whose key path carries spaces",
-            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-            "{ form / unknown .code:n = { } }\n",
-            "bound directly",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    # The dormant-block exclusion belongs to both scanners, not one.
-    for name in ("__tenkz_language_dormant_a:", "__tenkz_language_dormant_b:"):
-        sleeping = (
-            f"{kernel}\n\\cs_new_protected:Npn \\{name} "
-            "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }\n"
-        )
-        if tenkz_language.alphabet_errors(registry, contract, sleeping):
-            raise SystemExit(f"a dormant block was counted as a binding for {name}")
-    # Only the table's border pipes are stripped: `||` ends are empty cells.
-    bordered = contract.replace(
-        "| routes | `straight` `orth` `arc` |",
-        "|| routes | `straight` `orth` `arc` ||", 1,
-    )
-    if not tenkz_language.alphabet_errors(registry, bordered, kernel):
-        raise SystemExit("a differently bordered row was read as the expected shape")
-    # A second table below the first section 2.8 table is a second contract.
-    second_table = contract.replace(
-        "This table holds the words",
-        "| Alphabet | Words |\n|---|---|\n| routes | `bezier` |\n\n"
-        "This table holds the words", 1,
-    )
-    if second_table != contract and not any(
-        "second table" in error
-        for error in tenkz_language.alphabet_errors(registry, second_table, kernel)
-    ):
-        raise SystemExit("a second table inside section 2.8 was accepted")
-    for label, seeded_kernel, expected in (
-        (
-            "the side installer aimed at another alphabet's key",
-            f"{kernel}\n\\__tenkz_kernel_side:nn {{ tenkz-kernel-mark }} {{ form }}\n",
-            "bound directly",
-        ),
-        (
-            "a side installer call removed",
-            kernel.replace(
-                r"\__tenkz_kernel_side:nn { tenkz-kernel-picture } { west }", "", 1
-            ),
-            "installed 0 time(s)",
-        ),
-        (
-            "a parser replaced through xparse",
-            f"{kernel}\n\\RenewDocumentCommand \\__tenkz_kernel_route:n {{m}} {{ }}\n",
-            "times",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
-    # Negatives: a call that never runs, and a branch that is not an override.
-    for label, benign in (
-        (
-            "a choice-helper call inside a macro body",
-            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_sleep: "
-            "{ \\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form } "
-            "{ bracket } { form } }\n",
-        ),
-        (
-            "a customised choice branch",
-            f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-            "{ form / label .code:n = { } }\n",
-        ),
-    ):
-        if tenkz_language.alphabet_errors(registry, contract, benign):
-            raise SystemExit(f"{label} was reported as a binding")
-    # A body nothing calls is dormant; a body called at load is not.
-    sleeper = (
-        "\\cs_new_protected:Npn \\__tenkz_language_wake: "
-        "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{sleeper}\n"):
-        raise SystemExit("an uncalled body was counted as a binding")
-    if not any(
-        "bound directly" in error
-        for error in tenkz_language.alphabet_errors(
-            registry, contract, f"{kernel}\n{sleeper}\n\\__tenkz_language_wake:\n"
-        )
-    ):
-        raise SystemExit("a body invoked at load was skipped as dormant")
-    installer = (
-        "\\cs_new_protected:Npn \\__tenkz_language_install: "
-        "{ \\__tenkz_kernel_choice:nnnn { tenkz-kernel-mark } { form } "
-        "{ bracket, glow } { form } }"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{installer}\n"):
-        raise SystemExit("an uncalled installer body was counted")
-    if not tenkz_language.alphabet_errors(
-        registry, contract,
-        f"{kernel}\n{installer}\n\\__tenkz_language_install:\n",
-    ):
-        raise SystemExit("an installer invoked at load was skipped as dormant")
-    # An xparse-declared body is a body: its contents are dormant until called.
-    xparse = (
-        "\\NewDocumentCommand \\__tenkz_language_compat: {} "
-        "{ \\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } } }"
-    )
-    if tenkz_language.alphabet_errors(registry, contract, f"{kernel}\n{xparse}\n"):
-        raise SystemExit("an uncalled xparse body was counted as a binding")
-    # `\{` is a control symbol, not a group delimiter.
-    escaped = (
-        f"{kernel}\n\\keys_define:nn {{ tenkz-kernel-mark }} "
-        "{ probe .code:n = { \\{ }, form .code:n = { } }\n"
-    )
-    if not any("bound directly" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, escaped
-    )):
-        raise SystemExit("an escaped brace put the entry reader at the wrong depth")
-    # A heading inside a fence is a code sample, not a section of the contract.
-    fenced = (
-        contract + "\n```\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n"
-        "|---|---|\n| routes | `bezier` |\n```\n"
-    )
-    if tenkz_language.alphabet_errors(registry, fenced, kernel):
-        raise SystemExit("a fenced sample was read as the published contract")
-    # The definition token may stand any distance before the name.
-    spaced = f"{kernel}\n\\cs_set_protected:Npn{' ' * 200}\\__tenkz_kernel_route:n #1 {{ }}\n"
-    if not any("times" in error for error in tenkz_language.alphabet_errors(
-        registry, contract, spaced
-    )):
-        raise SystemExit("a definition behind a long gap was not counted")
-    binding = "\\keys_define:nn { tenkz-kernel-mark } { form .code:n = { } }"
-    for label, benign in (
-        (
-            "an uncalled :Nn helper body",
-            f"{kernel}\n\\cs_new:Nn \\__tenkz_language_nn: {{ {binding} }}\n",
-        ),
-        (
-            "a control sequence named as an N argument",
-            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_ref: "
-            f"{{ {binding} }}\n\\cs_if_exist:NTF \\__tenkz_language_ref: {{ }} {{ }}\n",
-        ),
-        (
-            "a case table nested in a branch action",
-            kernel.replace(
-                r"{straight} { \__tenkz_kernel_route_keep: }",
-                r"{straight} { \str_case:nnF {x} { {q} {} } { } "
-                r"\__tenkz_kernel_route_keep: }", 1,
-            ),
-        ),
-    ):
-        if benign == kernel:
-            raise SystemExit(f"negative {label!r} changed nothing")
-        if tenkz_language.alphabet_errors(registry, contract, benign):
-            raise SystemExit(f"{label} was reported")
-    # A level-one heading closes the section as surely as the others.
-    appendix = contract.replace(
-        "## 3. Addresses",
-        "# Appendix\n\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
-        "| routes | `bezier` |\n\n## 3. Addresses", 1,
-    )
-    if appendix != contract and not tenkz_language.alphabet_errors(
-        registry, appendix, kernel
-    ):
-        raise SystemExit("a section 2.8 under a level-one heading was not seen")
-    # Three more negatives, each a way a valid kernel could be failed.
-    for label, benign in (
-        (
-            "a side installer call inside a macro body",
-            f"{kernel}\n\\cs_new_protected:Npn \\__tenkz_language_sleep_side: "
-            "{ \\__tenkz_kernel_side:nn { tenkz-kernel-picture } { west } }\n",
-        ),
-        (
-            "a ProvideDocumentCommand that binds nothing",
-            f"{kernel}\n\\ProvideDocumentCommand \\__tenkz_kernel_route:n {{m}} {{ }}\n",
-        ),
-    ):
-        if tenkz_language.alphabet_errors(registry, contract, benign):
-            raise SystemExit(f"{label} was reported as a binding")
-    # An enum is a set of words; the helper dispatches on the word, not on its
-    # position, so a reordered row is the same alphabet.
+        must_report(label, seeded(contract, text), expected)
+
+    # Benign spellings that must not report.
     reordered = [
         tenkz_language.Entry(
             entry.kind,
@@ -766,65 +175,14 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         else entry
         for entry in registry
     ]
-    if tenkz_language.alphabet_errors(reordered, contract, kernel):
+    if seeded(contract, kernel, reordered):
         raise SystemExit("a reordered enum row was reported as drift")
-    # A blank line ends the table, so rows below it are not its rows.
-    blanked = contract.replace(
-        "| Alphabet | Words |\n|---|---|\n", "| Alphabet | Words |\n|---|---|\n\n", 1
-    )
-    if blanked != contract and not tenkz_language.alphabet_errors(
-        registry, blanked, kernel
-    ):
-        raise SystemExit("rows below a blank line were read as table rows")
-    duplicated = (
-        contract
-        + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n"
-        "| routes | `bezier` |\n\n## 99. A closing heading\n"
-    )
-    if not any("section 2.8s" in error for error in tenkz_language.alphabet_errors(
-        registry, duplicated, kernel
-    )):
-        raise SystemExit("a second section 2.8 was accepted")
-    # Prose immediately after the last row ends the table, blank line or not,
-    # and must not be reported as an interruption.
     unspaced = contract.replace(
         "| mark forms | `bracket` `enclosure` `label` |\n\n",
         "| mark forms | `bracket` `enclosure` `label` |\n", 1,
     )
-    if unspaced == contract:
-        raise SystemExit("the section 2.8 table no longer ends with a blank line")
-    if tenkz_language.alphabet_errors(registry, unspaced, kernel):
+    if unspaced != contract and seeded(unspaced, kernel):
         raise SystemExit("prose closing the table was reported as an interruption")
-    renamed = contract.replace("| Alphabet | Words |", "| Deprecated | Replacements |", 1)
-    if not any("header reads" in error for error in tenkz_language.alphabet_errors(
-        registry, renamed, kernel
-    )):
-        raise SystemExit("a renamed section 2.8 header was accepted")
-    for label, seeded_kernel, expected in (
-        (
-            "the side installer binding another key",
-            kernel.replace(
-                r"{ #2 .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
-                r"{ ignored .code:n = { \__tenkz_kernel_side_policy:nn {#2} {##1} } }",
-                1,
-            ),
-            "no longer binds the key it is given",
-        ),
-        (
-            "the choice helper installing into another scope",
-            kernel.replace(
-                "\\keys_define:nn {#1}\n      {\n        #2 .choices:nn",
-                "\\keys_define:nn {other-scope}\n      {\n        #2 .choices:nn",
-                1,
-            ),
-            "installs into the scope it is given",
-        ),
-    ):
-        if seeded_kernel == kernel:
-            raise SystemExit(f"seed {label!r} changed nothing")
-        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
-        if not any(expected in error for error in errors):
-            raise SystemExit(f"{label} was not reported; errors: {errors}")
 
 
 def main() -> int:
@@ -883,9 +241,7 @@ def main() -> int:
                 f"the registry validator accepted a {declaration_class} prelude"
             )
     # Everything above is Python over the registry and the contract, and runs
-    # anywhere; from here on every check compiles.  The skip belongs here so a
-    # machine without TeX still reports the drift the alphabet gate exists for
-    # rather than passing on the first missing engine (LionSR/tenkz#7).
+    # anywhere; from here on every check compiles.
     if shutil.which("xelatex") is None:
         print(
             "PASS: registry, alphabet drift, prelude inventory, and generated "
