@@ -45,6 +45,10 @@ MINIMUM_PASSES = 2
 MAXIMUM_PASSES = 6
 DEFAULT_OUTPUT = ROOT / "output" / "pdf" / "tenkz-manual.pdf"
 # `%B` is the caller's locale, and the manual's title page is English.
+# A version is read as the whole token the page carries and then required to
+# be one: matching a numeric prefix would accept `0.7-beta` as `0.7` and
+# compare it equal to the package's `0.7` while the page says otherwise.
+VERSION = re.compile(r"[0-9]+(?:\.[0-9]+)*")
 MONTHS = (
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
@@ -63,14 +67,23 @@ UNRESOLVED = re.compile(
 
 
 def package_release() -> tuple[str, str]:
-    """The `\\ProvidesPackage` date (YYYY/MM/DD) and version of tenkz.sty."""
-    text = PACKAGE.read_text(encoding="utf-8")
+    """The `\\ProvidesPackage` date (YYYY/MM/DD) and version of tenkz.sty.
+
+    Comments are blanked first: a release bump that leaves the previous
+    declaration commented above the active one would otherwise be read from
+    the dead line, and the build would date and name the PDF as the release
+    it is not.
+    """
+    text = strip_comments(PACKAGE.read_text(encoding="utf-8"))
     match = re.search(
-        r"\\ProvidesPackage\{tenkz\}\[(\d{4}/\d{2}/\d{2}) v([0-9.]+)", text
+        r"\\ProvidesPackage\s*\{tenkz\}\s*\[(\d{4}/\d{2}/\d{2})\s+v(\S+)", text
     )
     if match is None:
-        raise ValueError("tenkz.sty has no \\ProvidesPackage date and version")
-    return match.group(1), match.group(2)
+        raise ValueError("tenkz.sty has no active \\ProvidesPackage date and version")
+    version = match.group(2)
+    if not VERSION.fullmatch(version):
+        raise ValueError(f"tenkz.sty names a version this reader cannot read: {version!r}")
+    return match.group(1), version
 
 
 def recorded_inputs(record: Path) -> list[str]:
@@ -102,10 +115,15 @@ def executed_manual(text: str | None = None) -> str:
 def manual_version(text: str | None = None) -> str:
     """The version the manual's title page names for the package."""
     text = executed_manual(text)
-    match = re.search(r"manual for \\pkg\{\} version ([0-9.]+)", text)
+    match = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", text)
     if match is None:
         raise ValueError("manual2.tex names no package version on its title page")
-    return match.group(1)
+    version = match.group(1).strip()
+    if not VERSION.fullmatch(version):
+        raise ValueError(
+            f"manual2.tex names a version this reader cannot read: {version!r}"
+        )
+    return version
 
 
 def manual_dateline(text: str | None = None) -> str:

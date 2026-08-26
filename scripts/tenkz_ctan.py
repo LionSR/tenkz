@@ -2005,7 +2005,11 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
     dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)
-    manual_version = re.search(r"manual for \\pkg\{\} version ([0-9.]+)", manual)
+    # Read whole and validated, as `tenkz_manual_build.py` does: a numeric
+    # prefix match would report `0.7-beta` as agreeing with `v0.7`.
+    manual_version = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", manual)
+    if manual_version and not re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", manual_version.group(1).strip()):
+        manual_version = None
     event = re.search(r'^version = "([0-9.]+)"', tnlog, re.MULTILINE)
     heading = changes.splitlines()[0].lstrip("# ").strip() if changes else "absent"
     return [

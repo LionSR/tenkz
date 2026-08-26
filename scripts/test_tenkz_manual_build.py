@@ -10,6 +10,7 @@ run only where xelatex is installed.
 from __future__ import annotations
 
 import shutil
+import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -90,6 +91,38 @@ def main() -> int:
     direct = build.direct_pictures()
     if len(direct) != 2:
         raise SystemExit(f"the manual's own picture count moved: {len(direct)}")
+    # A version is read whole and then required to be one, on both sides: a
+    # numeric prefix match would call `0.7-beta` equal to the package's `0.7`
+    # while the page says otherwise.
+    version_line = next(row for row in source.splitlines() if f"version {manual}" in row)
+    qualified = source.replace(version_line, version_line.replace(manual, f"{manual}-beta"))
+    try:
+        build.manual_version(qualified)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("a qualified manual version was read as its numeric prefix")
+    # The package declaration is read from the active line, not from a
+    # previous release left commented above it.
+    package_source = build.PACKAGE.read_text(encoding="utf-8")
+    declaration = next(
+        row for row in package_source.splitlines() if "ProvidesPackage" in row
+    )
+    bumped = declaration.replace(f"v{version}", "v9.9")
+    seeded_package = package_source.replace(declaration, f"% {declaration}\n{bumped}")
+    original = build.PACKAGE
+    with tempfile.TemporaryDirectory(prefix="tenkz-package-seed-") as tmp:
+        path = Path(tmp) / "tenkz.sty"
+        path.write_text(seeded_package, encoding="utf-8")
+        build.PACKAGE = path
+        try:
+            _date, read = build.package_release()
+        finally:
+            build.PACKAGE = original
+    if read != "9.9":
+        raise SystemExit(
+            f"the commented previous declaration was read instead of the active one: {read}"
+        )
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:
@@ -109,8 +142,6 @@ def main() -> int:
         return 0
     # A hard audit finding must fail the build: a picture with no ink is the
     # audit's first hard rule, seeded into a copy of the manual's chapter set.
-    import tempfile
-
     with tempfile.TemporaryDirectory(prefix="tenkz-manual-seed-") as tmp:
         work = Path(tmp)
         original = build.MANUAL_DIR
