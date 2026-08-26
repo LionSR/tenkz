@@ -253,6 +253,62 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
         registry, contract, sibling
     )):
         raise SystemExit("binding a sibling key was reported as an override")
+    # The remaining ways a branch list could stop being the accepted alphabet:
+    # the parser bound by name, the key overridden through a variant spelling,
+    # the key rewired past the parser, a branch that refuses its own word, a
+    # second case table, and a delimiter that does not form the table.
+    for label, seeded_kernel, expected in (
+        (
+            "a parser bound by name",
+            f"{kernel}\n\\cs_set:cpn {{ __tenkz_kernel_route:n }} #1 {{ }}\n",
+            "times",
+        ),
+        (
+            "a key overridden through a keys_define variant",
+            f"{kernel}\n\\keys_define:nx {{ tenkz-kernel-mark }} "
+            "{ form .code:n = { } }\n",
+            "bound directly",
+        ),
+        (
+            "the route key rewired past its parser",
+            kernel.replace(
+                r"route .code:n    = { \__tenkz_kernel_route:n {#1} }",
+                r"route .code:n    = { \__tenkz_kernel_stage_put:nn {route} {#1} }",
+            ),
+            "no longer does",
+        ),
+        (
+            "a branch that refuses its own word",
+            kernel.replace(
+                r"{arc}      { \__tenkz_kernel_route_keep: }",
+                r"{arc}      { \msg_error:nn {tenkz}{gone} }",
+            ),
+            "branch refuses the word",
+        ),
+        (
+            "a second case table in one parser",
+            kernel.replace(
+                r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
+                "\\str_case:nn {x} { {bezier} {} }\n"
+                r"\cs_new_protected:Npn \__tenkz_kernel_route_keep:",
+                1,
+            ),
+            "case tables",
+        ),
+    ):
+        if seeded_kernel == kernel:
+            raise SystemExit(f"seed {label!r} changed nothing")
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded_kernel)
+        if not any(expected in error for error in errors):
+            raise SystemExit(f"{label} was not reported; errors: {errors}")
+    misshaped = contract.replace(
+        "| Alphabet | Words |\n|---|---|", "| Alphabet | Words |\n|---|"
+    )
+    if misshaped == contract:
+        raise SystemExit("the section 2.8 header no longer has its delimiter")
+    errors = tenkz_language.alphabet_errors(registry, misshaped, kernel)
+    if not any("delimiter" in error for error in errors):
+        raise SystemExit(f"a misshaped delimiter was accepted; errors: {errors}")
 
 
 def main() -> int:
