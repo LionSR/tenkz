@@ -61,6 +61,35 @@ def main() -> int:
     # The month comes from a fixed English table, not the caller's locale.
     if build.metadata_errors("2026/07/22", "July 2026", version, manual):
         raise SystemExit("the English month table disagrees with the title page")
+    # Metadata inside a branch TeX never takes reaches no page either, so the
+    # readers mask inert source as well as comments.
+    for reader in (build.manual_version, build.manual_dateline):
+        marker = manual if reader is build.manual_version else build.manual_dateline()
+        line = next(row for row in source.splitlines() if marker in row)
+        seeded = source.replace(line, f"\\iffalse\n{line}\n\\fi", 1)
+        if seeded == source:
+            raise SystemExit(f"could not bury {line!r} in a false branch")
+        try:
+            reader(seeded)
+        except ValueError:
+            continue
+        raise SystemExit(f"metadata in a false branch was read as the manual's: {line!r}")
+    # Every spelling of "compile me again" the manual's packages use.
+    for warning in (
+        "LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.",
+        "Package longtable Warning: Table widths have changed. Rerun LaTeX.",
+        "Package rerunfilecheck Warning: File `x.out' has changed.",
+    ):
+        if warning.startswith("Package rerunfilecheck"):
+            continue
+        if not build.RERUN.search(warning):
+            raise SystemExit(f"a rerun request was not recognised: {warning!r}")
+    # The manual draws two pictures of its own, outside the example
+    # environments the doctest covers; losing them would silently narrow the
+    # source-linked audit to nothing.
+    direct = build.direct_pictures()
+    if len(direct) != 2:
+        raise SystemExit(f"the manual's own picture count moved: {len(direct)}")
     try:
         build.manual_dateline("\\title{no date line here}")
     except ValueError:
