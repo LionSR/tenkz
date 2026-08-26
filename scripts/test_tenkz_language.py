@@ -201,6 +201,33 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     errors = tenkz_language.alphabet_errors(registry, contract, redefined)
     if not any("times" in error for error in errors):
         raise SystemExit(f"a redefined parser was not reported; errors: {errors}")
+    # The reader is total over the table and over the parser's bindings: a row
+    # it cannot account for, and any spelling that installs a second body,
+    # are reported rather than stepped over.
+    anchor = "| routes | `straight` `orth` `arc` |"
+    for label, seed in (
+        ("a row with no alphabet name", f"{anchor}\n|  | `bezier` |"),
+        ("a row with an extra cell", f"{anchor}\n| weights | `thin` | `thick` |"),
+    ):
+        errors = tenkz_language.alphabet_errors(
+            registry, contract.replace(anchor, seed), kernel
+        )
+        if not any("cannot name" in error for error in errors):
+            raise SystemExit(f"{label} was skipped; errors: {errors}")
+    for form in (
+        r"\cs_set:Nn", r"\cs_set_eq:NN", r"\cs_gset_protected:Npn", r"\let", r"\def",
+    ):
+        seeded = f"{kernel}\n{form} \\__tenkz_kernel_route:n {{ }}\n"
+        errors = tenkz_language.alphabet_errors(registry, contract, seeded)
+        if not any("times" in error for error in errors):
+            raise SystemExit(f"a parser replaced with {form} was missed; errors: {errors}")
+    # A generated variant derives a sibling and leaves the base alone, so it
+    # is not a second definition and must not be reported as one.
+    variant = f"{kernel}\n\\cs_generate_variant:Nn \\__tenkz_kernel_route:n {{ V }}\n"
+    if any("times" in error for error in tenkz_language.alphabet_errors(
+        registry, contract, variant
+    )):
+        raise SystemExit("a generated variant was counted as a redefinition")
 
 
 def main() -> int:

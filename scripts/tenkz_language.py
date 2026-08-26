@@ -612,24 +612,39 @@ def tombstone_errors(
 
 
 def contract_alphabets(text: str) -> dict[str, list[str]]:
-    """Read the section 2.8 table: one row per alphabet, words in backticks."""
+    """Read the section 2.8 table: one row per alphabet, words in backticks.
+
+    The reader is total over the table: the header and its delimiter are the
+    only rows it skips, and every other row must be one alphabet name and a
+    cell of backticked words.  A row it cannot account for is an error rather
+    than a line it steps over, because a row the contract renders and this
+    reader ignores is exactly the drift the gate exists to catch.
+    """
     section = re.search(r"^### 2\.8 [^\n]*\n(.*?)(?=^#{2,3} )", text, re.M | re.S)
     if section is None:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
     alphabets: dict[str, list[str]] = {}
+    seen_header = False
+    seen_delimiter = False
     for line in section.group(1).splitlines():
-        # Every row of the table is read before any of it is validated: a row
-        # whose cell opens with bare text is exactly the drift this gate is
-        # for, and a reader that only matches well-formed rows cannot see it.
-        # Markdown allows up to three spaces of indentation before a table
-        # row, and the rendered contract shows an indented row as part of the
-        # table, so the reader must see it too.
+        # Markdown allows up to three spaces of indentation before a row, and
+        # renders it inside the table, so the reader must see it there too.
         row = line[:3].lstrip(" ") + line[3:]
         if not row.startswith("|"):
+            if seen_delimiter and alphabets:
+                break  # the table has ended
             continue
         cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
-        if len(cells) != 2 or set(cells[0]) <= {"-", ":"} or cells[0] == "Alphabet":
+        if not seen_header:
+            seen_header = True
             continue
+        if not seen_delimiter:
+            if not all(set(cell) <= {"-", ":"} and cell for cell in cells):
+                raise ValueError(f"section 2.8 has no delimiter row; found {row!r}")
+            seen_delimiter = True
+            continue
+        if len(cells) != 2 or not cells[0]:
+            raise ValueError(f"section 2.8 has a row this reader cannot name: {row!r}")
         name, cell = cells
         # One row per alphabet: a second row for one name would let a
         # conflicting definition stand unread above the canonical one.
@@ -637,27 +652,45 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
             raise ValueError(f"section 2.8 lists {name!r} twice")
         # The cell is backticked words and the space between them, nothing
         # else: bare text beside them would read as a word to a person and be
-        # invisible to `findall`, which is the drift this gate exists to catch.
+        # invisible to `findall`.
         if not re.fullmatch(r"(?:`[^`]+`\s*)+", cell):
             raise ValueError(
                 f"section 2.8 row {name!r} has words this reader cannot name: {cell!r}"
             )
         alphabets[name] = re.findall(r"`([^`]+)`", cell)
+    if not alphabets:
+        raise ValueError("section 2.8 lists no alphabets")
     return alphabets
+
+
+# expl3 and TeX spellings that install a body under a name.  A control
+# sequence bound by any of them is a definition of it; `cs_generate_variant`
+# is deliberately absent, since it derives a differently-signatured sibling
+# and leaves the base alone.
+DEFINITION_TOKEN = re.compile(
+    r"\\(?:cs_(?:new|set|gset)[a-z_]*:[A-Za-z]*|let|[egx]?def)\s*$"
+)
+
+
+def macro_definitions(text: str, macro: str) -> list[int]:
+    """Offsets at which `macro` is bound, in file order.
+
+    Every occurrence is classified by the control sequence that precedes it,
+    so a replacement spelt `\\cs_set:Nn` or `\\cs_set_eq:NN` counts as one
+    definition just as `\\cs_new_protected:Npn` does.  TeX runs the last body
+    installed, so a reader of the first would compare an alphabet the parser
+    no longer has.
+    """
+    offsets: list[int] = []
+    for match in re.finditer(r"\\" + re.escape(macro) + r"(?![A-Za-z_:])", text):
+        if DEFINITION_TOKEN.search(text[max(0, match.start() - 80):match.start()]):
+            offsets.append(match.start())
+    return offsets
 
 
 def kernel_case_words(text: str, macro: str) -> list[str]:
     """The ``\\str_case`` branch words of one kernel parser, in file order."""
-    # Any definition form installs the body TeX executes, and a later one
-    # wins, so a reader pinned to the first would compare branches the parser
-    # no longer has.
-    definitions = list(
-        re.finditer(
-            r"\\cs_(?:new|set|gset)(?:_protected)?:Np[nx]\s*\\"
-            + re.escape(macro) + r"(?![A-Za-z_:])",
-            text,
-        )
-    )
+    definitions = macro_definitions(text, macro)
     if not definitions:
         raise ValueError(f"kernel defines no parser {macro}")
     if len(definitions) > 1:
@@ -665,7 +698,7 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             f"kernel defines {macro} {len(definitions)} times; "
             "the last would decide what the parser accepts"
         )
-    start = definitions[0].start()
+    start = definitions[0]
     end = text.find("\\cs_new_protected:Npn", start + 1)
     body = text[start : end if end > 0 else None]
     case = re.search(r"\\str_case:[A-Za-z]+\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body)
