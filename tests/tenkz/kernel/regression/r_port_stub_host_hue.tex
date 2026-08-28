@@ -1,0 +1,65 @@
+% Regression: an unbonded typed port stub inks its host atom's declared
+% species, and a stub whose host declares none keeps the house ink
+% (LionSR/tenkz#243).
+%
+% The policy stage turns every declared port no wire consumed into one
+% semantic open-leg wire.  That wire carries `host=` and no `species=` of its
+% own, so the hue resolver -- which reads the record's own species -- answered
+% `tenkzInk` and the leg drew black beside a red atom.  The leg is that atom's
+% index leaving it, so it is the atom's colour.
+%
+% Three K1 rows of docs/tenkz/COSMETIC-GAP-BAR.md named this in the same
+% words: rmp-ii-boundary-lasso, rmp-workbench-ii-boundary-b-old, and
+% rmp-ii-boundary-region ("physical port stubs stay house-black").
+%
+% Both directions are pinned below, because a fix that coloured every stub
+% would be as wrong as one that coloured none.
+\documentclass{standalone}
+\usepackage{tenkz}
+\makeatletter
+\ExplSyntaxOn
+\file_input:n { tenkz-kernel.code.tex }
+\seq_new:N \g__tenkz_test_stub_hue_seq
+\cs_new_eq:NN \__tenkz_test_stub_wire_ink:nN \__tenkz_kernel_r_wire_ink:nN
+\cs_set_protected:Npn \__tenkz_kernel_r_wire_ink:nN #1#2
+  {
+    \__tenkz_test_stub_wire_ink:nN {#1} #2
+    \__tenkz_model_get:nnN {#1} {origin} \l_tmpa_tl
+    \quark_if_no_value:NF \l_tmpa_tl
+      {
+        \str_if_eq:VnT \l_tmpa_tl {port-open}
+          {
+            \seq_gput_right:Ne \g__tenkz_test_stub_hue_seq
+              { \tl_use:N \l__tenkz_kernel_r_hue_tl }
+          }
+      }
+  }
+% The compile fails here rather than leaving a wrong colour on the page.
+\cs_new_protected:Npn \__tenkz_test_stub_hue_assert:nn #1#2
+  {
+    \str_if_eq:eeF { \seq_item:Nn \g__tenkz_test_stub_hue_seq {#1} } {#2}
+      {
+        \msg_error:nnee {tenkz}{kernel-render-todo}
+          { port~stub~#1~inks~
+            \seq_item:Nn \g__tenkz_test_stub_hue_seq {#1} ,~not~#2 }
+          {stub}
+      }
+  }
+\ExplSyntaxOff
+\tndeclare{species}{charge}{hue=source:red}
+\begin{document}
+% The hued host: its physical stub must carry the declared charge hue.
+\begin{tenkz}[cols=1, bonds=none, west=none]
+  \tn[name=A, species=charge, ports={0:virtual, 90:physical}]{}
+  \tnwire[species=charge]{A.0}{open e}
+\end{tenkz}
+% The plain host: its physical stub must stay house ink.
+\begin{tenkz}[cols=1, bonds=none, west=none]
+  \tn[name=B, ports={0:virtual, 90:physical}]{}
+  \tnwire{B.0}{open e}
+\end{tenkz}
+\ExplSyntaxOn
+\__tenkz_test_stub_hue_assert:nn {1} {red}
+\__tenkz_test_stub_hue_assert:nn {2} {tenkzInk}
+\ExplSyntaxOff
+\end{document}
