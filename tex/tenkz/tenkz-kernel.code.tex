@@ -12,11 +12,12 @@
 % regression fixtures, and the API examples -- keep working unchanged, which
 % is why the name stays.  Each stage carries its own load guard.
 
-% Load guard, as the single file carried: a document that inputs the kernel
-% a second time must not walk the six stages again.
-\ExplSyntaxOn
-\cs_if_exist:NT \tenkzkernel { \tex_endinput:D }
-\ExplSyntaxOff
+% Load guard.  It stands before \ExplSyntaxOn deliberately: a guarded exit
+% never reaches the trailing \ExplSyntaxOff, so a guard inside expl3 syntax
+% would leave the caller's catcodes changed -- ignoring spaces rather than
+% erroring.  Guarding first leaves them exactly as they were found, whether
+% the caller had expl3 syntax on or off.
+\ifcsname tenkzkernel\endcsname \expandafter\endinput \fi
 
 % Each stage closes its own \ExplSyntaxOn, so the syntax is re-armed before
 % every input rather than assumed to survive the one before it.

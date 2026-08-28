@@ -14,17 +14,15 @@
 % the stages load in the order tenkz-kernel.code.tex lists them, and the
 % golden event and pixel streams are unchanged by the move.
 
+% Load guard.  It stands before \ExplSyntaxOn deliberately: a guarded exit
+% never reaches the trailing \ExplSyntaxOff, so a guard inside expl3 syntax
+% would leave the caller's catcodes changed -- ignoring spaces rather than
+% erroring.  Guarding first leaves them exactly as they were found, whether
+% the caller had expl3 syntax on or off.
+\ifcsname tenkzkernel\endcsname \expandafter\endinput \fi
+
 \ExplSyntaxOn
 
-% Load guard: tenkz.sty loads this stage; a document that also inputs the
-% file directly (the pre-bridge fixture spelling) must not redefine it.
-\cs_if_exist:NT \tenkzkernel { \tex_endinput:D }
-% ---------- side policy normalizes to closure wires ---------------------------------------
-% "A closed chain that renders open is impossible by construction": each
-% trace side becomes wrap-<side> and each cup side cup-<side>, wire records
-% with origin fields, before the freeze.  The physical= expander completes a
-% chain atom's outward port here, at the same pre-freeze moment, unless the
-% site answered the policy for itself.
 
 % "The frame populates and the body overrides": an explicit basis creates one
 % ordinary addressed atom per cell per member.  Without a basis, each

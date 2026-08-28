@@ -14,17 +14,15 @@
 % the stages load in the order tenkz-kernel.code.tex lists them, and the
 % golden event and pixel streams are unchanged by the move.
 
+% Load guard.  It stands before \ExplSyntaxOn deliberately: a guarded exit
+% never reaches the trailing \ExplSyntaxOff, so a guard inside expl3 syntax
+% would leave the caller's catcodes changed -- ignoring spaces rather than
+% erroring.  Guarding first leaves them exactly as they were found, whether
+% the caller had expl3 syntax on or off.
+\ifcsname tenkzkernel\endcsname \expandafter\endinput \fi
+
 \ExplSyntaxOn
 
-% Load guard: tenkz.sty loads this stage; a document that also inputs the
-% file directly (the pre-bridge fixture spelling) must not redefine it.
-\cs_if_exist:NT \tenkzkernel { \tex_endinput:D }
-% ---------- render: records make ink ---------------------------------------------------------
-% The pass that closes the pipeline: validated records resolve through the
-% geometry stage and draw through the render coordinators.  Nothing here
-% parses author syntax the address grammar has not already parsed, nothing
-% here owns ink, and every distance is a named metric ratio in pitch units
-% until the one conversion at the coordinate boundary.
 %
 % Ink order is the stage invariant, refined for strings: plain index wires;
 % physical legs (crossing-referenced legs are saved, not yet drawn); strings
