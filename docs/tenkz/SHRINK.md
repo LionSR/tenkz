@@ -4820,3 +4820,39 @@ two lists of words.
 The meters stay six: the contract and the implementation now pin each
 other, which is what the freeze needs, and a vocabulary that shrinks is
 still a session's verdict rather than a number.
+
+### 2026-08-28 — correction: the equation relation macro is called, and the lint no longer hardcodes
+
+The 2026-08-11 session left two items standing whose text has since gone
+wrong.  Both are corrected here, because shrink sessions are immutable.
+
+**`\__tenkz_kernel_eq_rel:` is not called by nothing, and must not be
+deleted.**  That session recorded it as "defined and called by nothing"
+and left the instruction that "it is deleted by whoever lands next in
+that file".  Executing that instruction would break every equation.  The
+macro is reached by name rather than by a written call:
+`\__tenkz_kernel_rewrite_rels:N` substitutes it for `=` through
+`\regex_replace_all:nnN { = } { \c{__tenkz_kernel_eq_rel:} }`, and
+`\__tenkz_kernel_revert_rels:N` substitutes back
+(`tenkz-kernel-surface.code.tex`, the two lines above
+`\__tenkz_kernel_eq_env_begin_cmd`).  A search for the name as a call
+site finds nothing, which is how the session reached its verdict; a
+search for the name at all finds the two regexes.  The standing
+instruction is withdrawn: the macro is live, and the equation's relation
+rewriting is what it is for.
+
+**The lint's `rmp-alias` hardcoding is gone.**  The same session recorded
+that the rule "hardcodes the `periodic` spelling and discards two names
+by hand", with the trigger "the next registry tombstone" and the fix "a
+tombstone ledger the linter reads".  That fix has since landed:
+`scripts/tenkz_lint.py` builds its alias patterns from the registry's own
+alias rows and its tombstone patterns from `tombstone_patterns`, whose
+live-word owners arrive from `live_word_owners`.  The word `periodic`
+does not appear in the file.  The trigger is retired as met.
+
+A survey for simplification candidates over the whole package found no
+others: 843 expl3 functions with no orphan once names built through
+`\c{}` are counted, no duplicated function body of eight lines or more,
+and 716 tooling functions with one dead wrapper, `scoped_consumer_text`,
+removed in this change.  No meter moves: the wrapper was not a public
+surface and the corrections are text.
