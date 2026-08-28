@@ -317,7 +317,7 @@ def main() -> int:
     )
     if form_row[2] != "enum(bracket|enclosure|label|prose)":
         raise SystemExit(f"the mark form alphabet is no longer the contract's: {form_row[2]}")
-    kernel = (ROOT / "tex/tenkz/tenkz-kernel.code.tex").read_text(encoding="utf-8")
+    kernel = tenkz_language.kernel_source()
     branches = re.findall(
         r"\\__tenkz_kernel_tombstone:nnnn\s*\{\s*tenkz-kernel-mark\s*\}"
         r"\s*\{\s*form\s*\}\s*\{\s*([a-z-]+)\s*\}\s*\{(.*?)\}\n",

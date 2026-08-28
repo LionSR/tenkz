@@ -3,50 +3,15 @@
 % Owned state: the placed-record table and the per-picture ink registers.
 % Invariants:  ink reads frozen records; it resolves no address and moves no place.
 % Next stage:  tenkz-kernel-annotate decides where a name or a mark may stand.
-% tenkz-kernel-ink.code.tex
-%
-% This file is the ink stage: index wires, direction marks, measured closure contours,
-% physical legs, strings, declared strokes, mark stations, and atom glyphs.
-%
-% It was split out of tenkz-kernel.code.tex without changing a line of
-% its content; the stages load in the order tenkz.sty lists them and the
-% golden event and pixel streams are unchanged by the move.
-%
-% Input:       kernel syntax from the executable registry.
-% Output:      validated model records, placement requests, and kernel events.
-% Owned state: the chain cursor, the address node table, panel and relation stores.
-% Invariants:  every record is written before validation; addresses parse or error.
-% Next stage:  tenkz-model.code.tex holds the records; geometry resolves the nodes.
 % SPDX-License-Identifier: Apache-2.0
 % Copyright the TNLean project; see LICENSE for the full terms.
 %
-% This file is the language stage of the 1.0 kernel.  The sentence model it
-% implements: a picture draws one typed tensor network in one frame; frames
-% turn names into places, so an author writes addresses and never measures;
-% the body declares atoms, wires, and marks; every index ends in a bond, a
-% closure, or a declared open leg; equations compose whole pictures under one
-% shared metric and must expose equal boundaries.
+% tenkz-kernel-ink.code.tex is the ink stage: index wires, direction marks, measured closure contours,
+%   physical legs, strings, declared strokes, mark stations, atom glyphs.
 %
-% The S4 swap made this stage the package surface: tenkz.sty calls
-% \tenkzkernel at load, so `tenkz`, `tenkzeq`, and the body commands are
-% bound as soon as the package is.  The switch remains callable and rebinds
-% the same meanings, keeping the per-group opt-in spelling of existing
-% documents inert; its deletion is the 1.0 freeze's corpus rewrite.  Nothing
-% here draws; rendering consumes the records this stage validates.
-%
-% Shelf notes (reuse over reinvention, one line per decision):
-%   l3keys       TAKE  every key tree below; .choices for closed alphabets,
-%                      .meta:n for token-substitution sugar -- no hand parser.
-%   l3regex      TAKE  terminal address productions; anchored, readable
-%                      patterns a reader checks against the grammar table.
-%   l3seq stack  TAKE  explicit operand stack for the recursive descent;
-%                      scratch registers never survive a recursive call.
-%   pgfmath      SKIP  address arithmetic is fp; the metric owns dimensions.
-%   pgfkeys      SKIP  reserved to the style stage by the architecture.
-%   MathAxis     TAKE  (quantikz) the equation baseline sits on the math
-%                      axis: height of $\vcenter{}$, applied at render time.
-%   xparse       TAKE  \NewDocumentCommand grammars for all seven commands.
-
+% Split out of tenkz-kernel.code.tex without changing a line of content;
+% the stages load in the order tenkz-kernel.code.tex lists them, and the
+% golden event and pixel streams are unchanged by the move.
 
 \ExplSyntaxOn
 

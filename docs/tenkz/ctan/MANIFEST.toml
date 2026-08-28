@@ -31,6 +31,12 @@ files = [
   "tenkz-tree.code.tex",
   "tenkz-render.code.tex",
   "tenkz-kernel.code.tex",
+  "tenkz-kernel-language.code.tex",
+  "tenkz-kernel-policy.code.tex",
+  "tenkz-kernel-resolve.code.tex",
+  "tenkz-kernel-ink.code.tex",
+  "tenkz-kernel-annotate.code.tex",
+  "tenkz-kernel-surface.code.tex",
 ]
 
 [runtime.requires]

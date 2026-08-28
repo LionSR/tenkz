@@ -3,21 +3,14 @@
 % Owned state: none.
 % Invariants:  the stage order is the pipeline order; each stage guards itself.
 % Next stage:  tenkz-kernel-language.code.tex, the first stage listed below.
-% tenkz-kernel.code.tex
-%
-% The 1.0 kernel loader.  This file held the whole kernel until the stage
-% split; it now names the six stages and their order, and nothing else.  The
-% order is the pipeline: the language stage validates records, the policy
-% stage derives the wires a picture's own words imply, resolution answers
-% every spatial question, ink lays the marks down, annotation decides where a
-% name or a mark may stand, and the surface stage exposes the environments.
-%
-% Consumers that input the kernel by name -- the kernel and regression
-% fixtures, and the API examples -- keep working unchanged, which is why the
-% name stays.  Each stage carries its own load guard.
-%
 % SPDX-License-Identifier: Apache-2.0
 % Copyright the TNLean project; see LICENSE for the full terms.
+%
+% tenkz-kernel.code.tex is the 1.0 kernel loader.  It held the whole kernel
+% until the stage split; it now names the six stages and their order, and
+% nothing else.  Consumers that input the kernel by name -- the kernel and
+% regression fixtures, and the API examples -- keep working unchanged, which
+% is why the name stays.  Each stage carries its own load guard.
 
 % Load guard, as the single file carried: a document that inputs the kernel
 % a second time must not walk the six stages again.
