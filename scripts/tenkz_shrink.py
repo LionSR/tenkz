@@ -256,17 +256,6 @@ def _brace_argument(text: str, name: str, argument: int) -> list[str]:
     ]
 
 
-def scoped_consumer_text(corpus: dict[Path, str]) -> dict[str, dict[Path, str]]:
-    """Option text grouped by the registry scope that owns each key."""
-    return {
-        scope: {
-            path: "\n,\n".join(payloads)
-            for path, payloads in by_path.items()
-        }
-        for scope, by_path in scoped_option_groups(corpus).items()
-    }
-
-
 def scoped_option_groups(
     corpus: dict[Path, str],
 ) -> dict[str, dict[Path, list[str]]]:
