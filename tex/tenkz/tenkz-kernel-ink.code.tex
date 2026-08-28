@@ -4064,10 +4064,31 @@
   {
     \__tenkz_model_get:nnN {#1} {species} \l__tenkz_kernel_r_species_tl
     \quark_if_no_value:NTF \l__tenkz_kernel_r_species_tl
-      { \tl_set:Nn #2 { tenkzInk } }
+      { \__tenkz_kernel_r_host_hue:nN {#1} #2 }
       {
         \exp_args:NV \__tenkz_kernel_r_species_hue:nN
           \l__tenkz_kernel_r_species_tl #2
+      }
+  }
+% A wire the policy stage generated declares no species of its own, and it is
+% not house ink: an open leg is its host atom's index leaving that atom, so it
+% carries the atom's colour.  The record already names the host, which is the
+% only thing this needs to read.  A record with no host, and an atom whose own
+% species is unset, keep the house ink they had.
+\cs_new_protected:Npn \__tenkz_kernel_r_host_hue:nN #1#2
+  {
+    \__tenkz_model_get:nnN {#1} {host} \l__tenkz_kernel_r_host_tl
+    \quark_if_no_value:NTF \l__tenkz_kernel_r_host_tl
+      { \tl_set:Nn #2 { tenkzInk } }
+      {
+        \exp_args:NV \__tenkz_model_get:nnN
+          \l__tenkz_kernel_r_host_tl {species} \l__tenkz_kernel_r_host_species_tl
+        \quark_if_no_value:NTF \l__tenkz_kernel_r_host_species_tl
+          { \tl_set:Nn #2 { tenkzInk } }
+          {
+            \exp_args:NV \__tenkz_kernel_r_species_hue:nN
+              \l__tenkz_kernel_r_host_species_tl #2
+          }
       }
   }
 % Resolve a species name for every ink consumer.  Declared hues win,
