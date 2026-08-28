@@ -1,3 +1,8 @@
+% Input:       resolved places, routes, and measured extents.
+% Output:      TikZ nodes and paths for wires, legs, strings, strokes, and glyphs.
+% Owned state: the placed-record table and the per-picture ink registers.
+% Invariants:  ink reads frozen records; it resolves no address and moves no place.
+% Next stage:  tenkz-kernel-annotate decides where a name or a mark may stand.
 % tenkz-kernel-ink.code.tex
 %
 % This file is the ink stage: index wires, direction marks, measured closure contours,

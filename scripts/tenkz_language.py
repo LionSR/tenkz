@@ -22,7 +22,21 @@ REGISTRY = ROOT / "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = ROOT / "docs/tenkz/chapters2/generated-language-reference.tex"
 ALIASES = ROOT / "docs/tenkz/chapters2/generated-language-aliases.tex"
 CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
-KERNEL = ROOT / "tex/tenkz/tenkz-kernel.code.tex"
+# The kernel's six stages, in the order tenkz.sty loads them.  The gate reads
+# them as one text because that is what the loader assembles at run time; a
+# definition is a definition wherever the stage split put it.
+KERNEL_STAGES = tuple(
+    ROOT / f"tex/tenkz/tenkz-kernel-{stage}.code.tex"
+    for stage in ("language", "policy", "resolve", "ink", "annotate", "surface")
+)
+
+
+def kernel_source() -> str:
+    """Every kernel stage, concatenated in load order."""
+    return "\n".join(
+        path.read_text(encoding="utf-8") for path in KERNEL_STAGES
+    )
+
 
 # The closed alphabets of LANGUAGE-1.0 section 2.8, each paired with the place
 # that accepts its words.  The census meters count keys, not the words inside a
@@ -796,7 +810,7 @@ def alphabet_errors(
         CONTRACT.read_text(encoding="utf-8") if contract_text is None else contract_text
     )
     kernel_text = (
-        strip_comments(KERNEL.read_text(encoding="utf-8"))
+        strip_comments(kernel_source())
         if kernel_text is None
         else strip_comments(kernel_text)
     )

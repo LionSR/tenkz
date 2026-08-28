@@ -1,3 +1,8 @@
+% Input:       frozen records, resolved geometry, and the ink already laid.
+% Output:      label stations, mark ink, and annotation layering over generated returns.
+% Owned state: the face-occupancy table and the containment order.
+% Invariants:  a station is chosen from measured ink; annotation adds no topology.
+% Next stage:  tenkz-kernel-surface closes the picture and exposes the commands.
 % tenkz-kernel-annotate.code.tex
 %
 % This file is the annotation stage: where a name or a mark may stand.  The automatic

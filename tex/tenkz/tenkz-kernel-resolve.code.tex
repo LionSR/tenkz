@@ -1,3 +1,8 @@
+% Input:       the complete record set, with the policy wires derived.
+% Output:      resolved places, hulls, routes, lanes, and the equation's shared measure.
+% Owned state: the address dependency graph and the resolved-place table.
+% Invariants:  resolution reads records and metrics only; a cycle is a coded error.
+% Next stage:  tenkz-kernel-ink lays the resolved geometry down.
 % tenkz-kernel-resolve.code.tex
 %
 % This file is the resolution stage: placement, plane-ratio guards, the address

@@ -61,7 +61,7 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     report.  The unseeded texts pass.
     """
     contract = tenkz_language.CONTRACT.read_text(encoding="utf-8")
-    kernel = tenkz_language.KERNEL.read_text(encoding="utf-8")
+    kernel = tenkz_language.kernel_source()
     if tenkz_language.alphabet_errors(registry, contract, kernel):
         raise SystemExit("the alphabet check fails on the unseeded tree")
 

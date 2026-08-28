@@ -1,3 +1,8 @@
+% Input:       validated picture, atom, wire, and port records.
+% Output:      closure wires for side words; one open-leg wire per unconsumed port.
+% Owned state: the side stage table and the port-consumption ledger.
+% Invariants:  policy adds wires only; it never draws and never edits an authored record.
+% Next stage:  tenkz-kernel-resolve answers where every record stands.
 % tenkz-kernel-policy.code.tex
 %
 % This file is the policy stage: a picture's side words and its physical policy become
