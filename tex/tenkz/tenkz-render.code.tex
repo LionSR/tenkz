@@ -15,11 +15,6 @@
 
 \ExplSyntaxOn
 
-\msg_new:nnn {tenkz}{render-skin}
-  { [TKZ-RENDER-SKIN]~no~kernel~skin~named~'#1' }
-\msg_new:nnn {tenkz}{render-nowire}
-  { [TKZ-RENDER-NOWIRE]~the~bond~scan~draws~#1~->~#2~but~the~model~holds~
-    no~such~wire~record;~derivation~and~scan~disagree }
 \msg_new:nnn {tenkz}{render-wiredir}
   { [TKZ-RENDER-WIREDIR]~wire~record~#1~carries~dir='#2'~but~the~scan~
     derives~'#3';~the~record~is~authoritative }
@@ -41,11 +36,6 @@
 % ---------- coordinator strokes ------------------------------------------------
 % The kernel's topology passes decide every stroke; each one is inked here.
 % One contraction bond, backed by wire record #1 (diagnostics and, at the
-% events landing, provenance): #2 style tokens, #3 direction-mark tokens,
-% #4/#5 the resolved anchors, west side first.
-\cs_new_protected:Npn \__tenkz_render_bond:nnnnn #1#2#3#4#5
-  { \draw[#2,#3] #4 -- #5 ; }
-\cs_generate_variant:Nn \__tenkz_render_bond:nnnnn { e }
 % A coordinator-decided stub or segment: #1 style tokens, #2 path tokens,
 % emitted verbatim.
 \cs_new_protected:Npn \__tenkz_render_stroke:nn #1#2
@@ -57,23 +47,6 @@
   { \node[#1] at #2 {#3}; }
 
 % ---------- skins ------------------------------------------------------------
-% The eight kernel base skins resolve to the calibrated styles of tenkz-core.
-% A declared skin adds only the own-port pairing primitive below.
-\cs_new:Npn \__tenkz_render_skin_style:n #1
-  {
-    \str_case:nnF {#1}
-      {
-        {dot}  { tensor }
-        {box}  { box~tensor }
-        {ring} { on-wire~matrix }
-        {tri}  { left~canonical~tensor }
-        {triwest} { right~canonical~tensor }
-        {roundrect} { pill~tensor }
-        {dots} { draw = none , fill = none }
-        {none} { draw = none , fill = none , inner~sep = 0pt , minimum~size = 0pt }
-      }
-      { \msg_expandable_error:nnn {tenkz}{render-skin} {#1} tensor }
-  }
 
 % A declared skin's saved own-port route is drawn over its base glyph.  Its
 % paper halo both clears the glyph outline and keeps later ordered pairings
@@ -98,25 +71,20 @@
 % from geometry in pitch units; only here do they meet the pitch dimension.
 \tl_new:N \l__tenkz_render_x_tl
 \tl_new:N \l__tenkz_render_y_tl
-\tl_new:N \l__tenkz_render_content_tl
 % #4 carries the size the frame asks for.  A glyph belongs to the frame it
 % sits on, so a frame that shrinks shrinks its glyphs -- the size is never a
 % skin of its own; an unscaled atom passes an empty fourth argument.
+% Only `dot` is ever asked for: every other skin reaches paper through
+% \__tenkz_kernel_r_atom_glyph:n, which owns the skin-word-to-style table.
+% The word stays in the signature so the two call sites read as what they are.
 \cs_new_protected:Npn \__tenkz_render_atom_scaled:nnnn #1#2#3#4
   {
     \__tenkz_geom_xy:nNN {#2} \l__tenkz_render_x_tl \l__tenkz_render_y_tl
-    \str_case:nnF {#1}
-      {
-        {dot}  { \tl_clear:N \l__tenkz_render_content_tl }
-        {dots} { \tl_set:Nn \l__tenkz_render_content_tl { $\cdots$ } }
-        {none} { \tl_clear:N \l__tenkz_render_content_tl }
-      }
-      { \tl_set:Nn \l__tenkz_render_content_tl {#3} }
     \__tenkz_ink_node:nnnn
-      { \__tenkz_render_skin_style:n {#1} #4 }
+      { tensor #4 }
       { \l__tenkz_render_x_tl \tenkz@pitch }
       { \l__tenkz_render_y_tl \tenkz@pitch }
-      { \l__tenkz_render_content_tl }
+      { }
   }
 
 % ---------- labelled atoms ----------------------------------------------------

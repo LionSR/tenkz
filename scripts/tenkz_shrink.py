@@ -211,14 +211,6 @@ def _option_key_names(payload: str) -> list[str]:
     ]
 
 
-def _forwarded_options(payload: str, keys: set[str]) -> str:
-    """Keep only option parts whose keys are forwarded to another scope."""
-    return ",".join(
-        part
-        for part in _top_level_option_parts(payload)
-        if part.partition("=")[0].strip().replace("~", " ") in keys
-    )
-
 
 def _environment_options(text: str) -> list[str]:
     # `tenkzeq` parses the same picture-policy rows as `tenkz`, so both
