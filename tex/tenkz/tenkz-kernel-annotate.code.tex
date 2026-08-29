@@ -36,8 +36,8 @@
 %   * an endpoint port names its record and its face angle;
 %   * every other endpoint resolves its owner and the next route point, then
 %     reads that page-space bearing in the atom's complete carrier basis;
-%   * string waypoints do the same for both incident segments, cyclically for
-%     a closed route, while a generated hull departure samples its frozen path;
+%   * string waypoints read both frozen route tangents, cyclically for a
+%     closed route, while a generated hull reads its exact endpoint tangent;
 %   * an atom threaded on a wire stands at no cell of its own, and takes the
 %     two faces its carrier runs through at the bead.
 %
@@ -56,7 +56,7 @@
 % here, so the chooser knows a face it found free of charted ink is not a
 % face it verified free of all ink.  Such a station is left unclaimed in
 % the event stream rather than mislabeled as a kernel promise; the bearing
-% bead-tangent continuation of issue #15 is what empties the remaining ledger.
+% bead-tangent continuation of issue #15 answers the remaining routed-bead case.
 \__tenkz_prop_new_indexed:N \g__tenkz_kernel_lab_blind_prop % "atom" -> ""
 \tl_new:N \l__tenkz_kernel_lab_atom_tl
 \tl_new:N \l__tenkz_kernel_lab_row_tl
@@ -99,8 +99,22 @@
 \fp_new:N \l__tenkz_kernel_lab_next_y_fp
 \tl_new:N \l__tenkz_kernel_lab_local_u_tl
 \tl_new:N \l__tenkz_kernel_lab_local_v_tl
+\tl_new:N \l__tenkz_kernel_lab_path_tl
+\tl_new:N \l__tenkz_kernel_lab_segment_tl
+\seq_new:N \l__tenkz_kernel_lab_path_seq
+\bool_new:N \l__tenkz_kernel_lab_incoming_bool
+\bool_new:N \l__tenkz_kernel_lab_outgoing_bool
+\bool_new:N \l__tenkz_kernel_lab_incoming_found_bool
+\bool_new:N \l__tenkz_kernel_lab_outgoing_found_bool
+\tl_new:N \l__tenkz_kernel_lab_initial_point_tl
+\tl_new:N \l__tenkz_kernel_lab_final_point_tl
+\tl_new:N \l__tenkz_kernel_lab_tangent_tl
 \fp_const:Nn \c__tenkz_kernel_lab_route_sample_fp { 1 / 10000 }
 \fp_const:Nn \c__tenkz_kernel_lab_axis_tol_fp { 1 / 100 }
+% PGF stores path dimensions at scaled-point precision, so a coordinate
+% round-trip through the frozen soft path can differ by a few millionths of a
+% pitch from the resolver's floating-point station.
+\fp_const:Nn \c__tenkz_kernel_lab_point_tol_fp { 1 / 100000 }
 % One pass over the frozen records fills the table the atom pass reads.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_occupancy:
   {
@@ -127,7 +141,7 @@
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_blind:n { V }
 % Resolve the authored station word once for every atom label consumer and
 % bracket its audited node with the matching claim.  Written `auto` is the
-% chooser, just like an omitted field; an atom in the blind ledger receives a
+% chooser, just like an omitted field; blind or circular geometry receives a
 % fallback placement but cannot promise that the chosen station was clear.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_side_claim:nN #1#2
   {
@@ -137,7 +151,9 @@
       { \str_if_eq_p:Vn #2 {auto} }
       {
         \__tenkz_kernel_r_label_auto_side:nN {#1} #2
-        \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
+        \bool_lazy_or:nnF
+          { \prop_if_in_p:Nn \g__tenkz_kernel_lab_blind_prop {#1} }
+          { \str_if_eq_p:ee { \__tenkz_kernel_r_frame_word: } {circle} }
           {
             \use:e
               {
@@ -187,9 +203,14 @@
 % scale, relative placements, basis members, and circle frames alike.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_mark_bearing:nnn #1#2#3
   {
-    \__tenkz_kernel_r_local_vector:nnnNN {#1}
+    \__tenkz_kernel_r_label_mark_vector:nnn {#1}
       { (#2) - \l__tenkz_kernel_lab_centre_x_fp }
       { (#3) - \l__tenkz_kernel_lab_centre_y_fp }
+  }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_mark_bearing:nnn { VVV }
+\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_vector:nnn #1#2#3
+  {
+    \__tenkz_kernel_r_local_vector:nnnNN {#1} {#2} {#3}
       \l__tenkz_kernel_lab_local_u_tl
       \l__tenkz_kernel_lab_local_v_tl
     \fp_compare:nNnTF
@@ -209,7 +230,7 @@
       }
       { \__tenkz_kernel_r_label_blind:n {#1} }
   }
-\cs_generate_variant:Nn \__tenkz_kernel_r_label_mark_bearing:nnn { VVV }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_mark_vector:nnn { Vee, nee }
 
 % Preserve the even-span lane doctrine for an axial resolved segment.  The
 % segment direction is already in carrier coordinates, so this is the same
@@ -328,12 +349,6 @@
           \l__tenkz_kernel_lab_host_tl
         \__tenkz_kernel_r_label_port_lane:e
           { \int_eval:n { \__tenkz_kernel_node_item:nn {#1} {slot} } }
-        % The authored port face remains authoritative.  A circle chord may
-        % cross the label band again away from that port, so this host cannot
-        % make a verified free-face promise until chord/port occupancy has an
-        % explicit contract of its own.
-        \str_if_eq:eeT { \__tenkz_kernel_r_frame_word: } {circle}
-          { \__tenkz_kernel_r_label_blind:V \l__tenkz_kernel_lab_host_tl }
       }
   }
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_port_claim:n { V }
@@ -446,29 +461,49 @@
   }
 
 % A generated hull lane has no authored neighbour address.  Its frozen path
-% is already available here, so sample just inside the appropriate endpoint.
+% is already available here, so read its exact endpoint tangent.  This cannot
+% skip a short first/last segment as a fixed arclength fraction could.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_hull_bearing:nnn #1#2#3
   {
     \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
     \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
       {
-        \tl_set:Ne \l__tenkz_kernel_lab_t_tl
+        \tl_set_eq:Nc \l__tenkz_kernel_lab_path_tl
           {
-            \fp_eval:n
+            \l__tikzspath_prefix_tl
+            tenkz-bead-\tl_use:N \l__tenkz_kernel_lab_owner_tl
+          }
+        \str_if_eq:nnTF {#2} {first}
+          {
+            \spath_initialtangent:NV \l__tenkz_kernel_lab_segment_tl
+              \l__tenkz_kernel_lab_path_tl
+            \__tenkz_kernel_r_label_mark_vector:nee {#3}
               {
-                \str_if_eq:nnTF {#2} {first}
-                  { \c__tenkz_kernel_lab_route_sample_fp }
-                  { 1 - \c__tenkz_kernel_lab_route_sample_fp }
+                \dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_segment_tl {1} }
+                / \dim_to_fp:n { \tenkz@pitch }
+              }
+              {
+                \dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_segment_tl {2} }
+                / \dim_to_fp:n { \tenkz@pitch }
               }
           }
-        \exp_args:NVV \__tenkz_kernel_r_label_route_point:nnNN
-          \l__tenkz_kernel_lab_owner_tl
-          \l__tenkz_kernel_lab_t_tl
-          \l__tenkz_kernel_lab_next_x_fp
-          \l__tenkz_kernel_lab_next_y_fp
-        \__tenkz_kernel_r_label_mark_bearing:nnn {#3}
-          { \l__tenkz_kernel_lab_next_x_fp }
-          { \l__tenkz_kernel_lab_next_y_fp }
+          {
+            \spath_finaltangent:NV \l__tenkz_kernel_lab_segment_tl
+              \l__tenkz_kernel_lab_path_tl
+            \__tenkz_kernel_r_label_mark_vector:nee {#3}
+              {
+                -\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_segment_tl {1} }
+                / \dim_to_fp:n { \tenkz@pitch }
+              }
+              {
+                -\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_segment_tl {2} }
+                / \dim_to_fp:n { \tenkz@pitch }
+              }
+          }
       }
       { \__tenkz_kernel_r_label_blind:n {#3} }
   }
@@ -579,10 +614,9 @@
   }
 
 % Strings can meet an atom at an interior waypoint, and a closed string has
-% no endpoints at all.  Walk the canonical authored address chain once and
-% mark both incident bearings at each waypoint that owns an atom.  Generated
-% path controls are deliberately absent: they are rendering detail, not
-% semantic incidences.
+% no endpoints at all.  The canonical authored address chain identifies each
+% incidence and its owner; the frozen path then supplies the actual incoming
+% and outgoing tangents, including Hobby and orthogonal rendering controls.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_string_waypoints:n #1
   {
     \__tenkz_model_get:nnN {#1} {kind} \l__tenkz_kernel_lab_owner_tl
@@ -626,8 +660,8 @@
                     \int_step_inline:nn
                       { \seq_count:N \l__tenkz_kernel_lab_route_seq }
                       {
-                        \__tenkz_kernel_r_label_waypoint:nnn
-                          {##1}
+                        \__tenkz_kernel_r_label_waypoint:nnnn
+                          {#1} {##1}
                           {
                             \int_compare:nNnTF {##1} = {1}
                               { \seq_count:N \l__tenkz_kernel_lab_route_seq }
@@ -646,18 +680,18 @@
                 \int_step_inline:nnnn {2}{1}
                   { \seq_count:N \l__tenkz_kernel_lab_route_seq - 1 }
                   {
-                    \__tenkz_kernel_r_label_waypoint:nnn
-                      {##1} { ##1 - 1 } { ##1 + 1 }
+                    \__tenkz_kernel_r_label_waypoint:nnnn
+                      {#1} {##1} { ##1 - 1 } { ##1 + 1 }
                   }
               }
           }
       }
   }
 
-\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint:nnn #1#2#3
+\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint:nnnn #1#2#3#4
   {
     \tl_set:Ne \l__tenkz_kernel_lab_node_tl
-      { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#1} }
+      { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#2} }
     \str_if_eq:eeTF
       { \__tenkz_kernel_node_item:Nn \l__tenkz_kernel_lab_node_tl {kind} }
       {port}
@@ -690,34 +724,180 @@
                 \__tenkz_kernel_r_label_station_lanes:V
                   \l__tenkz_kernel_lab_atom_tl
               }
-            \clist_map_inline:nn {#2,#3}
+            \bool_set_true:N \l__tenkz_kernel_lab_incoming_bool
+            \bool_set_true:N \l__tenkz_kernel_lab_outgoing_bool
+            \__tenkz_kernel_r_label_waypoint_neighbor:nN
+              {#3} \l__tenkz_kernel_lab_incoming_bool
+            \__tenkz_kernel_r_label_waypoint_neighbor:nN
+              {#4} \l__tenkz_kernel_lab_outgoing_bool
+            \__tenkz_kernel_r_label_waypoint_path:nV {#1}
+              \l__tenkz_kernel_lab_atom_tl
+          }
+      }
+  }
+
+% A segment joining two stations on the same atom lies under that atom's
+% glyph.  It cannot establish a free label face, so suppress just that side
+% of the waypoint scan and put the owner in the conservative blind ledger.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint_neighbor:nN #1#2
+  {
+    \tl_set:Ne \l__tenkz_kernel_lab_node_tl
+      { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#1} }
+    \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
+      \l__tenkz_kernel_lab_node_tl
+      \l__tenkz_kernel_lab_far_atom_tl
+      \l__tenkz_kernel_lab_far_row_tl
+      \l__tenkz_kernel_lab_far_col_tl
+      \l__tenkz_kernel_lab_far_bool
+    \quark_if_no_value:NF \l__tenkz_kernel_lab_far_atom_tl
+      {
+        \str_if_eq:VVT \l__tenkz_kernel_lab_atom_tl
+          \l__tenkz_kernel_lab_far_atom_tl
+          {
+            \bool_set_false:N #2
+            \__tenkz_kernel_r_label_blind:V
+              \l__tenkz_kernel_lab_atom_tl
+          }
+      }
+  }
+
+% Scan the frozen pre-surgery path because its segments carry the exact route
+% tangents before crossing surgery.  Coordinate matching deliberately visits
+% every segment: if an authored point is repeated, reserving every rendered
+% tangent there is conservative and independent of path-command expansion.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint_path:nn #1#2
+  {
+    \bool_set_false:N \l__tenkz_kernel_lab_incoming_found_bool
+    \bool_set_false:N \l__tenkz_kernel_lab_outgoing_found_bool
+    \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
+    \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
+      {
+        \tl_set_eq:Nc \l__tenkz_kernel_lab_path_tl
+          {
+            \l__tikzspath_prefix_tl
+            tenkz-bead-\tl_use:N \l__tenkz_kernel_lab_owner_tl
+          }
+        \spath_segments_to_seq:NV \l__tenkz_kernel_lab_path_seq
+          \l__tenkz_kernel_lab_path_tl
+        \seq_map_inline:Nn \l__tenkz_kernel_lab_path_seq
+          { \__tenkz_kernel_r_label_waypoint_segment:nn {##1} {#2} }
+        \bool_lazy_or:nnT
+          {
+            \l__tenkz_kernel_lab_incoming_bool
+            && ! \l__tenkz_kernel_lab_incoming_found_bool
+          }
+          {
+            \l__tenkz_kernel_lab_outgoing_bool
+            && ! \l__tenkz_kernel_lab_outgoing_found_bool
+          }
+          { \__tenkz_kernel_r_label_blind:n {#2} }
+      }
+      { \__tenkz_kernel_r_label_blind:n {#2} }
+  }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_waypoint_path:nn { nV }
+
+\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint_segment:nn #1#2
+  {
+    \tl_set:Nn \l__tenkz_kernel_lab_segment_tl {#1}
+    \int_compare:nNnT { \tl_count:N \l__tenkz_kernel_lab_segment_tl } > {3}
+      {
+        \spath_initialpoint:NV \l__tenkz_kernel_lab_initial_point_tl
+          \l__tenkz_kernel_lab_segment_tl
+        \spath_finalpoint:NV \l__tenkz_kernel_lab_final_point_tl
+          \l__tenkz_kernel_lab_segment_tl
+        \bool_lazy_and:nnT
+          { \l__tenkz_kernel_lab_outgoing_bool }
+          {
+            \fp_compare_p:n
               {
-                \tl_set:Ne \l__tenkz_kernel_lab_node_tl
-                  { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {##1} }
-                \exp_args:NV \__tenkz_kernel_r_node:n
-                  \l__tenkz_kernel_lab_node_tl
-                \exp_args:NV \__tenkz_kernel_r_xy:nNN
-                  \l__tenkz_kernel_lab_node_tl
-                  \l__tenkz_kernel_lab_next_x_fp
-                  \l__tenkz_kernel_lab_next_y_fp
-                \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
-                  \l__tenkz_kernel_lab_node_tl
-                  \l__tenkz_kernel_lab_far_atom_tl
-                  \l__tenkz_kernel_lab_far_row_tl
-                  \l__tenkz_kernel_lab_far_col_tl
-                  \l__tenkz_kernel_lab_far_bool
-                \str_if_eq:VVTF
-                  \l__tenkz_kernel_lab_atom_tl
-                  \l__tenkz_kernel_lab_far_atom_tl
+                abs(
+                  \dim_to_fp:n
+                    { \tl_item:Nn \l__tenkz_kernel_lab_initial_point_tl {1} }
+                  / \dim_to_fp:n { \tenkz@pitch }
+                  - \l__tenkz_kernel_lab_centre_x_fp)
+                < \c__tenkz_kernel_lab_point_tol_fp
+              }
+            &&
+            \fp_compare_p:n
+              {
+                abs(
+                  \dim_to_fp:n
+                    { \tl_item:Nn \l__tenkz_kernel_lab_initial_point_tl {2} }
+                  / \dim_to_fp:n { \tenkz@pitch }
+                  - \l__tenkz_kernel_lab_centre_y_fp)
+                < \c__tenkz_kernel_lab_point_tol_fp
+              }
+          }
+          {
+            \spath_initialtangent:NV \l__tenkz_kernel_lab_tangent_tl
+              \l__tenkz_kernel_lab_segment_tl
+            \fp_compare:nNnT
+              {
+                abs(\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {1} })
+                + abs(\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {2} })
+              } > {0}
+              {
+                \bool_set_true:N \l__tenkz_kernel_lab_outgoing_found_bool
+                \__tenkz_kernel_r_label_mark_vector:nee {#2}
                   {
-                    \__tenkz_kernel_r_label_blind:V
-                      \l__tenkz_kernel_lab_atom_tl
+                    \dim_to_fp:n
+                      { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {1} }
+                    / \dim_to_fp:n { \tenkz@pitch }
                   }
                   {
-                    \__tenkz_kernel_r_label_mark_bearing:VVV
-                      \l__tenkz_kernel_lab_atom_tl
-                      \l__tenkz_kernel_lab_next_x_fp
-                      \l__tenkz_kernel_lab_next_y_fp
+                    \dim_to_fp:n
+                      { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {2} }
+                    / \dim_to_fp:n { \tenkz@pitch }
+                  }
+              }
+          }
+        \bool_lazy_and:nnT
+          { \l__tenkz_kernel_lab_incoming_bool }
+          {
+            \fp_compare_p:n
+              {
+                abs(
+                  \dim_to_fp:n
+                    { \tl_item:Nn \l__tenkz_kernel_lab_final_point_tl {1} }
+                  / \dim_to_fp:n { \tenkz@pitch }
+                  - \l__tenkz_kernel_lab_centre_x_fp)
+                < \c__tenkz_kernel_lab_point_tol_fp
+              }
+            &&
+            \fp_compare_p:n
+              {
+                abs(
+                  \dim_to_fp:n
+                    { \tl_item:Nn \l__tenkz_kernel_lab_final_point_tl {2} }
+                  / \dim_to_fp:n { \tenkz@pitch }
+                  - \l__tenkz_kernel_lab_centre_y_fp)
+                < \c__tenkz_kernel_lab_point_tol_fp
+              }
+          }
+          {
+            \spath_finaltangent:NV \l__tenkz_kernel_lab_tangent_tl
+              \l__tenkz_kernel_lab_segment_tl
+            \fp_compare:nNnT
+              {
+                abs(\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {1} })
+                + abs(\dim_to_fp:n
+                  { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {2} })
+              } > {0}
+              {
+                \bool_set_true:N \l__tenkz_kernel_lab_incoming_found_bool
+                \__tenkz_kernel_r_label_mark_vector:nee {#2}
+                  {
+                    -\dim_to_fp:n
+                      { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {1} }
+                    / \dim_to_fp:n { \tenkz@pitch }
+                  }
+                  {
+                    -\dim_to_fp:n
+                      { \tl_item:Nn \l__tenkz_kernel_lab_tangent_tl {2} }
+                    / \dim_to_fp:n { \tenkz@pitch }
                   }
               }
           }
