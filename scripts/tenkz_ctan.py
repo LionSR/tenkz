@@ -160,20 +160,23 @@ ZIP_EPOCH_CEILING = int(
 # The staged names an upload carries whatever else the manifest declares. A
 # manifest that dropped one of these would build an archive without a licence
 # or without a change record, and every check below it would still pass.
-REQUIRED_MATERIAL = ("README.md", "LICENSE", "CHANGES.md", "CITATION.cff", "tenkz.bib")
+REQUIRED_MATERIAL = (
+    "README.md", "LICENSE", "CHANGES.md", "CITATION.cff", "tenkz.bib", "tenkz.pdf"
+)
 
 # Existence is not identity: a manifest can point a staged name at the wrong
 # existing file, and an upload whose LICENSE is the change record is worse
 # than one with no licence at all, because it looks answered.
 #
-# Two of the five are named elsewhere already — `DESIGN.md` calls
+# Three required files are named elsewhere already — `DESIGN.md` calls
 # `docs/tenkz/CHANGES.md` the release change record, and the licence is the
-# repository's — so those are pinned to their source rather than sniffed. A
-# phrase would not do for them: a change record has no durable sentence, and
-# the licence's name appears in the README that sits beside it.
+# repository's, while the manual builder owns the PDF path — so those are
+# pinned to their source rather than sniffed. A phrase would not establish
+# their identity.
 CANONICAL_MATERIAL = {
     "LICENSE": "LICENSE",
     "CHANGES.md": "docs/tenkz/CHANGES.md",
+    "tenkz.pdf": "output/pdf/tenkz-manual.pdf",
 }
 
 # The tables a staging manifest is made of, and the keys each one is read for.
@@ -185,12 +188,18 @@ MANIFEST_TABLES = {
     "source_tree": ("excluded",),
 }
 
-# The other three are recognized by a phrase each carries and the others do
-# not.
+# The remaining text material is recognized by a phrase each file carries and
+# the others do not.
 MATERIAL_MARKS = {
     "README.md": "## Requirements",
     "CITATION.cff": "cff-version:",
     "tenkz.bib": "@manual{tenkz",
+}
+
+# Binary material is enumerated here rather than in a second list: its file
+# signature is both the content check and the UTF-8 exemption.
+BINARY_MATERIAL_MARKS = {
+    "tenkz.pdf": b"%PDF-",
 }
 
 # The one licence marker every runtime file carries, and the sentence beside
@@ -1297,6 +1306,17 @@ def check_material(manifest: dict) -> Report:
             f"the file staged as {name} does not read as one: it does not "
             f"contain {mark!r}",
         )
+    for name, mark in BINARY_MATERIAL_MARKS.items():
+        relative = declared.get(name)
+        if relative is None:
+            continue
+        source = ROOT / relative
+        if not source.is_file():
+            continue
+        report.require(
+            source.read_bytes().startswith(mark),
+            f"the file staged as {name} does not begin with {mark!r}",
+        )
     text = _material_text(manifest, "README.md")
     if not text:
         return report
@@ -1311,12 +1331,14 @@ def check_material(manifest: dict) -> Report:
 
 
 def check_encoding(content: dict[str, Path]) -> Report:
-    """Every staged file decodes as UTF-8, and none carries a byte-order mark."""
+    """Every staged text file decodes as UTF-8 and carries no byte-order mark."""
 
     report = Report("encoding")
     for name, source in content.items():
         if not source.is_file():
             report.failures.append(f"{name} is declared and missing")
+            continue
+        if name in BINARY_MATERIAL_MARKS:
             continue
         raw = source.read_bytes()
         report.require(

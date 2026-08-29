@@ -32,9 +32,9 @@ named by `RELEASE-POLICY.md` §3 may change it.
       for byte, the event stream audits clean, and the title page names the
       package's month and year. The PDF it installs at
       `output/pdf/tenkz-manual.pdf` is the documentation the upload carries.
-      Open work: the archive builder does not yet stage that PDF; staging it
-      is the release-preparation change's work, after the manual's content
-      sign-off (LionSR/tenkz#12).
+      The archive stages those exact bytes as `tenkz.pdf`; rebuilding the
+      manual after this check would therefore make a different release input
+      and requires running the check again.
 
 ## 2. Building the archive
 
