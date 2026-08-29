@@ -3,7 +3,7 @@
 # recorded, including failure; the check rejects lies, never gaps.
 schema_version = 1
 pairing_sha256 = "8080d498397036533fa13015da164e74f9b86e7bf66b2f6e33f7a4719a59c317"
-campaign_sha256 = "6748cce5b7d38fde5667293e3344a25e8bd4b1aa2d1882e05aa6ba2fc1d67b74"
+campaign_sha256 = "f5b0f38b8381e5166f10595be62a70fd63c896a50acfd695f484358b339fc98c"
 
 [[verdict]]
 id = "rmp-ii-peps-projection"
@@ -177,9 +177,9 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 case_sha256 = "f3f38a39564aac724350319cadd828da89426f23d09309cdd084a4ca64ff24d3"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave1b-source-review-2026-08-04-200dpi"
-second_viewer = "fable-w1b-vision-verification-2026-08-05-600dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration (wave 1B), Fable-verified against the author panel: the four-column ket-bra racetrack with all ket legs open upward, all bra legs open downward, and the west rho^R / east rho^L cup beads matches the author panel site for site; the rails are hand-written under bonds=none because bonds=grid also bonds each vertical pair, which had contracted the physical legs the source leaves open -- fixed in this verification pass; the labelled cup word draws each fixed point on the bend it closes, where the source draws it; the workbench wraps the same band in eig(...) where the case names it rho_n -- identical network."
 
 [[verdict]]
@@ -188,9 +188,9 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 case_sha256 = "59c18dae868ca219189f12a39da409f3eca35b4d828f8da1d9c1fa43fb9a0fb6"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave1b-source-review-2026-08-04-200dpi"
-second_viewer = "fable-w1b-vision-verification-2026-08-05-600dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration (wave 1B), Fable-verified against the author panel: the shared racetrack of rmp-ii-reduced-density inside eig(...), with the same bonds=none fix keeping all physical legs open as in the source; the labelled cup word draws each fixed point on the bend it closes, where the source draws it."
 
 [[verdict]]
@@ -198,11 +198,11 @@ id = "rmp-ii-spectrum-transfer"
 status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-case_sha256 = "0f422da82318edaf4e3b7831d1c33b87dc69487b9737cc4c5b21a8eb4ca2c1cd"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave1b-source-review-2026-08-04-200dpi"
-second_viewer = "fable-w1b-vision-verification-2026-08-05-600dpi"
-note = "Slot-to-species respell 2026-08-25: the retired slot= key's region word rides species= now; pixel-identical at 200dpi (czx compared directly, the two siblings carry the same one-word substitution).  Prior note: Kernel migration (wave 1B), Fable-verified against the author panel: each column's physical index is contracted into a ladder rung, matching the source's transfer-operator topology exactly, with the four virtual ends open around the ladder; rho^R and rho^L are the same construction -- a small ring atom in-line on its own rail -- resolving the K3 gap-bar residue's shared tail idiom; the source's dashed red cut rectangle is drawn as the house secondary enclosure around the four contracted columns; measured at 600dpi the rung and rail weights match the source's same-weight ladder, so the stale weight-mismatch tag is dropped; the n annotation is a bracket under the marked columns, the mark form the source's brace asks for, which retires the last recorded substitution and promotes the verdict to faithful."
+case_sha256 = "a229209234d45572adc7ce7c5a200bf6df9a7ac82e67434dba38e25aecd66380"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+second_viewer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+note = "The class-fixed extent migration preserves the transfer ladder, contracted physical rungs, four open virtual ends, cut enclosure, and n bracket. Both rho labels explicitly use the clear south station because their east and west faces carry the rail; the names remain paired unambiguously with their small inline capsules."
 
 [[verdict]]
 id = "rmp-ii-spectrum-fixed-points"
@@ -210,11 +210,11 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
-case_sha256 = "14861c03957f7378a7dddefbff0651fc6ab26d5863168090bebb46d349d2bb75"
-reviewed = "2026-08-22"
-renderer = "fable-arc-route-before-after-2026-08-22-200dpi"
-second_viewer = "fable-arc-route-source-recheck-2026-08-22"
-note = "Arc-route landing (#6201), Fable-verified against the fig9-3 source block: the two self-closures now write route=arc and each draws the protruding fold on its own side -- west of the first panel's rho^R, east of the second's -- restoring the closure ink the 2026-08-04 faithful promotion was regressed on. Topology unchanged from the wave-1B review: each factor is one wires=2 ring atom closed on its own doubled port pair with two open virtual ends on the far side. The source steps its fold out with rounded corners; the drawn half-circle fold is the house form of the same closure."
+case_sha256 = "e43b85aa3d5d2fc3008d41c86b2b0f52d5e07a5a1a6346165a132644ac659b93"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+second_viewer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+note = "The class-fixed extent migration preserves both doubled fixed-point factors, their self-closures, and their open virtual ends. The four rho names use explicit outward stations: R west and L east in the first panel, L west and R east in the second; all remain clear and paired with their factors."
 
 [[verdict]]
 id = "rmp-ii-blocking"
@@ -223,9 +223,9 @@ pairing = "verified"
 pairing_by = "fable-structural-redraw-2026-07-27"
 defects = []
 case_sha256 = "2e6bed4864a7b91f94c6b32b58ec821ae92160a7429329884caaf32aefff52fc"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave1b-source-review-2026-08-05-200dpi"
-second_viewer = "fable-w1b-vision-verification-2026-08-05-600dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration (wave 1B), Fable-verified against the published panel: the wide=2 pill's two typed north ports (i, beta) and one south port (alpha, under i as in the source) reproduce the source panel's topology, boundary, labels, and orientation unchanged; the stock pill silhouette (#5480) gives the source's rounded glyph form, but the pill remains markedly wider than the source's compact glyph (about 6:1 against the source's 1.75:1) -- intentional house styling, as recorded at the K2 promotion."
 
 [[verdict]]
@@ -234,8 +234,8 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 case_sha256 = "4146c0cffbb0248a36d06a4c5296eb094056f9790d4c9caedc571648609255c5"
-reviewed = "2026-08-07"
-renderer = "fable-5363-pill-respell-source-review-2026-08-07-200dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
 note = "Issue #5363: the four V isometries respelled from the house box onto the stock pill silhouette, giving the source's rounded V glyph (Vtensor, ImagesReview Section II.tex lines 75-81); the 225- and 45-degree bond ports meet and trim to the measured rounded boundary. Remaining residue: the |0> label sits south rather than east of its dot."
 
 [[verdict]]
@@ -266,9 +266,9 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 case_sha256 = "51389649d5d82dd7916b550039f079fd6a9d78b86ac82550725a08a6333f0d1b"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave1b-source-review-2026-08-04-200dpi"
-second_viewer = "fable-w1b-vision-verification-2026-08-05-200dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration (wave 1B), Fable-verified against the author panel: the triangle atom's three typed ports (alpha west, beta east, s south) reproduce the source panel's open boundary, labels, and rightward-pointing orientation; the source curls the s leg southwest off the triangle base where the house port drops it straight south -- equivalent routing of the same open leg; the A_L label sits inscribed in the glyph rather than above it, which is house label placement."
 
 [[verdict]]
@@ -278,9 +278,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "f63f0a1ab867cd68b45ab147281cfc49e1c8c01106dd6ab49fabf08e7f5de97a"
-reviewed = "2026-08-05"
-renderer = "claude-mirrored-triangle-source-review-2026-08-05-200dpi"
-second_viewer = "claude-mirrored-triangle-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Re-promoted from cosmetic-gap once the mirrored triangle skin landed (#5485): the glyph now points its apex west, as the source pic triaR does, so the sole recorded residue is gone. Against the author panel at 200 dpi and again at 400 dpi: alpha meets the west apex, beta leaves the east flat side, s hangs south, all three open, and the bracketed formula reads the same. House placement remains: the A_R name is inscribed in the glyph where the source leaves the triangle blank, and the source curls its beta and s legs off the flat side where the house draws them straight -- the same equivalent routing already accepted on rmp-ii-canonical-left."
 
 [[verdict]]
@@ -290,9 +290,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "7ebc48bae3f2bb9b5861a965075a084cc40b3ccc0bc59a32c437c24e3823f5d1"
-reviewed = "2026-08-05"
-renderer = "claude-mirrored-triangle-source-review-2026-08-05-200dpi"
-second_viewer = "claude-mirrored-triangle-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Re-promoted from cosmetic-gap once the mirrored triangle skin landed (#5485). The source mirrors the whole equation (nested cups west, apex-east glyphs, open pair east) while the house keeps the definition compass (east cup, open west pair -- the 2026-07-23 better-than-the-authors form); mirrored into the house frame the source glyphs face west, which both glyphs now do. Read at 200 dpi and again at 400 dpi: east cup on the contracted right index, ket over bra with the conjugate overline, vertical physical contraction, open west pair, and the bare cup on the right-hand side. The panel is now the exact mirror of the faithful rmp-ii-ortho-left, and the physical contraction is drawn vertically where the source nests it as an inner cup -- the same routing already accepted there."
 
 [[verdict]]
@@ -302,9 +302,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "5098b0c14bc1cb3c50e85d674375c6b8f8ff70c8e63d243e557f12928cbd1928"
-reviewed = "2026-08-05"
-renderer = "claude-kernel-source-review-2026-08-05-200dpi"
-second_viewer = "fable-vision-countersign-2026-08-05-600dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration, Fable-countersigned against the author panel: the source mirrors the whole equation (nested cups east, apex-west glyphs, open pair west) while the house keeps the definition compass (west cup, open east pair); mirrored into the house frame the source glyphs face east, which is exactly the kernel triangle's fixed apex, so no orientation residue remains. West cup, vertical physical contraction, and open east pair all verified; the conjugate overline is spelled directly in the label text, since kernel does not yet wire the conjugate flag to ink."
 
 [[verdict]]
@@ -347,9 +347,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "f8428a928de9eea853969d288aa2ebb3b52f85e7fc1de4dfc7557a3f3730b703"
-reviewed = "2026-08-05"
-renderer = "claude-kernel-source-review-2026-08-05-200dpi"
-second_viewer = "fable-vision-countersign-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration, landed with the enclosure repair: the range-addressed enclosure mark does draw, so the source's dotted rounded box around the sigma^A sigma^B cluster is now the house enclosure with sigma_partial R at its northeast corner, retiring both the wave's floating-label missing-element defect and the grid tier's brace-for-box note. Lasso topology, the B/sigma word, the east cup, and the conjugate overlines (spelled in the label text, since kernel does not yet wire the bar accent to ink) all match the author panel; solid-grey versus dotted contour, house label distance, and the added glyph labels are house style (the bar)."
 
 [[verdict]]
@@ -359,9 +359,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "744f5d11f8528f89f9526555ccd7976078fcda32903f7e45e5c7c785ae3162d0"
-reviewed = "2026-08-05"
-renderer = "claude-kernel-source-review-2026-08-05-200dpi"
-second_viewer = "claude-issue-5503-port-fix-countersign-2026-08-05-200dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Issue #5503: U.270 and A.90 retyped virtual to physical -- the bond carries the summed physical index j (A^{i_1} A^{i_2} = sum_j U_{(i_1 i_2),j} A^j), matching the author source's identical vertical-stub style for that bond and the LHS's unambiguous physical legs (ImagesReview Section II.tex lines 693-699), and the sibling convention in rmp-ii-ortho-left/right (270:physical -> 90:physical for a contracted physical index). Render at 200dpi is pixel-identical to the pre-fix panel, since physical leg/.style={bond} in tenkz-core.code.tex aliases the two wire styles for a connected bond; the fix is a semantic-typing correction confirmed against the author panel fig2_fig2-pepe_AAeqUA.pdf, not a visual change. Prior note: Kernel migration, Fable-countersigned against the author panel: two open-physical A boxes bonded on the left, and U's two labelled outputs over the single blocked bond into the wide pill on the right, matching the source's rounded U glyph (stock pill skin, PR #5480, issue #5363); the wide house A under U versus the source's site-sized A is house styling (the bar)."
 
 [[verdict]]
@@ -424,15 +424,14 @@ note = "kernel respell verified against newfig13: both splits preserve their bou
 
 [[verdict]]
 id = "rmp-iii-a-symmetry-sector"
-status = "faithful"
+status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "fable-structural-redraw-2026-07-27"
 defects = []
-case_sha256 = "f15bf8267fdcdea959ef62e5bfb85db772aa34012870fedef3346d747537d915"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave2b-source-review-2026-08-05-200dpi"
-second_viewer = "LionSR-delegated-fable-countersign-2026-07-26"
-note = "Kernel migration (wave 2B): each loop is now spelled upright -- bra-A over ket-A with R on the vertical physical bond, rho_l and rho_r rings closing the rails through corner arcs, X_g east of the left ket-A and X_g^dagger west of the right one, as at author-source y=-0.75; the corner arcs render as straight chords, so the loop reads as a hexagon where the source rounds a rectangle, the same house form the merged MPO-injective ring carries."
+case_sha256 = "5f8ac90ed3a7b49c6d3abd7e45626266d9782c7e0692b3a836f6e9af06d1f5fd"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+note = "The class-fixed extent migration preserves the two loop constructions, rho closures, vertical R bonds, and lower X insertions. The longer R_alpha and X_g^dagger names use explicit west and south-west stations so they clear neighboring glyphs. Cosmetic residue: R and X names now sit beside empty red capsules rather than inside them as in the author panel; all remain legible."
 
 [[verdict]]
 id = "rmp-iii-a-f-symbol"
@@ -666,22 +665,22 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "396b40f39caa7338f8e50f1ff678c48b4f791a7e227474a419b7aa50d908a4ad"
-reviewed = "2026-08-05"
-renderer = "claude-opus-eq-boundary-review-2026-08-05-200dpi"
-second_viewer = "claude-opus-eq-boundary-recheck-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Factor order restored to the source: the checked-in body read (g g / h h) X = X gh gh, a mirror only defensible under trace cyclicity that the open boundary does not grant; the author panel reads gh X (g/h)(g/h) = gh gh X (g/h) with X between the gh word and the stack, as now drawn. The gh tensors sit on the g row where the source centres them between rows (frame quantization, cosmetic). The stacked g and h boxes of one column now share the physical index that their product sums, as the source strokes it in one line through both boxes; before, each box kept its own pair of stubs, so the equation declared five sites on the left and four on the right instead of three and three."
 
 [[verdict]]
 id = "rmp-iii-a-g-injective-projector"
 status = "faithful"
-second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-source-repair-2026-07-29"
 defects = []
-case_sha256 = "bbe2cd76a900ccad265c0ee3e24e72ebe278ffb809c757c4371a2993438d12fb"
+case_sha256 = "a50a64b6aa27bca07111e3b1860e804de1dd2a1cbdea2de7c40deff3c566da5c"
 reviewed = "2026-08-29"
-renderer = "opus-k2-plate-review-2026-08-29-110dpi"
-note = "Ring squared 2026-08-29 at the maintainer's request, who asked at the 110dpi plate (p.59) why the red square could not be as regular as the original. It can now: route=orth reaches a closed string since #249, and the ring's eight stations are pairwise row- or column-aligned, so joining them with straight segments draws the author's rounded-corner square instead of a Hobby cycle scalloped through the same points. This resolves the open follow-up the promotion recorded and removes a divergence rather than adding one; the countersign that promoted the case is the same review that asked for this.  Prior note: Promoted to faithful 2026-08-29 on maintainer countersign of the 110dpi comparison plate (p.59): four L_g insertions, four ring tensors, one marked corner, and matching arrow directions on both sides; tenkz sets L_g in a rounded rectangle where the source uses a circle. Open follow-up, not a faithfulness gap: the red ring routes as a spline through its via stations where the author draws a rounded-corner square, so the loop reads less regular than the source.  Prior note: the paper projector: a normalized average of four cardinal L_g actions equals the four-tensor red ring with the northwest black junction"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+second_viewer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+note = "The class-fixed extent migration preserves the normalized four-action average, inward arrow directions, four-tensor projector ring, and marked corner. The four L_g names use the clockwise tangential east, south, west, and north stations, keeping them clear of the radial arrows and rotationally coherent."
 
 [[verdict]]
 id = "rmp-iii-a-mpo-action"
@@ -803,15 +802,14 @@ note = "one plane basis carries both rails and the diagonal transversal; seven f
 
 [[verdict]]
 id = "rmp-iii-b-r-tensor-right"
-status = "faithful"
+status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-source-and-annotation-review-2026-08-01"
 defects = []
-case_sha256 = "9f5d5f08f5cebd374f9b8897cf746794fc8428f2191f4061904255b50bf69c87"
-second_viewer = "rmp-r-resolver-visual-audit-2026-08-01"
-reviewed = "2026-08-01"
-renderer = "codex-plane-source-review-2026-08-01-300dpi"
-note = "one plane basis now carries both rails, the diagonal transversal, the resolver contour, and the three ordered b, a, b continuations"
+case_sha256 = "fc695f6d5f14dfd173039879e38a5cc6b9c39a6ac3a34877afe3105cfe3b41a3"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+note = "The class-fixed extent migration preserves the plane basis, two rails, diagonal transversal, resolver contour, and ordered b, a, b continuations. The resolver name uses an explicit north station to clear the lower rail and red strings. Cosmetic residue: R_{i,b} now sits above its empty white box rather than inside it as in the author panel; it remains legible."
 
 [[verdict]]
 id = "rmp-iii-b-braid-one"
@@ -844,22 +842,21 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = ["wrong-contraction"]
 case_sha256 = "c195a96cdd5fcabb2da8adb4f903eda726ec6eb431dbe8e47a40847821bb1510"
-second_viewer = "maintainer-k2-countersign-2026-08-29"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 reviewed = "2026-08-29"
-renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
 note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.73): the R_{j,a} attachment is physically and mathematically wrong, not the slant or glyph difference the prior note recorded. Held as a structural gap: exotic, and the maintainer directed no kernel work against it.  Prior note: The marked site names itself north-west, clear of the lattice dot its south-west station stood on. the plane frame now carries the patch the source draws, so the lattice slant matches and every inter-site index is virtual while the four site legs end in air; the source-red strings still wind through their six bead stations into R_{j,a} with j and i at their corners, and a's fourth bead now sits where it laps the lattice line running north out of i; the resolver contour stands further east than the source parallelogram, which the source shears with the plane and uses to hide the a-b meeting"
 
 [[verdict]]
 id = "rmp-iii-b-braid-four"
-status = "faithful"
+status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-source-and-annotation-review-2026-08-01"
 defects = []
-case_sha256 = "f129f0357b069e343ec419d26098d2f8425f1daea799e88fbda5b653376189dd"
-second_viewer = "rmp-r-resolver-visual-audit-2026-08-01"
-reviewed = "2026-08-01"
-renderer = "codex-plane-source-review-2026-08-01-300dpi"
-note = "the plane projection restores upper i, lower j, upper R_{i,b}, lower R_{j,a}, and the source lower-rail bead and outgoing tail"
+case_sha256 = "b2432ac83ce86ee71327d2f9ca04c06d6d39c9a35ba577944ed537d62f084b47"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+note = "The class-fixed extent migration preserves the source topology, upper i and lower j ordering, upper R_{i,b} and lower R_{j,a} resolver order, lower-rail bead, and outgoing tail. Cosmetic residue: the two resolver names now sit immediately outside their white boxes rather than inside them as in the author panel; both remain legible."
 
 [[verdict]]
 id = "rmp-iii-b-condensation"
@@ -901,9 +898,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "fc03485e73f02bc6321b22198efc8b60e11e2554165589aeb141bb6112725e68"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: A--B and the uncovered stretch close through the wide pill L on both side cups with L's lobe leg at the third station; the sideways cup routing and the flat-top lobe stub are house forms for the source's raised lobe (the bar). Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -913,9 +910,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "c13620b341bfc8cacc8229dedee85bcaae2af7a9fd3189f0c9e153365ab5df29"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: the uncovered stretch and B--C close through the wide pill R on both side cups with R's lobe leg at the first station; the sideways cup routing and the flat-top lobe stub are house forms for the source's raised lobe (the bar). Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -925,9 +922,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "181752328d5c9951aa4bee2c6adaa627e4386f76e66d83b833c4ed93e2d19b9d"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: the west cup closes A into L, and both cut virtual ends now turn upward -- A's through an invisible junction, L's at its top station -- matching the source's upturned pair and retiring the sideways-openings residue; stub lengths are house metric. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -937,9 +934,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "57f3f76e80184f5682ebd2b88f95e5ce161efb61e2f8f286246f57abdcfb4210"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: the east cup closes C into R, and both cut virtual ends now turn upward -- C's through an invisible junction, R's at its top station -- matching the source's upturned pair and retiring the sideways-ends residue. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -949,9 +946,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "de73c364578a815a626c21a95d7fce3a6e7c90f25b013b472928ebf108dc66bd"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: A--B closes into L through the west cup, and both cut interior ends now turn upward before the lobe leg, matching the source's order A, B, cut pair, lobe and retiring the sideways-ends residue. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -961,9 +958,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "5913a8e8261d4a631e242fff6e71a754f855fc70348bb59ac57adc7cb709d1f1"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: both outer ends close through R's side cups and the two cut interior ends turn upward between B and C as the source draws them, with the escaped leg at the first station; the 0.7 facing-break spelling is retired. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -973,9 +970,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "80717f6cfb9d24958c6393aa4e720030ef582bf18aa0f5364edbf27b0a347d33"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: the free identity wire is now the source's open U between two invisible junctions, retiring the horizontal-wire residue, and L keeps the far-west virtual, near-lobe virtual, and lobe leg at the source's stations. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -997,9 +994,9 @@ pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
 case_sha256 = "baa1232922901da5c217113fad0c2b3099238c38cc19fd9e2faef97459b58682"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "kernel migration: L alone carries the far-west virtual, the near-lobe virtual, and the lobe leg at the stations of the preceding panel; the near-lobe stub points upward where the source keeps it horizontal off the lobe, an equivalent open-leg presentation (the bar). Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -1009,9 +1006,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "b2ddefd1d8a6fba60d1bac58fe4611a024e19b292db9602970840c7bcec5d23b"
-reviewed = "2026-08-05"
-renderer = "fable-w4-section-iv-migration-2026-08-05-200dpi"
-second_viewer = "fable-w4-second-pass-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "re-audited against Rtensor5 for the recorded mirror: the 0.7 layout was topologically equivalent (same C--X bond, same three open legs) but set X's leg east of the contraction; the kernel respell restores the source's embedding -- X's leg at the far west, C closing east through the cup, and C's cut end sideways west -- so the mirror residue is gone. Confirmed on a second 400dpi pass."
 
 [[verdict]]
@@ -1113,9 +1110,9 @@ pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "b7509d6cd79e099de829f9ff108b45268dc8d052369c47b63ee5af294d15810b"
-reviewed = "2026-08-02"
-renderer = "codex-section-ii-author-source-review-2026-08-02-600dpi"
-second_viewer = "codex-independent-section-ii-source-review-2026-08-02"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "both X branches meet the A and conjugate-A rails, and their physical legs form one open vertical line"
 
 [[verdict]]
@@ -1182,8 +1179,8 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 case_sha256 = "326373a0ea708fa1397c87b7ed794b467c0ff4db0eba9dbc577bd3c686cd63f3"
-reviewed = "2026-08-05"
-renderer = "fable-w1a-vision-review-2026-08-05-200dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
 note = "The source colour coding is recovered from the author code (the red A row and the gray B row are explicit fill colours at lines 618-649, matching the published twin's charge/flux palette) and is now model-recorded as declared species; as on rmp-ii-boundary-lasso, the physical policy legs stay house-ink because the policy stub does not read the host species (K1)."
 
 [[verdict]]
@@ -1368,11 +1365,11 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
-case_sha256 = "f1b3b7a80ab23fbfea3714014e497b8131e3bc5c54c003541381791b6b31de93"
-reviewed = "2026-08-05"
-renderer = "fable-w7-crossings-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w7-crossings-recheck-2026-08-05-400dpi"
-note = "Archival pairing corrected to Eq59.pdf: the file named Eq59now.pdf holds the SPT g-pull sketch, while Eq59.pdf is this group average (four inward L_g actions, projector ring, marked corner). Kernel respell gives the ring its source red and the marked dot at the corner station; stadium L_g glyphs, single arrowheads per leg, and the diamond ring are house forms."
+case_sha256 = "327d1559175be7d70ca2a45e771dc33f5773ab11610fb05af39f064406d6175c"
+reviewed = "2026-08-29"
+renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
+second_viewer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+note = "The archival Eq59 pairing remains the four inward L_g actions against the red projector ring with its marked corner. The four names use clockwise tangential east, south, west, and north stations, keeping them clear of the radial arrows and rotationally coherent."
 
 [[verdict]]
 id = "rmp-workbench-iii-ghz-state-workbench"
@@ -1414,9 +1411,9 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 case_sha256 = "0ffbaaee5a13fb1769c2db0645f64676feb64e4c0df140f00af30b2963881324"
-reviewed = "2026-08-05"
-renderer = "kernel-migration-wave2b-source-review-2026-08-05-200dpi"
-second_viewer = "wave2b-delegated-second-viewer-2026-08-05-400dpi"
+reviewed = "2026-08-29"
+renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
+second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
 note = "Kernel migration (wave 2B): the tall X_gh box spans the g and h rows with its west port on the gh midline and two slotted east ports at the rail heights; every g-h column contracts g's lower physical index into h's upper one as the source's continuous vertical line does, the virtual word is red on both sides, and the boundary is one west gh end plus the open g and h rails east; the archival pairing is corrected to sptintertwin gh.pdf -- interMPO.pdf holds the a/b/c fusion intertwiner, a different panel."
 
 [[verdict]]

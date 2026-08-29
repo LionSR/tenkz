@@ -18,9 +18,9 @@
   % fold the source paints.
   \mathrm{eig}\left(
   \begin{tenkz}[rows={wire,wire}, cols=2, bonds=none]
-    \tn[name=R, skin=ring, wires=2,
+    \tn[name=R, skin=ring, wires=2, label pos=w,
       ports={180@1:virtual, 180@2:virtual, 0@1:virtual, 0@2:virtual}]{\rho^R} &
-    \tn[name=L, skin=ring, wires=2,
+    \tn[name=L, skin=ring, wires=2, label pos=e,
       ports={180@1:virtual, 180@2:virtual, 0@1:virtual, 0@2:virtual}]{\rho^L}
     \tnwire[route=arc]{R.180@1}{R.180@2}
     \tnwire{R.0@1}{L.180@1}
@@ -32,9 +32,9 @@
   \;=\;
   \mathrm{eig}\left(
   \begin{tenkz}[rows={wire,wire}, cols=2, bonds=none]
-    \tn[name=L, skin=ring, wires=2,
+    \tn[name=L, skin=ring, wires=2, label pos=w,
       ports={180@1:virtual, 180@2:virtual, 0@1:virtual, 0@2:virtual}]{\rho^L} &
-    \tn[name=R, skin=ring, wires=2,
+    \tn[name=R, skin=ring, wires=2, label pos=e,
       ports={180@1:virtual, 180@2:virtual, 0@1:virtual, 0@2:virtual}]{\rho^R}
     \tnwire{open w}{L.180@1}
     \tnwire{open w}{L.180@2}

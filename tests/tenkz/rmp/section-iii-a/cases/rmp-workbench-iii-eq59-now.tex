@@ -13,10 +13,14 @@
   \begin{tenkz}[rows={wire,wire,wire}, cols=3, bonds=none]
     % four L_g actions point along the four legs toward the centre; each leg
     % keeps its short open end beside the centre
-    \tn[skin=ring, at=(1,2), name=Ln, ports={90:virtual, 270:virtual}]{L_g}
-    \tn[skin=ring, at=(2,3), name=Le, ports={0:virtual, 180:virtual}]{L_g}
-    \tn[skin=ring, at=(3,2), name=Ls, ports={90:virtual, 270:virtual}]{L_g}
-    \tn[skin=ring, at=(2,1), name=Lw, ports={0:virtual, 180:virtual}]{L_g}
+    \tn[skin=ring, at=(1,2), name=Ln, label pos=e,
+      ports={90:virtual, 270:virtual}]{L_g}
+    \tn[skin=ring, at=(2,3), name=Le, label pos=s,
+      ports={0:virtual, 180:virtual}]{L_g}
+    \tn[skin=ring, at=(3,2), name=Ls, label pos=w,
+      ports={90:virtual, 270:virtual}]{L_g}
+    \tn[skin=ring, at=(2,1), name=Lw, label pos=n,
+      ports={0:virtual, 180:virtual}]{L_g}
     \tnwire[dir=to]{open n}{Ln.90}
     \tnwire[dir=to]{open e}{Le.0}
     \tnwire[dir=to]{open s}{Ls.270}

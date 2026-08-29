@@ -757,6 +757,7 @@
 \tl_new:N \l__tenkz_kernel_cupname_tl
 \tl_new:N \l__tenkz_kernel_cupother_tl
 \tl_new:N \l__tenkz_kernel_cuppol_tl
+\tl_new:N \l__tenkz_kernel_cuplabelside_tl
 \cs_new_protected:Npn \__tenkz_kernel_cup_bead:nn #1#2
   {
     \prop_get:NnN \l__tenkz_kernel_policy_prop {cup-#1}
@@ -767,6 +768,18 @@
         \__tenkz_model_record_atom:n { kind = tn , skin = ring }
         \__tenkz_model_complete_raw:nnV { \l__tenkz_model_last_tl } {label}
           \l__tenkz_kernel_cupbead_tl
+        % The side policy owns the bend and therefore its unambiguous outer
+        % station.  Record that compact compass word on the generated atom;
+        % the annotation stage should not have to rediscover policy geometry
+        % from the saved curve after a class-overflow name moves outside.
+        \tl_set:Ne \l__tenkz_kernel_cuplabelside_tl
+          {
+            \str_case:nn {#1}
+              { {west}{w} {east}{e} {north}{n} {south}{s} }
+          }
+        \__tenkz_model_complete_raw:nnV
+          { \l__tenkz_model_last_tl } {label-pos}
+          \l__tenkz_kernel_cuplabelside_tl
         \seq_push:Ne \l__tenkz_kernel_stack_seq
           { \tl_use:N \l__tenkz_model_last_tl }
         \__tenkz_kernel_addr:eN

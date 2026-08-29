@@ -846,7 +846,8 @@ sum are read from the class the mathematics already has.
    glyph, so no name is pushed outside the ink holding it, and an omitted
    class is the `m` class the registry declares, not a class of its own.
    Outside an equation there is nothing to share, and a glyph answers its
-   class and its slots alone.
+   class and its slots alone. A name that does not fit at that extent moves
+   to the label station rule (§6); it does not enlarge the standalone glyph.
 2. **Math-style sensing.** The surrounding mathematics chooses the density
    profile; there is no manual compact or inline flag. A picture in a line of
    running mathematics takes the denser class, because there it shares a line
@@ -1007,7 +1008,7 @@ policy for the shared leg; write the ports for the lone one.
 | `physical=up\|down\|updown\|none` | expander: declares each frame-cell atom's outward face physical, one port per face slot — a `wide=k` atom answers with `k` legs, one per spanned cell, exactly as the authored `90@1..@k` port list; geometric overlay atoms are excluded; in a plane this is the independent page-transverse axis, not a numeric in-plane face |
 | `boundary=open\|none` | `west=<w>, east=<w>` |
 | `boundary=periodic` | `west=trace, east=trace` |
-| `west={cup=$m$}` (any side) | side `cup` + `\tn[skin=ring, at=on <cup wire> 0.5]{m}` |
+| `west={cup=$m$}` (any side) | side `cup` + `\tn[skin=ring, at=on <cup wire> 0.5, label pos=<outward compass>]{m}` |
 | `west={tail=$m$}` (any side) | side `open` + boundary-skin atom on the stub wire |
 | `west label=$m$` etc., `bond label=` | `\tnmark[form=label]{<generated wire>}{m}` |
 | `lattice={RxC}` | R wire rows (`rows={wire,...,wire}`), `cols=C` |

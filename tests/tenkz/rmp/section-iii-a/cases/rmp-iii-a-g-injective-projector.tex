@@ -9,10 +9,10 @@
 \tndeclare{species}{projector}{hue=source:red}
 \[ \frac1{|G|}\sum_{g\in G}
   \begin{tenkz}[rows={wire,wire,wire}, cols=3, bonds=none, size=s]
-    \tn[skin=ring, at=(1,2), name=n]{L_g}
-    \tn[skin=ring, at=(2,3), name=e]{L_g}
-    \tn[skin=ring, at=(3,2), name=s]{L_g}
-    \tn[skin=ring, at=(2,1), name=w]{L_g}
+    \tn[skin=ring, at=(1,2), name=n, label pos=e]{L_g}
+    \tn[skin=ring, at=(2,3), name=e, label pos=s]{L_g}
+    \tn[skin=ring, at=(3,2), name=s, label pos=w]{L_g}
+    \tn[skin=ring, at=(2,1), name=w, label pos=n]{L_g}
     \tnwire[dir=from]{n.90}{0.7 n of n} \tnwire[dir=to]{n.270}{0.7 s of n}
     \tnwire[dir=from]{e.0}{0.7 e of e} \tnwire[dir=to]{e.180}{0.7 w of e}
     \tnwire[dir=from]{s.270}{0.7 s of s} \tnwire[dir=to]{s.90}{0.7 n of s}

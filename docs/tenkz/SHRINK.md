@@ -4913,3 +4913,20 @@ gate stops here.
 No language meter moves.  The public registry, parser paths, event format, and
 rendered corpus are unchanged; this deletes four private style definitions and their
 obsolete comments.
+
+### 2026-08-30 — standalone class extents move overflowing names to stations
+
+Issue #14 restores the §7.1 rule outside equations: a glyph keeps the extent
+owned by its size class and port slots, while a name that exceeds that floor
+uses the ordinary label station.  Seven benchmark cases state deliberate
+stations where an automatic choice would cross ink or lose the source's
+outward or rotational ordering.  These are placement records, not new grammar
+or escape hatches; M1, M2, M3, M5, and M6 are unchanged.
+
+M4 rises from 26.42 to 26.47.  The six added non-comment lines are only the
+line wrapping needed to keep the two `spectrum-transfer` declarations and the
+four `rmp-workbench-iii-eq59-now` declarations readable after adding their
+`label pos` fields.  The full 130-target review refreshed every changed-render
+verdict and found no new semantic gap.
+
+Census-correction: #14
