@@ -394,10 +394,27 @@ shell command % \tntree{commented}
             expected_error=source_prefix
             + "\\tncover was not executed during standalone compilation",
         )
+        # The audit still calls an author-chosen station advisory -- the
+        # printed output below is unchanged -- but this corpus is the manual,
+        # and a name in the contract must be legible whoever placed it, so the
+        # doctest holds it hard anyway (LionSR/tenkz#4).
         check_case(
             "audit-explicit",
             _label_on_ink_tnlog("|provenance=explicit"),
+            expected_error=source_prefix
+            + "a label stands on drawn ink in audit-explicit: picture 1 "
+            "label bbox id=1 intersects the bond route bond-1 on the "
+            "author's chosen station",
             expected_output=expected_explicit,
+        )
+        # An elision is the one label that stands on ink by construction: the
+        # wires it elides run through its band because that is what eliding
+        # them means.  It says so in its own record, and the ink reading lets
+        # it be -- so nothing is reported and nothing fails.
+        check_case(
+            "audit-elision",
+            _label_on_ink_tnlog("|role=elision"),
+            expected_output=header + "  ok: no hard errors (0 advisory(ies))\n",
         )
         check_case(
             "audit-auto",

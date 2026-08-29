@@ -79,7 +79,7 @@ drift apart unnoticed.
 
 ```toml tenkz-event-kinds-v1
 schema = 1
-version = "1.2"
+version = "1.3"
 emitted = [
   "atom",
   "bbox",
