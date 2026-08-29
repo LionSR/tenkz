@@ -233,6 +233,10 @@ FIELD_VALIDATORS: dict[str, dict[str, Callable[[str], bool]]] = {
         # label chooser placed the label, absent on every unclaimed site.
         "station": _enum("s", "n", "e", "w"),
         "provenance": _enum("auto", "explicit"),
+        # Optional role: a label whose site is deliberately on the ink it
+        # stands in.  `elision' is the row of dots standing for the sites it
+        # replaces, which the wires it elides run through by construction.
+        "role": _enum("elision"),
     },
     "glyph-geometry": {
         "picture": _is_picture_id,
