@@ -5004,8 +5004,18 @@
         \__tenkz_model_get:nnN {#1} {wind} \l__tenkz_kernel_r_c_tl
         \quark_if_no_value:NTF \l__tenkz_kernel_r_c_tl
           {
-            \exp_args:NVV \__tenkz_string_declare_closed:nn
-              \l__tenkz_kernel_r_sid_tl \l__tenkz_kernel_r_pts_tl
+            % route=orth squares the cycle's turns, as it squares an open
+            % route's; every other route is the smooth Hobby cycle
+            \__tenkz_model_get:nnN {#1} {route} \l__tenkz_kernel_r_tl
+            \str_if_eq:VnTF \l__tenkz_kernel_r_tl {orth}
+              {
+                \exp_args:NV \__tenkz_kernel_r_orth_save_closed:nN
+                  \l__tenkz_kernel_r_sid_tl \l__tenkz_kernel_r_pts_tl
+              }
+              {
+                \exp_args:NVV \__tenkz_string_declare_closed:nn
+                  \l__tenkz_kernel_r_sid_tl \l__tenkz_kernel_r_pts_tl
+              }
           }
           {
             \regex_extract_once:nVNTF
@@ -5170,23 +5180,16 @@
       { \dim_to_fp:n {#2} / \dim_to_fp:n { \use:c {tenkz@pitch} } }
   }
 
-% a right-angled polyline saved for the same surgery and ink as any string
+% a right-angled polyline saved for the same surgery and ink as any string.
+% The string engine owns the path, so the route is registered as generated
+% and states its `string' record like every other declared curve; the corner
+% radius is zero because `orth' squares its turns.
 \cs_new_protected:Npn \__tenkz_kernel_r_orth_save:nN #1#2
-  {
-    \__tenkz_string_register:nn {#1} {open}
-    \tl_clear:N \l__tenkz_kernel_r_tl
-    \tl_map_inline:Nn #2
-      {
-        \tl_if_empty:NF \l__tenkz_kernel_r_tl
-          { \tl_put_right:Nn \l__tenkz_kernel_r_tl { -- } }
-        \tl_put_right:Nn \l__tenkz_kernel_r_tl { ( ##1 ) }
-      }
-    \use:e
-      {
-        \exp_not:N \path [ spath/save = {#1} ]
-          \tl_use:N \l__tenkz_kernel_r_tl ;
-      }
-  }
+  { \__tenkz_string_declare_polyline:nVn {#1} #2 { 0pt } }
+
+% the same route closed into a cycle: what `route=orth' means for a ring
+\cs_new_protected:Npn \__tenkz_kernel_r_orth_save_closed:nN #1#2
+  { \__tenkz_string_declare_closed_polyline:nVn {#1} #2 { 0pt } }
 
 % cross={over|under at crossing of A and B}: self over means the other
 % operand is the under path.  A leg operand names the leg's saved path.  The

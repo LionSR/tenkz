@@ -191,6 +191,14 @@ hole, its boundary entries — stands unchanged.
 | `stroke=` | small-enum | `solid` `dashed` `dotted` | `solid` | `TKZ-WIRE-*` |
 | `name=` | identifier | — | generated | `TKZ-NAME-*` |
 
+`route=orth` squares a string's turns: consecutive stations are joined by
+straight segments rather than bent into one smooth curve through them. It
+says the same thing about a `closed` string, whose stations then close into
+a squared cycle rather than a smooth one -- the shape an author reaches for
+when the figure is a ring drawn as a square. `route=arc` bows a waypointless
+string along its ends' faces; a string with waypoints already states its
+curve through them.
+
 `crossing=` is the habit a hull route's derived crossing set carries: the
 order the string takes at every crossing the route computes, stated once
 instead of once per member (§5); `cross=` remains the declaration that
