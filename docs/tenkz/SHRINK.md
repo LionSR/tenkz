@@ -4882,3 +4882,34 @@ a spelling the grammar could not say: no escape-ledger word is used, M3
 stays zero, and no package surface, parser path, or alias moves.
 
 Census-correction: #250
+
+### 2026-08-29 — final 0.9 simplification gate
+
+The final gate revisited the candidates held back by the two whole-package
+surveys in #246 and #247 after the manual prose pass in #259.  Two deferred
+style islands now have a definitive answer.
+
+**The compatibility-size styles are dead with their renderers.**
+`tenkz inscribed size s`, `m`, and `l` were width-only size styles for the
+deleted compatibility front ends.  The kernel constructs only
+`tenkz canonical size <letter>`, `tenkz pill size <letter>`, and
+`tenkz dot size <letter>`; no package source, fixture, example, or tool
+constructs an inscribed-size name.  The three styles and the comment promising
+their renderer's future migration are deleted.
+
+**The labelled-circle style has no language owner.**  `circle tensor` arrived
+for the old local-site geometry surface and lost its last possible caller when
+that front end was deleted.  The kernel's primitive-skin alphabet is closed and
+contains no circle; its ring is the live on-wire capsule.  No source constructs
+the style name, directly or through a generated fragment, so the style and its
+obsolete rationale are deleted.
+
+The RMP manifest's unused `fixture` read path is not taken in this gate:
+removing it changes a row on all 130 benchmark-book pages, so it is not an
+ink-neutral dead island.  The two proposed Python duplication rewrites from
+#247 likewise carry no demonstrated defect or deletion.  The smallest final
+gate stops here.
+
+No language meter moves.  The public registry, parser paths, event format, and
+rendered corpus are unchanged; this deletes four private style definitions and their
+obsolete comments.
