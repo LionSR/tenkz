@@ -1130,6 +1130,9 @@
                 \__tenkz_kernel_r_dots_label:n {#1}
               }
               {
+                % the unpaired elision draws its own glyph, and stands on the
+                % row it elides exactly as the paired one does
+                \use:c { tenkz@labelroleclaim } { elision }
                 \exp_args:NV \__tenkz_render_labelnode:nnn
                   \l__tenkz_kernel_r_atom_style_tl
                   {
@@ -1139,6 +1142,7 @@
                     )
                   }
                   { $ \cdots $ }
+                \use:c { tenkz@labelrelease }
               }
           }
         {dot}
@@ -1339,6 +1343,10 @@
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_dots_label:n #1
   {
+    % The elision stands on the row it elides, so the wires it stands for run
+    % through its band by construction.  It says so in its own record rather
+    % than leaving a reader to infer it from an unclaimed site.
+    \use:c { tenkz@labelroleclaim } { elision }
     \tl_set:Nn \l__tenkz_kernel_r_atom_style_tl
       { tenkz~audited~label , inner~sep = 0pt }
     \__tenkz_model_get:nnN {#1} {species}
@@ -1353,6 +1361,7 @@
       \l__tenkz_kernel_r_atom_style_tl
       { (#1.center) }
       { $ \cdots $ }
+    \use:c { tenkz@labelrelease }
   }
 % The complete unturned live style of an inscribed glyph.  Measurement and
 % ink share it; the caller adds the record's turn after measuring in the

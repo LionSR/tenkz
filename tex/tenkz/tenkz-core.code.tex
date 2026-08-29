@@ -492,6 +492,13 @@
 \let\tenkz@labelprovenance\relax
 \let\tenkz@armedlabelstation\relax
 \let\tenkz@armedlabelprovenance\relax
+% A label whose site is deliberately on the ink it stands in -- the elision
+% glyph, whose row the wires it elides pass straight through -- says so, so a
+% reader need not guess it from an unclaimed site.  It rides the same
+% per-node token as the claim above.
+\let\tenkz@labelrole\relax
+\let\tenkz@armedlabelrole\relax
+\def\tenkz@labelroleclaim#1{\def\tenkz@armedlabelrole{#1}}
 \def\tenkz@labelclaim#1#2{%
   \def\tenkz@armedlabelprovenance{#1}%
   \if\relax\detokenize{#2}\relax
@@ -503,7 +510,9 @@
   \let\tenkz@labelstation\relax
   \let\tenkz@labelprovenance\relax
   \let\tenkz@armedlabelstation\relax
-  \let\tenkz@armedlabelprovenance\relax}
+  \let\tenkz@armedlabelprovenance\relax
+  \let\tenkz@labelrole\relax
+  \let\tenkz@armedlabelrole\relax}
 % Mirror the actual backend graphic state without changing any PGF arguments.
 % Assignments remain local to the same TeX groups as the driver mutations, so
 % inherited scopes and final node options are observed at the real path use.
@@ -570,7 +579,8 @@
     ymin=\number\tenkz@bboxymin|ymax=\number\tenkz@bboxymax|%
     shape=\tenkz@labelshape|radius=\number\tenkz@labelradius%
     \ifx\tenkz@labelstation\relax\else|station=\tenkz@labelstation\fi%
-    \ifx\tenkz@labelprovenance\relax\else|provenance=\tenkz@labelprovenance\fi}}
+    \ifx\tenkz@labelprovenance\relax\else|provenance=\tenkz@labelprovenance\fi%
+    \ifx\tenkz@labelrole\relax\else|role=\tenkz@labelrole\fi}}
 \def\tenkz@checklinear#1#2#3#4#5#6{%
   \tenkz@identitylineartrue
   \pgf@xa=#1pt\relax
@@ -1017,6 +1027,8 @@
         \csname tenkz@labelclaimprov@#1\endcsname
       \expandafter\let\expandafter\tenkz@labelstation
         \csname tenkz@labelclaimstat@#1\endcsname
+      \expandafter\let\expandafter\tenkz@labelrole
+        \csname tenkz@labelclaimrole@#1\endcsname
       \tenkz@requireidentitylinear{\tikzlastnode}{label}%
       \tenkz@requirelabelrectangle{\tikzlastnode}%
       \iftenkz@identitylinear
@@ -1251,6 +1263,7 @@
   \global\expandafter\let\csname tenkz@labelowner@#1\endcsname\relax
   \global\expandafter\let\csname tenkz@labelclaimprov@#1\endcsname\relax
   \global\expandafter\let\csname tenkz@labelclaimstat@#1\endcsname\relax
+  \global\expandafter\let\csname tenkz@labelclaimrole@#1\endcsname\relax
   \tenkz@cleanupvisiblesnapshot{#1}}
 \def\tenkz@captureglyphgeometrynode#1#2#3#4{%
   \expandafter\ifx\csname tenkz@invalid@#4\endcsname\relax
@@ -1467,6 +1480,12 @@
         \tenkz@armedlabelstation
       \global\let\tenkz@armedlabelprovenance\relax
       \global\let\tenkz@armedlabelstation\relax
+    \fi
+    \ifx\tenkz@armedlabelrole\relax\else
+      \global\expandafter\let
+        \csname tenkz@labelclaimrole@\tenkz@glyphsnaptoken\endcsname
+        \tenkz@armedlabelrole
+      \global\let\tenkz@armedlabelrole\relax
     \fi
     \edef\tenkz@installlabelsnapshot{%
       \noexpand\tikzset{%

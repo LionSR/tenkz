@@ -1054,10 +1054,26 @@ def compile_example(example: Example, engine: str, work: Path) -> None:
             f"{example.source}:{example.line}: {example.label} produced an "
             f"empty {log_path.name} after standalone compilation"
         )
-    if Audit(log_path, driver).run():
+    audit = Audit(log_path, driver)
+    if audit.run():
         raise RuntimeError(
             f"{example.source}:{example.line}: standalone event audit failed "
             f"for {example.label}"
+        )
+    # A name in the manual must be legible, and the manual is the contract.
+    # The audit calls a label-on-ink collision advisory when the author chose
+    # the station or no chooser claimed it, which is every label a
+    # hand-written example carries -- so the finding was printed here and
+    # discarded on every run (LionSR/tenkz#4).  This corpus holds them all
+    # hard instead.  The claim is exactly that and no wider: other advisories
+    # are still advisory here, and an elision, which stands on the row it
+    # elides, says so in its own record and is not a collision.
+    on_ink = [f for f in audit.findings if f.rule == "label-on-ink"]
+    if on_ink:
+        detail = "; ".join(f.msg for f in on_ink)
+        raise RuntimeError(
+            f"{example.source}:{example.line}: a label stands on drawn ink in "
+            f"{example.label}: {detail}"
         )
 
 

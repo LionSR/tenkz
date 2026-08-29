@@ -12,12 +12,13 @@ is the contract.
 
 ## 1. Format version
 
-The event format is version **1.2**, meaning the surface this page describes.
+The event format is version **1.3**, meaning the surface this page describes.
 The minor moved from 1.0 when the `picture` event gained the optional `size`
-field (§6), and from 1.1 when the `wire-ink` kind and the label bbox's
-optional `station`/`provenance` fields arrived (§3), which are the additions
-a minor is for: a reader of 1.0 ignores an optional field it does not know
-and reads every record it did before.
+field (§6), from 1.1 when the `wire-ink` kind and the label bbox's optional
+`station`/`provenance` fields arrived (§3), and from 1.2 when that bbox gained
+its optional `role` field (§3), which are the additions a minor is for: a
+reader of 1.2 ignores an optional field it does not know and reads every
+record it did before.
 No stream carries that number in band. There is no header line, no magic
 string, no producer record, and no trailer: the first byte of a `.tnlog` is the
 first event, in practice always a `picture` line.
@@ -78,7 +79,7 @@ drift apart unnoticed.
 
 ```toml tenkz-event-kinds-v1
 schema = 1
-version = "1.2"
+version = "1.3"
 emitted = [
   "atom",
   "bbox",
@@ -161,7 +162,7 @@ first, the rest sorted, no `picture=`.
 | `stringcross` | `under`, `over`, `hits` | one over-under crossing |
 | `ink-use` | `picture`, `class` (`glyph`, `wire`), `id`, `shape` | opens an ink-owner scope for the geometry that follows |
 | `label-use` | `picture` | a label node claimed no ink owner |
-| `bbox` | `picture`, `class=label`, `id`, `owner`, `xmin`, `xmax`, `ymin`, `ymax`, `shape`, `radius`, then optionally `station` (`s`, `n`, `e`, `w`) and `provenance` (`auto`, `explicit`) | one measured label box, in integer scaled points.  `provenance=auto` with `station=` is the kernel's own word for the face it chose: the dot chooser's verified promise of an ink-free face, the mark's default north, or the bracket's default south; `provenance=explicit` (no station) records the author's own `label pos=`, on a dot, a point mark, or an enclosure hull.  Both fields are absent on every label site no chooser claimed — a dot whose ink the occupancy reading could not chart (its blind ledger; issue 6195), and the centred label of a region, whose interior is no face lane |
+| `bbox` | `picture`, `class=label`, `id`, `owner`, `xmin`, `xmax`, `ymin`, `ymax`, `shape`, `radius`, then optionally `station` (`s`, `n`, `e`, `w`) and `provenance` (`auto`, `explicit`) | one measured label box, in integer scaled points.  `provenance=auto` with `station=` is the kernel's own word for the face it chose: the dot chooser's verified promise of an ink-free face, the mark's default north, or the bracket's default south; `provenance=explicit` (no station) records the author's own `label pos=`, on a dot, a point mark, or an enclosure hull.  `role=elision` marks a label whose site is deliberately on the ink it stands in -- the row of dots standing for the sites it replaces, which the wires it elides run through because that is what eliding them means; it is the one label the `label-on-ink` reading does not hold against a route, and it stays in every other reading, because a name colliding with a name is a defect wherever it sits.  Both station fields are absent on every label site no chooser claimed — a dot whose ink the occupancy reading could not chart (its blind ledger; issue 6195), and the centred label of a region, whose interior is no face lane |
 | `glyph-geometry` | `picture`, `owner`, `shape`, `xmin`, `xmax`, `ymin`, `ymax`, `radius`, `stroke`, `x1`, `y1`, `x2`, `y2`, `x3`, `y3` | one measured glyph silhouette, in integer scaled points |
 | `wire-ink` | `picture`, `name`, `origin` (`bond`, `physical-leg`, `port`, `trace`, `leg`, `mark`, `skin`), `stroke`, `points` | one drawn route, read back from the saved soft path the renderer strokes: `points=` opens on the route's first point, a bare `x,y` extends a polyline, and a `c:`-prefixed sextuple `c:x1,y1,x2,y2,x3,y3` is a cubic to `x3,y3` with the two control pairs before it; `stroke=` is half the stroke width the route's resolved style draws it with, so a restyled wire class widens the recorded band with the ink; the points live in the picture's own coordinates, and a canvas transform named in a wire class's stored definition -- at top level or nested inside a path action -- is refused at picture begin with `[TKZ-WIRE-RESTYLE-TRANSFORM]`, by inspecting the definition, never executing it; the guard defends the documented footgun, not an adversary -- a transform reached only through a user-named indirection is out of its sight, and such a restyle leaves the record at the route's own coordinates while the ink moves; the record is written at the stroke pass, after crossing surgery, so an under-strand's crossing gap splits it into one record per drawn component; every coordinate is an integer scaled point.  A `dir=to`/`dir=from` route additionally writes one `origin=mark` record, a short segment at the direction barb's arc-length station whose stroke covers the barb's own configured reach: the Straight Barb postaction is not reproduced stroke-for-stroke, only over-covered, the same doctrine as the dash rule below.  Caller-declared strings emit no record.  A declared skin's rendered pairing writes `origin=skin` records from its saved route -- one per drawn component, since pairings join the crossing police and a gap splits the record like any other; the `stroke` is half the wider of the pairing's two layers, the paper halo and the foreground, so a label erased by either intersects the recorded band |
 | `closure-rail` | `picture`, `name`, `row`, `side`, `west`, `east`, `stroke`, `clear`, `points` | one traced row's closure: the two virtual ends it joins, or `none` where the row has no site on that side, the half stroke it is drawn with, the standoff the rows it passes demand of it — signed by the side the return runs, measured from its own row line, and `arc` for a frame sector, which stands off no row line — and the semicolon-separated polyline it lays, all in integer scaled points |

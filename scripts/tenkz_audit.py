@@ -1549,8 +1549,15 @@ class Audit:
                     placement = " on the author's chosen station"
                 else:
                     placement = " (unclaimed label site)"
+                # An elision stands on the row it elides: the wires it
+                # stands for run through its band because that is what it
+                # means, so its band is not held against them.  It stays in
+                # every other reading -- the closure rails above, label
+                # against label, and bbox coverage -- because a name colliding
+                # with a name is a defect wherever it sits.
+                elides = label[0].attrs.get("role") == "elision"
                 for ink_event, ink_segments, ink_stroke in (
-                        [] if inscribed else inks):
+                        [] if inscribed or elides else inks):
                     try:
                         touched = any(
                             _segment_intersects_label(
