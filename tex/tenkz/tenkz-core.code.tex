@@ -1451,8 +1451,6 @@
     \fi},
   tenkz audited glyph/.style 2 args={
     /utils/exec={\tenkz@installglyphaudit{#1}{#2}}},
-  tenkz audited glyph deferred/.style={
-    /utils/exec=\tenkz@installdeferredglyphaudit},
 }
 \def\tenkz@installlabelaudit{%
   \tenkz@bboxlabeluse
@@ -1491,30 +1489,6 @@
           append after command={\noexpand\pgfextra{%
             \noexpand\tenkz@captureglyphgeometry{#1}{#2}%
               {\tenkz@glyphsnaptoken}}}}}%
-      \tenkz@installglyphsnapshot
-    \fi
-  \fi}
-\def\tenkz@recorddeferredglyph#1{%
-  \tenkz@checklastauditowner{#1}%
-  \iftenkz@auditownermatch
-    \expandafter\ifx\csname tenkz@invalid@#1\endcsname\relax
-      \tenkz@cleanupglyphsnapshot{#1}%
-    \else
-      \expandafter\xdef\csname tenkz@glyphsnaptoken@\tikzlastnode\endcsname{#1}%
-    \fi
-  \fi}
-\def\tenkz@installdeferredglyphaudit{%
-  \iftenkz@bboxcapture
-    \iftenkz@auditpicture
-      \global\advance\tenkz@glyphsnapuid by 1\relax
-      \edef\tenkz@glyphsnaptoken{\the\tenkz@glyphsnapuid}%
-      \edef\tenkz@auditinstallowner{\tenkz@glyphsnaptoken}%
-      \edef\tenkz@installglyphsnapshot{%
-        \noexpand\tikzset{%
-          execute at end node={%
-            \noexpand\tenkz@snapshotglyphstate{\tenkz@glyphsnaptoken}},%
-          append after command={\noexpand\pgfextra{%
-            \noexpand\tenkz@recorddeferredglyph{\tenkz@glyphsnaptoken}}}}}%
       \tenkz@installglyphsnapshot
     \fi
   \fi}

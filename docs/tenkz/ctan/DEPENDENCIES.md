@@ -1,6 +1,9 @@
 # What tenkz needs, and who reads it
 
-The archive carries eleven runtime files and nothing else. Everything below is
+The archive carries the runtime files `docs/tenkz/ctan/MANIFEST.toml` pins
+under `[runtime]`, in that order, and nothing else.  The count is not
+restated here: it moved when the kernel split into its stages, and a number
+written twice is a number that drifts. Everything below is
 what an installation must already have for those eleven to load and draw. The
 list is not copied from the package's load line: each entry names the code that
 reads the library, so a reader can check the claim, and the classification is
