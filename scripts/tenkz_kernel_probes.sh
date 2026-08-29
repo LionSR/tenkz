@@ -32,10 +32,12 @@ compile() {
 # gate.  The extraction drops the display-math delimiters of the printed form
 # and nothing else.  Most of them are also a kernel fixture body character for
 # character; those pairs are diffed, which pins the printed example's event
-# stream through the fixture's row of the golden ledger as well.  The one
-# without a twin is section 12.7, whose fixture k_roperator.tex states the
-# same target in the compatibility spelling the contract has retired;
-# rebinding that pair rides the via= census move, item 1 of tracker 4709.
+# stream through the fixture's row of the golden ledger as well.  Every
+# printed example now has its twin: section 12.7 was the last one without,
+# because k_roperator.tex stated the same target in a compatibility spelling
+# the contract had retired -- and, drawing two disjoint orth stubs where the
+# section is named for a wrap, a different picture.  Its replacement is the
+# contract's own hull route, which needed no census move to become sayable.
 #
 # The table below is the only place any of this is written down.  The counts,
 # the compile set, the diffed pairs and the audit set are all read off it, so
@@ -51,7 +53,7 @@ c_s123:### 12.3:k_pullthrough
 c_s124:### 12.4:k_twoshift
 c_s125:### 12.5:k_czx
 c_s126:### 12.6:k_blocking
-c_s127:### 12.7:
+c_s127:### 12.7:k_roperator
 "
 sketch_rows=()
 sketch_twins=0
