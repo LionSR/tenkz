@@ -19,20 +19,28 @@
     \end{tenkz}
     =
     \begin{tenkz}[rows={wire,wire,wire}, cols=3, bonds=none]
+      % A keeps the four virtual legs it carries on the left; the ring is
+      % pulled around it, so each MPO tensor takes one of them inward and
+      % offers its own outward in its place.  Only the physical leg stays
+      % open on A itself, which is what makes the two boundaries the same
+      % five ends.
       \tn[at=(2,2), name=A, skin=dot, label pos=270,
-        ports={45:physical}]{A}
+        ports={0:virtual, 45:physical, 90:virtual, 180:virtual,
+          270:virtual}]{A}
       \tn[skin=mpo, at=(2,1), name=W,
-        ports={90:virtual, 180:virtual, 270:virtual}]{}
+        ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
       \tn[skin=mpo, at=(1,2), name=N,
-        ports={0:virtual, 90:virtual, 180:virtual}]{}
+        ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
       \tn[skin=mpo, at=(2,3), name=E,
-        ports={0:virtual, 90:virtual, 270:virtual}]{}
+        ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
       \tn[skin=mpo, at=(3,2), name=S,
-        ports={0:virtual, 180:virtual, 270:virtual}]{}
+        ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
       \tnwire[route=arc]{W.90}{N.180}
       \tnwire[route=arc]{N.0}{E.90}
       \tnwire[route=arc]{E.270}{S.0}
       \tnwire[route=arc]{S.180}{W.270}
+      \tnwire{A.180}{W.0} \tnwire{A.90}{N.270}
+      \tnwire{A.0}{E.180} \tnwire{A.270}{S.90}
       \tnwire{open w}{W.180} \tnwire{E.0}{open e}
       \tnwire{open s}{S.270} \tnwire{N.90}{open n}
     \end{tenkz}

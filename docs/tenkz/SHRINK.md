@@ -4856,3 +4856,29 @@ others: 843 expl3 functions with no orphan once names built through
 and 716 tooling functions with one dead wrapper, `scoped_consumer_text`,
 removed in this change.  No meter moves: the wrapper was not a public
 surface and the corrections are text.
+
+### 2026-08-29 — the MPO-injectivity tensor gains the four bonds it was missing
+
+PR #250 repairs `rmp-iii-a-mpo-injective`, whose central `A` was drawn
+bonded to nothing. It carried `ports={45:physical}` and no others, so the
+four virtual legs the tensor holds on the left of the equation had no
+counterpart on the right: the projector ring closed around a tensor it
+never touched, and each MPO tensor sent its spare leg straight to the
+boundary. The verdict note read "Ring topology is preserved", which is how
+a disconnected tensor survived review; the maintainer found it at the
+110dpi comparison plate by asking why an isolated `A` stood in the middle.
+
+Deleting the tensor is not the alternative, and the language says so: the
+`tenkzeq` boundary guard stops the compile on five open ends against four.
+The ring is instead pulled around `A`, which is what the target's own
+formula line always said — each MPO tensor takes one of `A`'s virtual legs
+inward and offers its own outward in its place.
+
+M4, mean lines per case, rises from 26.39 to 26.42. The four added lines
+are the four bonds `\tnwire{A.180}{W.0}`, `\tnwire{A.90}{N.270}`,
+`\tnwire{A.0}{E.180}`, and `\tnwire{A.270}{S.90}`, plus the port lists that
+name their faces. They state a contraction that was previously absent, not
+a spelling the grammar could not say: no escape-ledger word is used, M3
+stays zero, and no package surface, parser path, or alias moves.
+
+Census-correction: #250
