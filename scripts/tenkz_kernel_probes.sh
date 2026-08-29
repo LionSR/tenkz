@@ -1988,7 +1988,7 @@ for pixel_fixture in \
     r_noncell_port_slot r_noncell_port_slot_cell \
     r_wide_policy_legs r_wide_policy_ports \
     r_route_noncell_slots r_route_noncell_slots_cell \
-    r_closed_orth_ring; do
+    r_closed_orth_ring r_crossing_declared_hue; do
   if ! pdftoppm -singlefile -png -r 300 \
       "$WORK/$pixel_fixture.pdf" "$WORK/$pixel_fixture" >/dev/null 2>&1; then
     echo "FAIL: $pixel_fixture fixture could not be rasterized" >&2
@@ -2060,6 +2060,7 @@ for path in sys.argv[1:]:
   "$WORK/r_trace_return_rows.png" "$WORK/r_trace_row_closure.png" \
   "$WORK/r_trace_over_deferred_leg.png" \
   "$WORK/r_wire_stroke.png" "$WORK/r_closed_orth_ring.png" \
+  "$WORK/r_crossing_declared_hue.png" \
   >"$PIXEL_CURRENT"
 
 negative="$KERNEL/negative/n_diagonal_port.tex"
