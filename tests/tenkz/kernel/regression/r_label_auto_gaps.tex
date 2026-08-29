@@ -1,28 +1,10 @@
-% Regression: the placements the automatic station cannot read, pinned at
-% the historical south default they had before the station existed.
+% Regression: automatic stations read route incidence from resolved geometry.
 %
-% The station reads the frozen wire records in frame coordinates: an
-% endpoint resolves to a cell, and the direction its ink leaves by is the
-% sign of the difference between two cell numbers.  A placement the frame
-% does not chart has no cell to difference, and a route that turns where its
-% own waypoints say does not leave along the chord between its ends.
-%
-% Two different things happen there, and only the first is inert.  Where no
-% cell exists at all the scan reserves nothing and the station stays at the
-% south these labels stood on before the station was added.  Where a cell
-% exists but describes the wrong thing -- the turning route -- the scan falls
-% back to the opposite end of the wire and reserves the face the chord points
-% at, which the ink may never use.  On an atom carrying other wires that can
-% carry the station onto the route rather than leave it at south: with north
-% and south taken, a string whose chord runs east while its ink leaves west
-% reserves east and sends the name west, onto the route.  Each picture here
-% pins one atom, so each pins the station and not that interaction.
-%
-% Each picture below is a placement, a frame, or a kind of ink the reading
-% cannot answer.
-% They are pinned so the reading that answers them -- bearings between
-% resolved points, turned into the atom's own frame, issue 6195 -- has a
-% target to flip, and so a later change cannot move them without saying so.
+% Endpoint and waypoint page bearings are pulled back through the owning
+% atom's complete carrier basis.  The same reading covers non-cell placements,
+% basis members, closed routes, generated hull departures, and circle frames.
+% The remaining blind pins distinguish the later bead-tangent and label-order
+% steps of issue #15 from this resolved-incidence step.
 \documentclass{standalone}
 \usepackage{tenkz}
 \makeatletter
@@ -39,6 +21,23 @@
     \__tenkz_model_get:nnN {#1} {label} \l__tenkz_test_side_label_tl
     \str_case:VnF \l__tenkz_test_side_label_tl
       {
+        {T}
+          {
+            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
+              { \errmessage{routed~carrier~bead~made~an~unverified~claim} }
+          }
+        {W}
+          {
+            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
+              { \errmessage{circle~carrier~bead~made~an~unverified~claim} }
+          }
+      }
+      {
+        \prop_if_in:NnT \g__tenkz_kernel_lab_blind_prop {#1}
+          { \errmessage{resolved~label~bearing~remained~unclaimed} }
+      }
+    \str_case:VnF \l__tenkz_test_side_label_tl
+      {
         {P}
           {
             \str_if_eq:VnF #2 {s}
@@ -46,12 +45,12 @@
           }
         {Q}
           {
-            \str_if_eq:VnF #2 {s}
+            \str_if_eq:VnF #2 {n}
               { \errmessage{geometric~waypoint~answered:~update~the~pin} }
           }
         {R}
           {
-            \str_if_eq:VnF #2 {s}
+            \str_if_eq:VnF #2 {e}
               { \errmessage{interior~waypoint~answered:~update~the~pin} }
           }
         {T}
@@ -66,17 +65,17 @@
           }
         {N}
           {
-            \str_if_eq:VnF #2 {s}
+            \str_if_eq:VnF #2 {n}
               { \errmessage{member~pair~answered:~update~the~pin} }
           }
         {U}
           {
-            \str_if_eq:VnF #2 {s}
+            \str_if_eq:VnF #2 {n}
               { \errmessage{circle~chord~answered:~update~the~pin} }
           }
         {V}
           {
-            \str_if_eq:VnF #2 {s}
+            \str_if_eq:VnF #2 {n}
               { \errmessage{circle~chord~answered:~update~the~pin} }
           }
         {W}
@@ -89,6 +88,24 @@
             \str_if_eq:VnF #2 {n}
               { \errmessage{a~label~answered~another~label:~update~the~pin} }
           }
+        {Y}
+          {
+            \str_if_eq:VnF #2 {n}
+              { \errmessage{closed~waypoint~bearing~regressed} }
+          }
+        {Z}
+          {
+            \str_if_eq:VnF #2 {e}
+              {
+                \errmessage
+                  {generated~hull~bearing~regressed:~\tl_use:N #2}
+              }
+          }
+        {G}
+          {
+            \str_if_eq:VnF #2 {s}
+              { \errmessage{affine~local~bearing~regressed} }
+          }
       }
       { \errmessage{unexpected~label~in~gap~fixture} }
   }
@@ -96,25 +113,33 @@
 \makeatother
 \begin{document}
 \tenkzkernel
-% A named endpoint whose atom stands a step off the frame owns no cell, so
-% no difference of cell numbers says which way the wire leaves it.
+% A named endpoint whose atom stands a step off the frame owns no cell.  Its
+% resolved bearing to C nevertheless occupies east, so its historical south
+% station is now a verified automatic claim.
 \begin{tenkz}[lattice={2x2}, bonds=none]
   \tn[at=(1,1), name=A]{}
   \tn[at=1 s of A, name=P, skin=dot]{P}
   \tn[at=(2,2), name=C]{}
   \tnwire{P}{C}
 \end{tenkz}
-% A waypoint spelt as a relative address names a point, not a cell, so the
-% departure bearing is a property of the resolved point.  The scan falls
-% back to the chord between the ends, which here points the way the route
-% leaves, so this atom's station is south either way.
+% The same off-cell reading is carrier-local.  This plane sends logical east
+% toward page southwest; G still reserves its local east face and keeps south.
+\begin{tenkz}[lattice={2x2}, frame=plane, bonds=none]
+  \tn[at=(1,1), name=GA]{}
+  \tn[at=1 s of GA, name=G, skin=dot]{G}
+  \tn[at=(2,2), name=GC]{}
+  \tnwire{G}{GC}
+\end{tenkz}
+% A waypoint spelt as a relative address names a point, not a cell.  The
+% resolved first segment leaves Q south, rather than following the eastward
+% endpoint chord, so Q moves north.
 \begin{tenkz}[lattice={2x3}, bonds=none]
   \tn[at=(1,1), name=Q, skin=dot]{Q}
   \tn[at=(1,3), name=E]{}
   \tnwire[kind=string, via={1 s of Q}]{Q}{E}
 \end{tenkz}
-% An atom named as an interior waypoint is entered and left by the route,
-% and neither of the wire's two ends names it.
+% An atom named as an interior waypoint is entered from north and left south,
+% even though neither endpoint names it; east is its first free station.
 \begin{tenkz}[lattice={3x1}, bonds=none]
   \tn[at=(1,1), name=F]{}
   \tn[at=(2,1), name=R, skin=dot]{R}
@@ -129,19 +154,18 @@
   \tnwire[kind=string, name=RS, via={(3,1),(3,3)}]{J}{K}
   \tn[at=on RS 0.5, skin=dot]{T}
 \end{tenkz}
-% Two basis members of one outer cell share that cell's row and column, so
-% the difference between them is zero and no direction comes out of it.
+% Two basis members of one outer cell share its row and column, but their
+% resolved member points differ in the plane basis.  M occupies local north
+% and stays south; N occupies local south and moves north.
 \begin{tenkz}[lattice={1x2}, bonds=none,
     frame={plane, basis={wire at (0,0), wire at (0,2)}}]
   \tn[at=(1,1,1), skin=dot]{M}
   \tn[at=(1,1,2), skin=dot]{N}
   \tnwire{(1,1,1)}{(1,1,2)}
 \end{tenkz}
-% A circle closes its columns into a ring: the step from the last station to
-% the first runs the short way, and a chord between stations further apart
-% leaves each of them at an angle to the tangent that column numbers say
-% nothing about.  The reading answers nothing on a circle rather than
-% answering wrongly, so both ends of this chord keep their south.
+% A circle closes its columns into a ring, so column arithmetic cannot read a
+% chord.  In each endpoint's own tangent/outward basis this chord leaves
+% inward through local south, and both labels move north.
 \begin{tenkz}[rows={wire}, cols=4, bonds=none, frame=circle]
   \tn[at=(1,1), skin=dot]{U}
   \tn[at=(1,3), skin=dot]{V}
@@ -163,15 +187,45 @@
 % when the table is built -- the boxes are what the ink stage goes on to
 % measure -- and it needs an order in which two labels that each want the
 % same face are settled.  That is a further stage rather than a further
-% record, so it is deferred with the rest against issue 6195.
+% record, so it is deferred to the label-order step of issue #15.
 \begin{tenkz}[lattice={2x1}, bonds=none]
   \tn[at=(1,1), name=XA, skin=dot]{X}
   \tn[at=(2,1), name=XB]{}
   \tnwire{XA}{XB}
   \tnmark[form=label, label pos=90]{XA}{$m$}
 \end{tenkz}
+% A closed string has no endpoints.  The labelled northwest waypoint sees
+% the cycle arrive from the east and leave south, so those two faces are
+% occupied and its name takes north.
+\begin{tenkz}[lattice={3x3}, bonds=none]
+  \tn[at=(1,1), skin=dot]{Y}
+  \tnwire[kind=string, closed,
+    via={(1,1),(3,1),(3,3),(1,3)}]
+\end{tenkz}
+% A hull route's first generated point is not present in from/via/to.  From Z
+% the frozen route leaves north toward the selected hull, while the ordinary
+% chord to ZE runs east.  Z stands above the selected hull, whose sampled
+% departure falls in its local west sector.  Two vertical probes take north
+% and south, leaving east as the first free station; the endpoint chord alone
+% would instead take east and force the name west.
+\begin{tenkz}[lattice={5x4}, bonds=none]
+  \tn[at=(3,2), skin=box]{}
+  \tn[at=(3,3), skin=box]{}
+  \tn[at=(4,2), skin=box]{}
+  \tn[at=(4,3), skin=box]{}
+  \tn[at=(1,2), name=Z, skin=dot]{Z}
+  \tn[at=(1,4), name=ZE]{}
+  \tn[at=1 n of Z, name=ZN]{}
+  \tn[at=(2,2), name=ZS]{}
+  \tnwire[name=zn]{Z}{ZN}
+  \tnwire[name=zs]{Z}{ZS}
+  \tnwire[kind=string, name=hz, route={n of (3,2) .. (4,3)},
+    crossing=over,
+    cross={over at crossing of hz and zn, over at crossing of hz and zs}]
+    {Z}{ZE}
+\end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {10}
-  { \errmessage{gap~fixture~did~not~station~ten~labels} }
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {13}
+  { \errmessage{gap~fixture~did~not~station~thirteen~labels} }
 \ExplSyntaxOff
 \end{document}

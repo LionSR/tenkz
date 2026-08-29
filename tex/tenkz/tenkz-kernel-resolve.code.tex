@@ -968,6 +968,20 @@
       }
   }
 
+% Read a page-space vector in atom #1's own carrier coordinates.  Consumers
+% use this inverse alongside `r_page_face`, rather than reaching into the
+% carrier-basis scratch state or reproducing affine/circle cases themselves.
+\cs_new_protected:Npn \__tenkz_kernel_r_local_vector:nnnNN #1#2#3#4#5
+  {
+    \__tenkz_kernel_r_carrier_basis:n {#1}
+    \__tenkz_geom_basis_unapply:nnnnnnNN
+      { \l__tenkz_kernel_r_basis_ex_tl }
+      { \l__tenkz_kernel_r_basis_ey_tl }
+      { \l__tenkz_kernel_r_basis_nx_tl }
+      { \l__tenkz_kernel_r_basis_ny_tl }
+      {#2} {#3} #4 #5
+  }
+
 % The physical policy follows the carrier's physical axis, not an authored
 % in-plane face.  A projected plane owns a third, page-space transverse
 % vector.  Its glyph exit is the ray intersection obtained by pulling that

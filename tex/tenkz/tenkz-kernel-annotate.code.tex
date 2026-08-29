@@ -34,11 +34,10 @@
 %   * a transverse plane closure names its two hosts and the axes it leaves
 %     them by;
 %   * an endpoint port names its record and its face angle;
-%   * every other endpoint -- a cell, a basis member, or a bare record name
-%     -- reaches its atom through the cell it stands at, and its ink leaves
-%     toward the wire's next point: the waypoint on that end's own side of a
-%     string's route, and the opposite end for every wire that draws the
-%     chord between its ends;
+%   * every other endpoint resolves its owner and the next route point, then
+%     reads that page-space bearing in the atom's complete carrier basis;
+%   * string waypoints do the same for both incident segments, cyclically for
+%     a closed route, while a generated hull departure samples its frozen path;
 %   * an atom threaded on a wire stands at no cell of its own, and takes the
 %     two faces its carrier runs through at the bead.
 %
@@ -48,21 +47,22 @@
 % rather than clear of them.  Such a station is taken by the ink running
 % along its lane as well as by the ink leaving through its face.
 %
-% A departure along neither axis leaves through a corner and blocks no face.
-% The answer is therefore independent of ink order and identical on every
-% compile.
+% The four half-open bearing sectors choose one face deterministically, so the
+% answer is independent of ink order and identical on every compile.
 \__tenkz_prop_new_indexed:N \l__tenkz_kernel_lab_occ_prop % "atom/side" -> ""
 % Atoms whose ink the reading could not chart.  Every place the occupancy
-% pass stands down -- the circle guards, an endpoint atom with no cell, a
-% bead on a route that bends through its own waypoints -- records the atom
+% pass stands down -- currently a bead on a route that bends through its own
+% waypoints, or another degenerate/unresolved incidence -- records the atom
 % here, so the chooser knows a face it found free of charted ink is not a
 % face it verified free of all ink.  Such a station is left unclaimed in
 % the event stream rather than mislabeled as a kernel promise; the bearing
-% reading of issue 6195 is what empties this ledger.
+% bead-tangent continuation of issue #15 is what empties the remaining ledger.
 \__tenkz_prop_new_indexed:N \g__tenkz_kernel_lab_blind_prop % "atom" -> ""
 \tl_new:N \l__tenkz_kernel_lab_atom_tl
 \tl_new:N \l__tenkz_kernel_lab_row_tl
 \tl_new:N \l__tenkz_kernel_lab_col_tl
+\tl_new:N \l__tenkz_kernel_lab_segment_row_tl
+\tl_new:N \l__tenkz_kernel_lab_segment_col_tl
 \tl_new:N \l__tenkz_kernel_lab_far_row_tl
 \tl_new:N \l__tenkz_kernel_lab_far_col_tl
 \tl_new:N \l__tenkz_kernel_lab_far_atom_tl
@@ -85,13 +85,20 @@
 \tl_new:N \l__tenkz_kernel_lab_wlane_tl
 \tl_new:N \l__tenkz_kernel_lab_elane_tl
 \clist_new:N \l__tenkz_kernel_lab_route_clist
+\seq_new:N \l__tenkz_kernel_lab_route_seq
 \bool_new:N \l__tenkz_kernel_lab_cell_bool
+\bool_new:N \l__tenkz_kernel_lab_segment_cell_bool
 \bool_new:N \l__tenkz_kernel_lab_far_bool
 \bool_new:N \l__tenkz_kernel_lab_span_bool
+\bool_new:N \l__tenkz_kernel_lab_closed_bool
 \fp_new:N \l__tenkz_kernel_lab_before_x_fp
 \fp_new:N \l__tenkz_kernel_lab_before_y_fp
 \fp_new:N \l__tenkz_kernel_lab_centre_x_fp
 \fp_new:N \l__tenkz_kernel_lab_centre_y_fp
+\fp_new:N \l__tenkz_kernel_lab_next_x_fp
+\fp_new:N \l__tenkz_kernel_lab_next_y_fp
+\tl_new:N \l__tenkz_kernel_lab_local_u_tl
+\tl_new:N \l__tenkz_kernel_lab_local_v_tl
 \fp_const:Nn \c__tenkz_kernel_lab_route_sample_fp { 1 / 10000 }
 \fp_const:Nn \c__tenkz_kernel_lab_axis_tol_fp { 1 / 100 }
 % One pass over the frozen records fills the table the atom pass reads.
@@ -120,7 +127,7 @@
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_blind:n { V }
 % Resolve the authored station word once for every atom label consumer and
 % bracket its audited node with the matching claim.  Written `auto` is the
-% chooser, just like an omitted field; blind and circular geometry receives a
+% chooser, just like an omitted field; an atom in the blind ledger receives a
 % fallback placement but cannot promise that the chosen station was clear.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_side_claim:nN #1#2
   {
@@ -130,9 +137,7 @@
       { \str_if_eq_p:Vn #2 {auto} }
       {
         \__tenkz_kernel_r_label_auto_side:nN {#1} #2
-        \bool_lazy_or:nnF
-          { \prop_if_in_p:Nn \g__tenkz_kernel_lab_blind_prop {#1} }
-          { \str_if_eq_p:ee { \__tenkz_kernel_r_frame_word: } {circle} }
+        \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
           {
             \use:e
               {
@@ -175,6 +180,78 @@
       \l__tenkz_kernel_r_face_side_tl
   }
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_mark:nn { ne, Ve, VV }
+% Mark the face through which the segment from the resolved incident point in
+% `lab_centre` to page point (#2,#3) leaves atom #1.  Geometry owns the atom's
+% complete carrier basis; applying its
+% inverse here is the one reading that remains valid under shear, unequal
+% scale, relative placements, basis members, and circle frames alike.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_bearing:nnn #1#2#3
+  {
+    \__tenkz_kernel_r_local_vector:nnnNN {#1}
+      { (#2) - \l__tenkz_kernel_lab_centre_x_fp }
+      { (#3) - \l__tenkz_kernel_lab_centre_y_fp }
+      \l__tenkz_kernel_lab_local_u_tl
+      \l__tenkz_kernel_lab_local_v_tl
+    \fp_compare:nNnTF
+      {
+        abs(\l__tenkz_kernel_lab_local_u_tl)
+        + abs(\l__tenkz_kernel_lab_local_v_tl)
+      } > { 1e-8 }
+      {
+        \__tenkz_kernel_r_label_mark:ne {#1}
+          {
+            atand(
+              \l__tenkz_kernel_lab_local_v_tl ,
+              \l__tenkz_kernel_lab_local_u_tl )
+          }
+        \bool_if:NT \l__tenkz_kernel_lab_segment_cell_bool
+          { \__tenkz_kernel_r_label_bearing_lanes:n {#1} }
+      }
+      { \__tenkz_kernel_r_label_blind:n {#1} }
+  }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_mark_bearing:nnn { VVV }
+
+% Preserve the even-span lane doctrine for an axial resolved segment.  The
+% segment direction is already in carrier coordinates, so this is the same
+% test on affine, sheared, and circular charts; circle stations expose no
+% lanes through `r_label_station_lanes` and therefore match none here.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_bearing_lanes:n #1
+  {
+    \fp_compare:nNnT
+      { abs(\l__tenkz_kernel_lab_local_v_tl) }
+      <
+      {
+        abs(\l__tenkz_kernel_lab_local_u_tl)
+        * \c__tenkz_kernel_lab_axis_tol_fp
+      }
+      {
+        \fp_compare:nNnT
+          { \l__tenkz_kernel_lab_segment_row_tl }
+          = { \l__tenkz_kernel_lab_nlane_tl }
+          { \__tenkz_kernel_r_label_mark_side:nn {#1} {n} }
+        \fp_compare:nNnT
+          { \l__tenkz_kernel_lab_segment_row_tl }
+          = { \l__tenkz_kernel_lab_slane_tl }
+          { \__tenkz_kernel_r_label_mark_side:nn {#1} {s} }
+      }
+    \fp_compare:nNnT
+      { abs(\l__tenkz_kernel_lab_local_u_tl) }
+      <
+      {
+        abs(\l__tenkz_kernel_lab_local_v_tl)
+        * \c__tenkz_kernel_lab_axis_tol_fp
+      }
+      {
+        \fp_compare:nNnT
+          { \l__tenkz_kernel_lab_segment_col_tl }
+          = { \l__tenkz_kernel_lab_wlane_tl }
+          { \__tenkz_kernel_r_label_mark_side:nn {#1} {w} }
+        \fp_compare:nNnT
+          { \l__tenkz_kernel_lab_segment_col_tl }
+          = { \l__tenkz_kernel_lab_elane_tl }
+          { \__tenkz_kernel_r_label_mark_side:nn {#1} {e} }
+      }
+  }
 % Every face wire #1 stands on.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_wire_faces:n #1
   {
@@ -231,81 +308,171 @@
       \l__tenkz_kernel_lab_from_tl \l__tenkz_kernel_lab_to_tl {first}
     \exp_args:NnVV \__tenkz_kernel_r_label_end_faces:nnnn {#1}
       \l__tenkz_kernel_lab_to_tl \l__tenkz_kernel_lab_from_tl {last}
+    \__tenkz_kernel_r_label_string_waypoints:n {#1}
   }
+% A port incidence has one authored face and slot, whether it occurs at an
+% endpoint or inside a string's waypoint chain.  Keep that contract in one
+% helper so the two topology walks cannot diverge.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_port_claim:n #1
+  {
+    \__tenkz_kernel_port_node_record:nN {#1}
+      \l__tenkz_kernel_lab_host_tl
+    \quark_if_no_value:NF \l__tenkz_kernel_lab_host_tl
+      {
+        \__tenkz_kernel_r_label_mark:Ve
+          \l__tenkz_kernel_lab_host_tl
+          { \__tenkz_kernel_node_item:nn {#1} {face} }
+        \tl_set_eq:NN \l__tenkz_kernel_lab_face_tl
+          \l__tenkz_kernel_r_face_side_tl
+        \__tenkz_kernel_r_label_station_lanes:V
+          \l__tenkz_kernel_lab_host_tl
+        \__tenkz_kernel_r_label_port_lane:e
+          { \int_eval:n { \__tenkz_kernel_node_item:nn {#1} {slot} } }
+        % The authored port face remains authoritative.  A circle chord may
+        % cross the label band again away from that port, so this host cannot
+        % make a verified free-face promise until chord/port occupancy has an
+        % explicit contract of its own.
+        \str_if_eq:eeT { \__tenkz_kernel_r_frame_word: } {circle}
+          { \__tenkz_kernel_r_label_blind:V \l__tenkz_kernel_lab_host_tl }
+      }
+  }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_port_claim:n { V }
 % Endpoint #2 of wire #1 stands on the atom it names.  A port names its
 % record and the angle its ink leaves at, which is the answer outright.
-% Every other endpoint reaches its atom through the cell it stands at, and
-% leaves toward the next point of the route: waypoint #4 -- `first` or
-% `last` -- when the wire names any, and the opposite endpoint #3 when it
-% names none.
+% Every other endpoint resolves its owner and the next point of the route.
+% A hull route owns generated points absent from the authored address chain,
+% so that one case samples the already-frozen route beside the endpoint.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_end_faces:nnnn #1#2#3#4
   {
     \quark_if_no_value:nF {#2}
       {
         \str_if_eq:eeTF { \__tenkz_kernel_node_item:nn {#2} {kind} } {port}
-          {
-            \__tenkz_kernel_port_node_record:nN {#2}
-              \l__tenkz_kernel_lab_host_tl
-            \quark_if_no_value:NF \l__tenkz_kernel_lab_host_tl
-              {
-                \__tenkz_kernel_r_label_mark:Ve
-                  \l__tenkz_kernel_lab_host_tl
-                  { \__tenkz_kernel_node_item:nn {#2} {face} }
-                \tl_set_eq:NN \l__tenkz_kernel_lab_face_tl
-                  \l__tenkz_kernel_r_face_side_tl
-                \__tenkz_kernel_r_label_station_lanes:V
-                  \l__tenkz_kernel_lab_host_tl
-                \__tenkz_kernel_r_label_port_lane:e
-                  { \int_eval:n { \__tenkz_kernel_node_item:nn {#2} {slot} } }
-              }
-          }
+          { \__tenkz_kernel_r_label_port_claim:n {#2} }
           {
             \__tenkz_kernel_r_label_end_atom:nNNNN {#2}
               \l__tenkz_kernel_lab_atom_tl
               \l__tenkz_kernel_lab_row_tl \l__tenkz_kernel_lab_col_tl
               \l__tenkz_kernel_lab_cell_bool
-            \bool_if:NF \l__tenkz_kernel_lab_cell_bool
+            \bool_set_eq:NN \l__tenkz_kernel_lab_segment_cell_bool
+              \l__tenkz_kernel_lab_cell_bool
+            \quark_if_no_value:NF \l__tenkz_kernel_lab_atom_tl
               {
-                % an endpoint atom with no cell carries this wire's ink,
-                % and no difference of cell numbers says which way it goes
-                \quark_if_no_value:NF \l__tenkz_kernel_lab_atom_tl
+                \__tenkz_kernel_r_node:n {#2}
+                \__tenkz_kernel_r_xy:nNN {#2}
+                  \l__tenkz_kernel_lab_centre_x_fp
+                  \l__tenkz_kernel_lab_centre_y_fp
+                \tl_set_eq:NN \l__tenkz_kernel_lab_segment_row_tl
+                  \l__tenkz_kernel_lab_row_tl
+                \tl_set_eq:NN \l__tenkz_kernel_lab_segment_col_tl
+                  \l__tenkz_kernel_lab_col_tl
+                \bool_if:NT \l__tenkz_kernel_lab_cell_bool
                   {
-                    \__tenkz_kernel_r_label_blind:V
+                    \__tenkz_kernel_r_label_station_lanes:V
                       \l__tenkz_kernel_lab_atom_tl
                   }
-              }
-            \bool_if:NT \l__tenkz_kernel_lab_cell_bool
-              {
-                \__tenkz_kernel_r_label_station_lanes:V
-                  \l__tenkz_kernel_lab_atom_tl
-                \__tenkz_kernel_r_label_next_cell:nnn {#1} {#3} {#4}
-                \bool_if:NTF \l__tenkz_kernel_lab_far_bool
+                \__tenkz_kernel_route_of:nNN {#1}
+                  \l__tenkz_kernel_lab_face_tl
+                  \l__tenkz_kernel_lab_owner_tl
+                \tl_if_empty:NTF \l__tenkz_kernel_lab_face_tl
                   {
-                    % A wire whose far cell belongs to the same atom runs
-                    % under one glyph and leaves it by no face at all.  A
-                    % covering glyph hides that run, but a dot does not,
-                    % so the atom's ink stays uncharted and its station is
-                    % no promise.
-                    \str_if_eq:VVTF
-                      \l__tenkz_kernel_lab_far_atom_tl
-                      \l__tenkz_kernel_lab_atom_tl
+                    \__tenkz_kernel_r_label_next_node:nnnN
+                      {#1} {#3} {#4} \l__tenkz_kernel_lab_node_tl
+                    \quark_if_no_value:NTF \l__tenkz_kernel_lab_node_tl
                       {
-                        \__tenkz_kernel_r_label_blind:V
-                          \l__tenkz_kernel_lab_atom_tl
+                        \__tenkz_kernel_r_label_open_face:Vnn
+                          \l__tenkz_kernel_lab_atom_tl {#1} {#4}
                       }
                       {
-                        \__tenkz_kernel_r_label_mark_toward:V
+                        \exp_args:NV \__tenkz_kernel_r_node:n
+                          \l__tenkz_kernel_lab_node_tl
+                        \exp_args:NV \__tenkz_kernel_r_xy:nNN
+                          \l__tenkz_kernel_lab_node_tl
+                          \l__tenkz_kernel_lab_next_x_fp
+                          \l__tenkz_kernel_lab_next_y_fp
+                        \exp_args:NV
+                          \__tenkz_kernel_r_label_end_atom:nNNNN
+                          \l__tenkz_kernel_lab_node_tl
+                          \l__tenkz_kernel_lab_far_atom_tl
+                          \l__tenkz_kernel_lab_far_row_tl
+                          \l__tenkz_kernel_lab_far_col_tl
+                          \l__tenkz_kernel_lab_far_bool
+                        \str_if_eq:VVTF
                           \l__tenkz_kernel_lab_atom_tl
+                          \l__tenkz_kernel_lab_far_atom_tl
+                          {
+                            \__tenkz_kernel_r_label_blind:V
+                              \l__tenkz_kernel_lab_atom_tl
+                          }
+                          {
+                            \__tenkz_kernel_r_label_mark_bearing:VVV
+                              \l__tenkz_kernel_lab_atom_tl
+                              \l__tenkz_kernel_lab_next_x_fp
+                              \l__tenkz_kernel_lab_next_y_fp
+                          }
                       }
                   }
                   {
-                    \__tenkz_kernel_r_label_open_face:Vnn
-                      \l__tenkz_kernel_lab_atom_tl {#1} {#4}
+                    \__tenkz_kernel_r_label_hull_bearing:nnV
+                      {#1} {#4} \l__tenkz_kernel_lab_atom_tl
                   }
               }
           }
       }
   }
+
+% The semantic neighbour of an ordinary endpoint.  Strings use the nearest
+% authored waypoint; every other wire uses the opposite endpoint.  The
+% result is a resolved node, or no value when the endpoint opens outward.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_next_node:nnnN #1#2#3#4
+  {
+    \tl_set:Nn #4 { \q_no_value }
+    \tl_set:Nn \l__tenkz_kernel_lab_via_tl { \q_no_value }
+    \__tenkz_model_get:nnN {#1} {kind} \l__tenkz_kernel_lab_owner_tl
+    \str_if_eq:VnT \l__tenkz_kernel_lab_owner_tl {string}
+      { \__tenkz_model_get:nnN {#1} {via} \l__tenkz_kernel_lab_via_tl }
+    \quark_if_no_value:NF \l__tenkz_kernel_lab_via_tl
+      {
+        \clist_set:NV \l__tenkz_kernel_lab_route_clist
+          \l__tenkz_kernel_lab_via_tl
+        \tl_set:Ne #4
+          {
+            \clist_item:Nn \l__tenkz_kernel_lab_route_clist
+              { \str_if_eq:nnTF {#3} {first} {1} {-1} }
+          }
+        \tl_if_empty:NF #4 { \__tenkz_kernel_addr:VN #4 #4 }
+      }
+    \tl_if_empty:NT #4 { \tl_set:Nn #4 { \q_no_value } }
+    \quark_if_no_value:NT #4 { \tl_set:Nn #4 {#2} }
+  }
+
+% A generated hull lane has no authored neighbour address.  Its frozen path
+% is already available here, so sample just inside the appropriate endpoint.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_hull_bearing:nnn #1#2#3
+  {
+    \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
+    \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
+      {
+        \tl_set:Ne \l__tenkz_kernel_lab_t_tl
+          {
+            \fp_eval:n
+              {
+                \str_if_eq:nnTF {#2} {first}
+                  { \c__tenkz_kernel_lab_route_sample_fp }
+                  { 1 - \c__tenkz_kernel_lab_route_sample_fp }
+              }
+          }
+        \exp_args:NVV \__tenkz_kernel_r_label_route_point:nnNN
+          \l__tenkz_kernel_lab_owner_tl
+          \l__tenkz_kernel_lab_t_tl
+          \l__tenkz_kernel_lab_next_x_fp
+          \l__tenkz_kernel_lab_next_y_fp
+        \__tenkz_kernel_r_label_mark_bearing:nnn {#3}
+          { \l__tenkz_kernel_lab_next_x_fp }
+          { \l__tenkz_kernel_lab_next_y_fp }
+      }
+      { \__tenkz_kernel_r_label_blind:n {#3} }
+  }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_hull_bearing:nnn { nnV }
 % The atom a wire endpoint stands on, and the cell it stands at.  A cell or
 % basis-member address names the cell outright and the frame answers which
 % atom claimed it, so an end anywhere in a spanning atom's rectangle finds
@@ -410,70 +577,149 @@
           }
       }
   }
-% A far waypoint needs a coordinate even when no atom occupies its cell.  All
-% other endpoint forms use the same atom-aware reading as a wire end, so port
-% slots and bare spanning names cannot acquire a second coordinate doctrine.
-\cs_new_protected:Npn \__tenkz_kernel_r_label_far_end:n #1
+
+% Strings can meet an atom at an interior waypoint, and a closed string has
+% no endpoints at all.  Walk the canonical authored address chain once and
+% mark both incident bearings at each waypoint that owns an atom.  Generated
+% path controls are deliberately absent: they are rendering detail, not
+% semantic incidences.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_string_waypoints:n #1
   {
-    \str_if_eq:eeTF { \__tenkz_kernel_node_item:nn {#1} {kind} } {cell}
+    \__tenkz_model_get:nnN {#1} {kind} \l__tenkz_kernel_lab_owner_tl
+    \str_if_eq:VnT \l__tenkz_kernel_lab_owner_tl {string}
       {
-        \tl_set:Ne \l__tenkz_kernel_lab_far_row_tl
-          { \__tenkz_kernel_node_item:nn {#1} {row} }
-        \tl_set:Ne \l__tenkz_kernel_lab_far_col_tl
-          { \__tenkz_kernel_node_item:nn {#1} {col} }
-        \__tenkz_kernel_any_cell_claim:eeN
-          { \tl_use:N \l__tenkz_kernel_lab_far_row_tl }
-          { \tl_use:N \l__tenkz_kernel_lab_far_col_tl }
-          \l__tenkz_kernel_lab_far_atom_tl
-        \bool_set_true:N \l__tenkz_kernel_lab_far_bool
-      }
-      {
-        \__tenkz_kernel_r_label_end_atom:nNNNN {#1}
-          \l__tenkz_kernel_lab_far_atom_tl
-          \l__tenkz_kernel_lab_far_row_tl
-          \l__tenkz_kernel_lab_far_col_tl
-          \l__tenkz_kernel_lab_far_bool
+        \__tenkz_model_get:nnN {#1} {via} \l__tenkz_kernel_lab_via_tl
+        \quark_if_no_value:NF \l__tenkz_kernel_lab_via_tl
+          {
+            \seq_clear:N \l__tenkz_kernel_lab_route_seq
+            \prop_if_in:NeTF \l__tenkz_model_record_prop { #1 / closed }
+              { \bool_set_true:N \l__tenkz_kernel_lab_closed_bool }
+              {
+                \bool_set_false:N \l__tenkz_kernel_lab_closed_bool
+                \quark_if_no_value:NF \l__tenkz_kernel_lab_from_tl
+                  {
+                    \seq_put_right:NV \l__tenkz_kernel_lab_route_seq
+                      \l__tenkz_kernel_lab_from_tl
+                  }
+              }
+            \clist_set:NV \l__tenkz_kernel_lab_route_clist
+              \l__tenkz_kernel_lab_via_tl
+            \clist_map_inline:Nn \l__tenkz_kernel_lab_route_clist
+              {
+                \__tenkz_kernel_addr:nN {##1} \l__tenkz_kernel_lab_node_tl
+                \seq_put_right:NV \l__tenkz_kernel_lab_route_seq
+                  \l__tenkz_kernel_lab_node_tl
+              }
+            \bool_if:NF \l__tenkz_kernel_lab_closed_bool
+              {
+                \quark_if_no_value:NF \l__tenkz_kernel_lab_to_tl
+                  {
+                    \seq_put_right:NV \l__tenkz_kernel_lab_route_seq
+                      \l__tenkz_kernel_lab_to_tl
+                  }
+              }
+            \bool_if:NTF \l__tenkz_kernel_lab_closed_bool
+              {
+                \int_compare:nNnT
+                  { \seq_count:N \l__tenkz_kernel_lab_route_seq } > {1}
+                  {
+                    \int_step_inline:nn
+                      { \seq_count:N \l__tenkz_kernel_lab_route_seq }
+                      {
+                        \__tenkz_kernel_r_label_waypoint:nnn
+                          {##1}
+                          {
+                            \int_compare:nNnTF {##1} = {1}
+                              { \seq_count:N \l__tenkz_kernel_lab_route_seq }
+                              { ##1 - 1 }
+                          }
+                          {
+                            \int_compare:nNnTF
+                              {##1} =
+                              { \seq_count:N \l__tenkz_kernel_lab_route_seq }
+                              {1} { ##1 + 1 }
+                          }
+                      }
+                  }
+              }
+              {
+                \int_step_inline:nnnn {2}{1}
+                  { \seq_count:N \l__tenkz_kernel_lab_route_seq - 1 }
+                  {
+                    \__tenkz_kernel_r_label_waypoint:nnn
+                      {##1} { ##1 - 1 } { ##1 + 1 }
+                  }
+              }
+          }
       }
   }
-\cs_generate_variant:Nn \__tenkz_kernel_r_label_far_end:n { V }
-% The cell the wire's ink leaves an endpoint toward.  A string route bends
-% at its waypoints, so the departure follows the waypoint on this endpoint's
-% own side of the route and not the far end the chord would suggest; every
-% other wire runs to its opposite endpoint, and reads that end even where a
-% waypoint field is set, because only the string stage draws through one.
-% A waypoint that names no cell falls back to the opposite end rather than
-% losing the face.
-\cs_new_protected:Npn \__tenkz_kernel_r_label_next_cell:nnn #1#2#3
+
+\cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint:nnn #1#2#3
   {
-    \bool_set_false:N \l__tenkz_kernel_lab_far_bool
-    \tl_set:Nn \l__tenkz_kernel_lab_via_tl { \q_no_value }
-    \__tenkz_model_get:nnN {#1} {kind} \l__tenkz_kernel_lab_node_tl
-    \str_if_eq:VnT \l__tenkz_kernel_lab_node_tl {string}
-      { \__tenkz_model_get:nnN {#1} {via} \l__tenkz_kernel_lab_via_tl }
-    \quark_if_no_value:NF \l__tenkz_kernel_lab_via_tl
+    \tl_set:Ne \l__tenkz_kernel_lab_node_tl
+      { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#1} }
+    \str_if_eq:eeTF
+      { \__tenkz_kernel_node_item:Nn \l__tenkz_kernel_lab_node_tl {kind} }
+      {port}
       {
-        % the waypoints arrive as one field, and a waypoint is read as an
-        % address, so the list is parsed before an item is taken from it
-        \clist_set:NV \l__tenkz_kernel_lab_route_clist
-          \l__tenkz_kernel_lab_via_tl
-        \tl_set:Ne \l__tenkz_kernel_lab_node_tl
-          {
-            \clist_item:Nn \l__tenkz_kernel_lab_route_clist
-              { \str_if_eq:nnTF {#3} {first} {1} {-1} }
-          }
-        \tl_if_empty:NF \l__tenkz_kernel_lab_node_tl
-          {
-            \__tenkz_kernel_addr:VN \l__tenkz_kernel_lab_node_tl
-              \l__tenkz_kernel_lab_node_tl
-            \__tenkz_kernel_r_label_far_end:V
-              \l__tenkz_kernel_lab_node_tl
-          }
+        \__tenkz_kernel_r_label_port_claim:V
+          \l__tenkz_kernel_lab_node_tl
       }
-    \bool_if:NF \l__tenkz_kernel_lab_far_bool
       {
-        \quark_if_no_value:nF {#2}
+        \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
+          \l__tenkz_kernel_lab_node_tl
+          \l__tenkz_kernel_lab_atom_tl
+          \l__tenkz_kernel_lab_row_tl \l__tenkz_kernel_lab_col_tl
+          \l__tenkz_kernel_lab_cell_bool
+        \bool_set_eq:NN \l__tenkz_kernel_lab_segment_cell_bool
+          \l__tenkz_kernel_lab_cell_bool
+        \quark_if_no_value:NF \l__tenkz_kernel_lab_atom_tl
           {
-            \__tenkz_kernel_r_label_far_end:n {#2}
+            \exp_args:NV \__tenkz_kernel_r_node:n
+              \l__tenkz_kernel_lab_node_tl
+            \exp_args:NV \__tenkz_kernel_r_xy:nNN
+              \l__tenkz_kernel_lab_node_tl
+              \l__tenkz_kernel_lab_centre_x_fp
+              \l__tenkz_kernel_lab_centre_y_fp
+            \tl_set_eq:NN \l__tenkz_kernel_lab_segment_row_tl
+              \l__tenkz_kernel_lab_row_tl
+            \tl_set_eq:NN \l__tenkz_kernel_lab_segment_col_tl
+              \l__tenkz_kernel_lab_col_tl
+            \bool_if:NT \l__tenkz_kernel_lab_cell_bool
+              {
+                \__tenkz_kernel_r_label_station_lanes:V
+                  \l__tenkz_kernel_lab_atom_tl
+              }
+            \clist_map_inline:nn {#2,#3}
+              {
+                \tl_set:Ne \l__tenkz_kernel_lab_node_tl
+                  { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {##1} }
+                \exp_args:NV \__tenkz_kernel_r_node:n
+                  \l__tenkz_kernel_lab_node_tl
+                \exp_args:NV \__tenkz_kernel_r_xy:nNN
+                  \l__tenkz_kernel_lab_node_tl
+                  \l__tenkz_kernel_lab_next_x_fp
+                  \l__tenkz_kernel_lab_next_y_fp
+                \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
+                  \l__tenkz_kernel_lab_node_tl
+                  \l__tenkz_kernel_lab_far_atom_tl
+                  \l__tenkz_kernel_lab_far_row_tl
+                  \l__tenkz_kernel_lab_far_col_tl
+                  \l__tenkz_kernel_lab_far_bool
+                \str_if_eq:VVTF
+                  \l__tenkz_kernel_lab_atom_tl
+                  \l__tenkz_kernel_lab_far_atom_tl
+                  {
+                    \__tenkz_kernel_r_label_blind:V
+                      \l__tenkz_kernel_lab_atom_tl
+                  }
+                  {
+                    \__tenkz_kernel_r_label_mark_bearing:VVV
+                      \l__tenkz_kernel_lab_atom_tl
+                      \l__tenkz_kernel_lab_next_x_fp
+                      \l__tenkz_kernel_lab_next_y_fp
+                  }
+              }
           }
       }
   }
@@ -693,84 +939,6 @@
       }
   }
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_open_face:nnn { Vnn }
-% The endpoint stands at the near cell and its ink leaves toward the far
-% one: a step along a row or a column takes the face it crosses.  The ink
-% also runs the length of the lane it leaves by, so it takes any station
-% standing in that lane as well: a wire crossing a spanning atom's own row
-% takes the face whose station lands in that row, and one crossing its own
-% column takes the face whose station lands in that column.
-%
-% All of that reads a difference of cell numbers as a direction, which holds
-% while the frame lays its cells out along its own axes.  A circle does not:
-% its columns close into a ring, so the step from the last station to the
-% first runs the short way and not back across the ring, and a chord between
-% two stations further apart leaves each of them at an angle to the tangent
-% that the column numbers say nothing about.  On a circle this reading
-% therefore answers nothing rather than answering wrongly, and the faces
-% that carry an explicit word -- ports, policy legs, transverse hosts, open
-% ends -- go on answering there as everywhere.  Reading the departure as a
-% bearing in the endpoint's own frame is what answers a circle; issue 6195.
-\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_toward:n #1
-  {
-    \str_if_eq:eeTF { \__tenkz_kernel_r_frame_word: } {circle}
-      { \__tenkz_kernel_r_label_blind:n {#1} }
-      { \__tenkz_kernel_r_label_mark_axis:n {#1} }
-  }
-\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_axis:n #1
-  {
-    \fp_compare:nNnTF
-      { \l__tenkz_kernel_lab_far_row_tl } = { \l__tenkz_kernel_lab_row_tl }
-      {
-        \fp_compare:nNnT
-          { \l__tenkz_kernel_lab_far_col_tl }
-          < { \l__tenkz_kernel_lab_col_tl }
-          { \__tenkz_kernel_r_label_mark_side:nn {#1} {w} }
-        \fp_compare:nNnT
-          { \l__tenkz_kernel_lab_far_col_tl }
-          > { \l__tenkz_kernel_lab_col_tl }
-          { \__tenkz_kernel_r_label_mark_side:nn {#1} {e} }
-        \fp_compare:nNnTF
-          { \l__tenkz_kernel_lab_far_col_tl }
-          = { \l__tenkz_kernel_lab_col_tl }
-          {
-            % two basis members of one outer cell share its row and
-            % column: the difference is zero and no direction comes out
-            % of it, so the ink between them stays uncharted
-            \__tenkz_kernel_r_label_blind:n {#1}
-          }
-          {
-            \fp_compare:nNnT
-              { \l__tenkz_kernel_lab_row_tl }
-              = { \l__tenkz_kernel_lab_nlane_tl }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {n} }
-            \fp_compare:nNnT
-              { \l__tenkz_kernel_lab_row_tl }
-              = { \l__tenkz_kernel_lab_slane_tl }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {s} }
-          }
-      }
-      {
-        \fp_compare:nNnT
-          { \l__tenkz_kernel_lab_far_col_tl }
-          = { \l__tenkz_kernel_lab_col_tl }
-          {
-            \fp_compare:nNnTF
-              { \l__tenkz_kernel_lab_far_row_tl }
-              < { \l__tenkz_kernel_lab_row_tl }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {n} }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {s} }
-            \fp_compare:nNnT
-              { \l__tenkz_kernel_lab_col_tl }
-              = { \l__tenkz_kernel_lab_wlane_tl }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {w} }
-            \fp_compare:nNnT
-              { \l__tenkz_kernel_lab_col_tl }
-              = { \l__tenkz_kernel_lab_elane_tl }
-              { \__tenkz_kernel_r_label_mark_side:nn {#1} {e} }
-          }
-      }
-  }
-\cs_generate_variant:Nn \__tenkz_kernel_r_label_mark_toward:n { V }
 % An atom threaded on a wire has no cell, so no endpoint names it.  Its
 % carrier runs through the bead, and the faces that run crosses are taken.
 % The fraction the bead stands at says how many: at an end of the route the
@@ -918,7 +1086,7 @@
 % share.  A string bending through its own waypoints turns where the route
 % says and reaches the bead by no face this stage can name; that gap is the
 % frame-cell reading's own limit, and the bearing reading tracked in issue
-% 6195 answers it.
+% issue #15 answers it in the bead-tangent step.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_carrier_faces:nn #1#2
   {
     \__tenkz_model_get:nnN {#1} {origin} \l__tenkz_kernel_lab_owner_tl
