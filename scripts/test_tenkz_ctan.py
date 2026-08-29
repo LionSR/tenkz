@@ -383,11 +383,59 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
     material = tenkz_ctan.check_material(manifest)
     assert any("LICENSE" in reason for reason in material.failures), material.failures
     assert any("CHANGES.md" in reason for reason in material.failures), material.failures
+    assert any("tenkz.pdf" in reason for reason in material.failures), material.failures
 
     encoding = tenkz_ctan.check_encoding(
         {name: ROOT / relative for name, relative in manifest["material"].items()}
     )
     assert len(encoding.failures) == 3, encoding.failures
+
+
+def test_the_manual_is_canonical_binary_material() -> None:
+    manifest = tenkz_ctan.read_manifest()
+    assert manifest["material"]["tenkz.pdf"] == "output/pdf/tenkz-manual.pdf"
+    manual = ROOT / manifest["material"]["tenkz.pdf"]
+    assert manual.read_bytes().startswith(b"%PDF-")
+
+    # A PDF is binary rather than malformed UTF-8; an ordinary material file
+    # carrying the same bytes remains an encoding failure.
+    with tempfile.TemporaryDirectory() as directory:
+        room = Path(directory)
+        binary = room / "manual.pdf"
+        binary.write_bytes(b"%PDF-1.7\n\xff\x00\n")
+        report = tenkz_ctan.check_encoding(
+            {"tenkz.pdf": binary, "README.md": binary}
+        )
+    assert len(report.failures) == 1, report.failures
+    assert "README.md is not UTF-8" in report.failures[0], report.failures
+
+
+def test_the_manual_cannot_be_staged_from_another_pdf() -> None:
+    manifest = tenkz_ctan.read_manifest()
+    wrong = {
+        "material": dict(
+            manifest["material"],
+            **{"tenkz.pdf": "output/pdf/some-other-manual.pdf"},
+        )
+    }
+    failures = tenkz_ctan.check_material(wrong).failures
+    assert any("tenkz.pdf is staged from" in reason for reason in failures), failures
+
+
+def test_a_non_pdf_manual_is_refused() -> None:
+    root = tenkz_ctan.ROOT
+    try:
+        with tempfile.TemporaryDirectory() as directory:
+            tenkz_ctan.ROOT = Path(directory)
+            manual = tenkz_ctan.ROOT / "output/pdf/tenkz-manual.pdf"
+            manual.parent.mkdir(parents=True)
+            manual.write_bytes(b"not a PDF\n")
+            failures = tenkz_ctan.check_material(
+                {"material": {"tenkz.pdf": "output/pdf/tenkz-manual.pdf"}}
+            ).failures
+    finally:
+        tenkz_ctan.ROOT = root
+    assert any("tenkz.pdf does not begin with" in reason for reason in failures), failures
 
 
 def test_the_whole_check_reports_a_missing_file_rather_than_raising() -> None:

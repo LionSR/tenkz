@@ -61,12 +61,18 @@ jobs:
       - name: Report the activation pins
         run: python3 tests/tenkz/release-harness/supervisor.py pins
 
-      # The upload archive, checked wherever the release payload is checked.
-      # This job installs no TeX, so the check reports its clean-install step
-      # skipped here; pr-ci.yml runs the same command with `--require-smoke`
-      # in the job that already has an engine.
+      # The upload archive carries the built manual, so the release-payload
+      # job produces that input through the same reproducible entry point as
+      # pr-ci.yml before it checks the staging contract.  The installed engine
+      # also makes the archive's clean-install smoke test mandatory here.
+      - name: Install TeX dependencies
+        uses: texra-ai/lean-env-action/blueprint-system-deps@dd809c3886f8e88a184f2a37aa865c60183762a7
+
+      - name: Build the release manual reproducibly
+        run: python3 scripts/tenkz_manual_build.py check --require-engine
+
       - name: Test the CTAN staging contracts
         run: python3 scripts/test_tenkz_ctan.py
 
       - name: Check the CTAN staging tree and its archive
-        run: python3 scripts/tenkz_ctan.py check
+        run: python3 scripts/tenkz_ctan.py check --require-smoke

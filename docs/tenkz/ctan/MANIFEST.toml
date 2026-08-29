@@ -96,13 +96,13 @@ unconsumed = ["fit"]
 "CHANGES.md" = "docs/tenkz/CHANGES.md"
 "CITATION.cff" = "docs/tenkz/ctan/CITATION.cff"
 "tenkz.bib" = "docs/tenkz/ctan/tenkz.bib"
+"tenkz.pdf" = "output/pdf/tenkz-manual.pdf"
 
 [source_tree]
 # Everything in `tex/tenkz/` the upload deliberately leaves out. Anything else
 # found there that the entry point does not load fails the check.
 #
 # `examples/` holds the registry's one-picture-per-command examples. They are
-# compiled by the manual doc-test and are not reader documentation; the
-# documentation an upload carries is the manual, whose reproducible build is
-# the open work of the release.
+# compiled by the manual doc-test and are not reader documentation.  The
+# upload carries the reproducibly built manual as `tenkz.pdf` instead.
 excluded = ["examples"]
