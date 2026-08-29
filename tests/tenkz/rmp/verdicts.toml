@@ -673,14 +673,15 @@ note = "Factor order restored to the source: the checked-in body read (g g / h h
 
 [[verdict]]
 id = "rmp-iii-a-g-injective-projector"
-status = "cosmetic-gap"
+status = "faithful"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-source-repair-2026-07-29"
 defects = []
 case_sha256 = "733c5ac2790a0fd4b6f78839efda9b673c1a540223e03edad5ac4cf8da6de201"
-reviewed = "2026-07-29"
-renderer = "codex-source-repair-2026-07-29-300dpi"
-note = "the paper projector: a normalized average of four cardinal L_g actions equals the four-tensor red ring with the northwest black junction"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign of the 110dpi comparison plate (p.59): four L_g insertions, four ring tensors, one marked corner, and matching arrow directions on both sides; tenkz sets L_g in a rounded rectangle where the source uses a circle. Open follow-up, not a faithfulness gap: the red ring routes as a spline through its via stations where the author draws a rounded-corner square, so the loop reads less regular than the source.  Prior note: the paper projector: a normalized average of four cardinal L_g actions equals the four-tensor red ring with the northwest black junction"
 
 [[verdict]]
 id = "rmp-iii-a-mpo-action"
@@ -765,25 +766,27 @@ note = "the exact hash renders one central physical leg per side, four split vir
 
 [[verdict]]
 id = "rmp-iii-b-dyon"
-status = "cosmetic-gap"
+status = "faithful"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "0759d0dd170de24a3f635b78e0f102fcea49cdb8e1bd04ec78dc052811a3b560"
-reviewed = "2026-08-04"
-renderer = "kimi-kernel-mpo-source-review-2026-08-04-200dpi"
-note = "Slot-to-species respell 2026-08-25: the retired slot= key's region word rides species= now; pixel-identical at 200dpi (czx compared directly, the two siblings carry the same one-word substitution).  Prior note: Kernel stock MPO skin (#5362) with the enclosure mark and labelled open string intact; the charge stays the stock box against the source's hatched diamond and the disk is a rounded contour, not the source's ellipse."
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.67). The first viewer proposed reclassifying to K1 because the enclosure inks contour-only against the source's filled region; the maintainer judged the contour faithful here, so the case promotes and the enclosure-fill question stays with rmp-ii-boundary-region alone.  Prior note: Slot-to-species respell 2026-08-25: the retired slot= key's region word rides species= now; pixel-identical at 200dpi (czx compared directly, the two siblings carry the same one-word substitution).  Prior note: Kernel stock MPO skin (#5362) with the enclosure mark and labelled open string intact; the charge stays the stock box against the source's hatched diamond and the disk is a rounded contour, not the source's ellipse."
 
 [[verdict]]
 id = "rmp-iii-b-self-braiding"
-status = "cosmetic-gap"
+status = "structural-gap"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-defects = []
+defects = ["wrong-contraction"]
 case_sha256 = "4bc9c09a115b4eb223d3bb9e8a8947472c7bc05c41d887dc769d57a1626b2cec"
-reviewed = "2026-07-28"
-renderer = "codex-named-boundary-self-braiding-review-2026-07-28-120dpi"
-note = "the double winding carries eight tensors plus the source tail crossing and a named north boundary; the four-tensor single winding has an ordinary east-boundary tail"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.68): completely wrong, not the clean match the prior note claimed. The route to a fix is redrawing the case against the author's TikZ at ImagesReview Section III lines 704-738, not a kernel change. Held as a structural gap: exotic, and the maintainer directed no kernel work against it.  Prior note: the double winding carries eight tensors plus the source tail crossing and a named north boundary; the four-tensor single winding has an ordinary east-boundary tail"
 
 [[verdict]]
 id = "rmp-iii-b-r-tensor-left"
@@ -823,26 +826,27 @@ note = "the plane frame now carries the patch the source draws: the author paint
 
 [[verdict]]
 id = "rmp-iii-b-braid-two"
-status = "cosmetic-gap"
+status = "structural-gap"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
-defects = []
+defects = ["extra-element", "open-closure"]
 case_sha256 = "a81ca9594ac5c5604ef28205431a4cd620de4a840307dbf151d7fbc21a635e91"
-reviewed = "2026-07-28"
-renderer = "codex-kernel-ink-2026-07-28-200dpi"
-note = "the two strands nest through their bead stations without crossing each other -- the side-by-side against the flattened source shows every meeting occluded by a bead; the old crossing was the previous body's invention"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.72): one node more than the source, and a string that should run to an open end instead terminates on an anyon. The case header declares six open string endpoints while the body opens only two -- one string runs from open n to a.315 and the other from i.45 to open e, so two of the four string ends attach rather than open. Held as a structural gap: the panel is exotic enough that the maintainer directed no kernel work against it.  Prior note: the two strands nest through their bead stations without crossing each other -- the side-by-side against the flattened source shows every meeting occluded by a bead; the old crossing was the previous body's invention"
 
 [[verdict]]
 id = "rmp-iii-b-braid-three"
-status = "cosmetic-gap"
+status = "structural-gap"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-defects = []
+defects = ["wrong-contraction"]
 case_sha256 = "c195a96cdd5fcabb2da8adb4f903eda726ec6eb431dbe8e47a40847821bb1510"
-second_viewer = "braid-plane-remodel-second-pass-2026-08-06-400dpi"
-reviewed = "2026-08-06"
-renderer = "braid-plane-remodel-2026-08-06-200dpi"
-note = "The marked site names itself north-west, clear of the lattice dot its south-west station stood on. the plane frame now carries the patch the source draws, so the lattice slant matches and every inter-site index is virtual while the four site legs end in air; the source-red strings still wind through their six bead stations into R_{j,a} with j and i at their corners, and a's fourth bead now sits where it laps the lattice line running north out of i; the resolver contour stands further east than the source parallelogram, which the source shears with the plane and uses to hide the a-b meeting"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.73): the R_{j,a} attachment is physically and mathematically wrong, not the slant or glyph difference the prior note recorded. Held as a structural gap: exotic, and the maintainer directed no kernel work against it.  Prior note: The marked site names itself north-west, clear of the lattice dot its south-west station stood on. the plane frame now carries the patch the source draws, so the lattice slant matches and every inter-site index is virtual while the four site legs end in air; the source-red strings still wind through their six bead stations into R_{j,a} with j and i at their corners, and a's fourth bead now sits where it laps the lattice line running north out of i; the resolver contour stands further east than the source parallelogram, which the source shears with the plane and uses to hide the a-b meeting"
 
 [[verdict]]
 id = "rmp-iii-b-braid-four"
@@ -1011,27 +1015,27 @@ note = "re-audited against Rtensor5 for the recorded mirror: the 0.7 layout was 
 
 [[verdict]]
 id = "rmp-iv-intersection-lhs-six"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "fable-author-asset-crosscheck-2026-08-05"
 defects = []
 case_sha256 = "011be6aaed02a449c89c60fb86b282d0c8cc338599b90ec92d11aa86f35c6f31"
-reviewed = "2026-08-05"
-renderer = "fable-nested-regions-2026-08-05-200dpi"
-second_viewer = "fable-orchestrator-countersign-2026-08-05-200dpi"
-note = "kernel migration with true nested regions: the A--B patch window sits one clearance inside the L window, the patch's six virtual bonds end on the inner window that cuts them, and all three sites keep transverse physical legs, matching LHS6. Residue: the source draws the patch bonds as through-lines and sets the window label inside the annulus; the kernel draws face stubs and the corner label station (house routing). Countersigned by an independent second viewer: topology and residues confirmed against the author panel. Also realigned the swapped source metadata: LHS6 is the L window over A--B (author lines 173-190)"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.88), which is the second-viewer countersign the prior note asked for. The first viewer flagged the L label sitting outside the plane and the through-lines drawn as corner ticks rather than verticals; the maintainer judged both presentational.  Prior note: kernel migration with true nested regions: the A--B patch window sits one clearance inside the L window, the patch's six virtual bonds end on the inner window that cuts them, and all three sites keep transverse physical legs, matching LHS6. Residue: the source draws the patch bonds as through-lines and sets the window label inside the annulus; the kernel draws face stubs and the corner label station (house routing). Countersigned by an independent second viewer: topology and residues confirmed against the author panel. Also realigned the swapped source metadata: LHS6 is the L window over A--B (author lines 173-190)"
 
 [[verdict]]
 id = "rmp-iv-intersection-rhs-six"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "fable-author-asset-crosscheck-2026-08-05"
 defects = []
 case_sha256 = "2658fafca514444e741e49b79d5cd72349b40f13cc26e3ad4699fca7400563c5"
-reviewed = "2026-08-05"
-renderer = "fable-nested-regions-2026-08-05-200dpi"
-second_viewer = "fable-orchestrator-countersign-2026-08-05-200dpi"
-note = "kernel migration with true nested regions: the B--C patch window sits one clearance inside the R window, the patch's six virtual bonds end on the inner window that cuts them, and all three sites keep transverse physical legs, matching RHS6. Residue: the source draws the patch bonds as through-lines and sets the window label inside the annulus; the kernel draws face stubs and the corner label station (house routing). Countersigned by an independent second viewer: topology and residues confirmed against the author panel. Also realigned the swapped source metadata: RHS6 is the R window over B--C (author lines 156-172)"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.89), which is the second-viewer countersign the prior note asked for. Same residue as its left-hand twin -- the R label outside the plane and corner-tick through-lines -- and the same judgement: presentational.  Prior note: kernel migration with true nested regions: the B--C patch window sits one clearance inside the R window, the patch's six virtual bonds end on the inner window that cuts them, and all three sites keep transverse physical legs, matching RHS6. Residue: the source draws the patch bonds as through-lines and sets the window label inside the annulus; the kernel draws face stubs and the corner label station (house routing). Countersigned by an independent second viewer: topology and residues confirmed against the author panel. Also realigned the swapped source metadata: RHS6 is the R window over B--C (author lines 156-172)"
 
 [[verdict]]
 id = "rmp-app-toric-primal"
@@ -1139,14 +1143,15 @@ note = "Both sides now separate four in-plane virtual legs from an independent p
 
 [[verdict]]
 id = "rmp-workbench-ii-mpu-wrap-second"
-status = "cosmetic-gap"
+status = "faithful"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "693506905ff355ac103097c1fde988f2b331f7cdca8970225896f357be1b8def"
-reviewed = "2026-07-28"
-renderer = "codex-kernel-skin-pairing-source-review-2026-07-28-200dpi"
-note = "the first row uses north-to-east shift-right pairings and the second row uses their shift-left mirrors"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.99): the wrap reads upside down against the source, which the maintainer judged immaterial here. The stub pair touches without joining on both sides -- the source legs are 0.5 long with rows 1 apart, so the stubs meet at the midpoint and stay open.  Prior note: the first row uses north-to-east shift-right pairings and the second row uses their shift-left mirrors"
 
 [[verdict]]
 id = "rmp-workbench-ii-v-tensor-definition"
@@ -1392,14 +1397,15 @@ note = "Kernel migration (wave 2B): one box atom with two virtual and two labell
 
 [[verdict]]
 id = "rmp-workbench-iii-g-injective-pull"
-status = "cosmetic-gap"
+status = "faithful"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-port-contract-source-review-2026-08-01"
 defects = []
 case_sha256 = "7e636c9eac4298b2d19f380abc27ce60059aa4a8c388fc324d39e95c07660cad"
-reviewed = "2026-08-01"
-renderer = "codex-port-contract-source-review-2026-08-01-240dpi"
-note = "the exact hash follows the author-source G-injective pull at lines 468-497: the g string moves across the tensor while the northeast physical leg remains open"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.121): two boxes north-west of the vertex left of the equals sign and two south-east of it right of the sign, same count and same side as the source, which shears them into parallelograms; tenkz additionally labels g. Open follow-up, not a faithfulness gap: the red route could be more regular.  Prior note: the exact hash follows the author-source G-injective pull at lines 468-497: the g string moves across the tensor while the northeast physical leg remains open"
 
 [[verdict]]
 id = "rmp-workbench-iii-intertwining-mpo"
@@ -1414,14 +1420,15 @@ note = "Kernel migration (wave 2B): the tall X_gh box spans the g and h rows wit
 
 [[verdict]]
 id = "rmp-workbench-iii-mpo-injective-white"
-status = "cosmetic-gap"
+status = "faithful"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-port-contract-source-review-2026-08-01"
 defects = []
 case_sha256 = "6941d8e4171cca51c7be77953fd9d39823c287b6f0414b8f3bff01549073ea11"
-reviewed = "2026-08-01"
-renderer = "codex-port-contract-source-review-2026-08-01-240dpi"
-note = "the exact hash shows the g string crossing and pulling through the site while the source upward physical leg remains open"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.123): identical topology, identical A and g labels, identical equation. Open follow-up, not a faithfulness gap: the red route could be more regular than the spline it draws today.  Prior note: the exact hash shows the g string crossing and pulling through the site while the source upward physical leg remains open"
 
 [[verdict]]
 id = "rmp-workbench-iii-mpo-on-peps-definition"
@@ -1459,14 +1466,15 @@ note = "Kernel migration (wave 2B): five boxes with both physical legs each, the
 
 [[verdict]]
 id = "rmp-workbench-iii-eq59"
-status = "cosmetic-gap"
+status = "structural-gap"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
-defects = []
+defects = ["missing-element"]
 case_sha256 = "73f78dccd814583373d958f419fdedda423cbc683ca0510ee7e1b25cb4e31a04"
-reviewed = "2026-08-24"
-renderer = "fable-via-wave-rail-hull-2026-08-24-200dpi"
-note = "the centered torus has both identified noncontractible cycles; each open 5x5 window keeps five independent O_g and O_h stations, and the two three-station g rails join above the marked tensor while O_h stays vertical; the joining rail now travels the hull route n of marked instead of a four-waypoint orthogonal jog, so the squared rail rounds into the loop above the marked tensor with its beads and the g and g^-1 labels keeping their stations -- verified against the prior render at 200dpi"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.127): very wrong. The source draws a full lattice where the kernel panel reduces it to the single row and column that carry beads, and draws a torus where the kernel draws a circle with wrapped edges. Held as a structural gap: exotic, and the maintainer directed no kernel work against it.  Prior note: the centered torus has both identified noncontractible cycles; each open 5x5 window keeps five independent O_g and O_h stations, and the two three-station g rails join above the marked tensor while O_h stays vertical; the joining rail now travels the hull route n of marked instead of a four-waypoint orthogonal jog, so the squared rail rounds into the loop above the marked tensor with its beads and the g and g^-1 labels keeping their stations -- verified against the prior render at 200dpi"
 
 [[verdict]]
 id = "rmp-workbench-iii-g-injective-mpo"
