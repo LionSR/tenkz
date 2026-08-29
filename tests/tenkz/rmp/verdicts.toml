@@ -678,10 +678,10 @@ second_viewer = "maintainer-k2-countersign-2026-08-29"
 pairing = "verified"
 pairing_by = "codex-source-repair-2026-07-29"
 defects = []
-case_sha256 = "733c5ac2790a0fd4b6f78839efda9b673c1a540223e03edad5ac4cf8da6de201"
+case_sha256 = "bbe2cd76a900ccad265c0ee3e24e72ebe278ffb809c757c4371a2993438d12fb"
 reviewed = "2026-08-29"
 renderer = "opus-k2-plate-review-2026-08-29-110dpi"
-note = "Promoted to faithful 2026-08-29 on maintainer countersign of the 110dpi comparison plate (p.59): four L_g insertions, four ring tensors, one marked corner, and matching arrow directions on both sides; tenkz sets L_g in a rounded rectangle where the source uses a circle. Open follow-up, not a faithfulness gap: the red ring routes as a spline through its via stations where the author draws a rounded-corner square, so the loop reads less regular than the source.  Prior note: the paper projector: a normalized average of four cardinal L_g actions equals the four-tensor red ring with the northwest black junction"
+note = "Ring squared 2026-08-29 at the maintainer's request, who asked at the 110dpi plate (p.59) why the red square could not be as regular as the original. It can now: route=orth reaches a closed string since #249, and the ring's eight stations are pairwise row- or column-aligned, so joining them with straight segments draws the author's rounded-corner square instead of a Hobby cycle scalloped through the same points. This resolves the open follow-up the promotion recorded and removes a divergence rather than adding one; the countersign that promoted the case is the same review that asked for this.  Prior note: Promoted to faithful 2026-08-29 on maintainer countersign of the 110dpi comparison plate (p.59): four L_g insertions, four ring tensors, one marked corner, and matching arrow directions on both sides; tenkz sets L_g in a rounded rectangle where the source uses a circle. Open follow-up, not a faithfulness gap: the red ring routes as a spline through its via stations where the author draws a rounded-corner square, so the loop reads less regular than the source.  Prior note: the paper projector: a normalized average of four cardinal L_g actions equals the four-tensor red ring with the northwest black junction"
 
 [[verdict]]
 id = "rmp-iii-a-mpo-action"
@@ -1405,7 +1405,7 @@ defects = []
 case_sha256 = "7e636c9eac4298b2d19f380abc27ce60059aa4a8c388fc324d39e95c07660cad"
 reviewed = "2026-08-29"
 renderer = "opus-k2-plate-review-2026-08-29-110dpi"
-note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.121): two boxes north-west of the vertex left of the equals sign and two south-east of it right of the sign, same count and same side as the source, which shears them into parallelograms; tenkz additionally labels g. Open follow-up, not a faithfulness gap: the red route could be more regular.  Prior note: the exact hash follows the author-source G-injective pull at lines 468-497: the g string moves across the tensor while the northeast physical leg remains open"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.121): two boxes north-west of the vertex left of the equals sign and two south-east of it right of the sign, same count and same side as the source, which shears them into parallelograms; tenkz additionally labels g. Follow-up closed 2026-08-29: the first viewer proposed routing this string orthogonally too, and the author panel settles it the other way -- the source string bows smoothly through its waypoints, so squaring it would move the case away from the source rather than toward it. The curve stays. Only rmp-iii-a-g-injective-projector, whose source really is a rounded-corner square, took route=orth.  Prior note: the exact hash follows the author-source G-injective pull at lines 468-497: the g string moves across the tensor while the northeast physical leg remains open"
 
 [[verdict]]
 id = "rmp-workbench-iii-intertwining-mpo"
@@ -1428,7 +1428,7 @@ defects = []
 case_sha256 = "6941d8e4171cca51c7be77953fd9d39823c287b6f0414b8f3bff01549073ea11"
 reviewed = "2026-08-29"
 renderer = "opus-k2-plate-review-2026-08-29-110dpi"
-note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.123): identical topology, identical A and g labels, identical equation. Open follow-up, not a faithfulness gap: the red route could be more regular than the spline it draws today.  Prior note: the exact hash shows the g string crossing and pulling through the site while the source upward physical leg remains open"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.123): identical topology, identical A and g labels, identical equation. Follow-up closed 2026-08-29: the first viewer proposed routing this string orthogonally too, and the author panel settles it the other way -- the source string bows smoothly through its waypoints, so squaring it would move the case away from the source rather than toward it. The curve stays. Only rmp-iii-a-g-injective-projector, whose source really is a rounded-corner square, took route=orth.  Prior note: the exact hash shows the g string crossing and pulling through the site while the source upward physical leg remains open"
 
 [[verdict]]
 id = "rmp-workbench-iii-mpo-on-peps-definition"
