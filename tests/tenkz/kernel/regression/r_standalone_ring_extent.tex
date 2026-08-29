@@ -1,0 +1,13 @@
+% Regression: a ring's content-derived corner padding is not part of its
+% standalone class floor.  Long names move to stations without changing the
+% full glyph silhouette; written `auto` follows the same chooser as omission.
+\documentclass{standalone}
+\usepackage{tenkz}
+\begin{document}
+\tenkzkernel
+\begin{tenkz}[rows={wire}, cols=3, bonds=none, physical=none]
+  \tn[skin=ring, name=short]{X} &
+  \tn[skin=ring, name=auto, label pos=auto]{\mathcal R_{j,a}} &
+  \tn[skin=ring, name=explicit, label pos=n]{\mathcal R_{j,a}}
+\end{tenkz}
+\end{document}

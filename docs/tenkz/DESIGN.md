@@ -142,19 +142,20 @@ paragraph buys. A panel standing behind a conditional the body never takes
 still lends its extent to the measure, and a panel arriving through a macro or
 an included file lends none and is drawn exactly as it would be alone. Both
 are wrong about the *sharing* and neither can misdraw a panel: the measure
-only grows a glyph, and a glyph sharing nothing keeps its own extent. Reading
-the panels along the executed path instead would be right about the sharing
-and wrong about the document, which is the trade this one refuses.
+only grows a glyph, and a glyph sharing nothing keeps its class floor while
+an overflowing name moves to its station. Reading the panels along the
+executed path instead would be right about the sharing and wrong about the
+document, which is the trade this one refuses.
 
-Three cheaper answers do not work. **Fixing the extent to the size class
-alone** is what the contract says in the abstract, and the corpus prices it:
-45 of the 1143 glyphs drawn across the benchmark stand wider than their class
-because of their name, and pinning the extent would evict those names from
-their ink and send 18 reviewed figures back to be re-authored. **Carrying the
-measure between LaTeX runs** through the auxiliary file fails because the
-fixture and benchmark harnesses compile once. **Fitting the name to the
-glyph** by shrinking type is refused on sight: names are set at named sizes
-and are not scaled to fit.
+Two cheaper answers do not work. **Carrying the measure between LaTeX runs**
+through the auxiliary file fails because the fixture and benchmark harnesses
+compile once. **Fitting the name to the glyph** by shrinking type is refused
+on sight: names are set at named sizes and are not scaled to fit. Fixing an
+extent to its size class is not an equation substitute and no longer pretends
+to be one: outside an equation there is no shared measure, so that is the
+ordinary rule. A name that exceeds the fixed standalone glyph keeps its type
+size and moves to the atom's label station; only an equation's explicit claim
+that its panels are one object supplies the shared measure that may grow ink.
 
 Two other spellings for the group were considered and are rejected.
 

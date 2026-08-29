@@ -2340,6 +2340,11 @@
 \dim_new:N \l__tenkz_kernel_hull_ytwo_dim
 \dim_new:N \l__tenkz_kernel_hull_xthree_dim
 \dim_new:N \l__tenkz_kernel_hull_ythree_dim
+\tl_new:N \l__tenkz_kernel_hull_natural_name_tl
+\dim_new:N \l__tenkz_kernel_hull_natural_wd_dim
+\dim_new:N \l__tenkz_kernel_hull_natural_ht_dim
+\dim_new:N \l__tenkz_kernel_hull_floor_wd_dim
+\dim_new:N \l__tenkz_kernel_hull_floor_ht_dim
 \fp_new:N \l__tenkz_kernel_hull_xoff_fp
 \fp_new:N \l__tenkz_kernel_hull_yoff_fp
 \fp_new:N \l__tenkz_kernel_hull_xrot_fp
@@ -2976,6 +2981,86 @@
       {#2}
   }
 
+% A standalone glyph belongs to its class and slots, not to the width of its
+% name.  Measure the natural labelled node first, then the same style without
+% content.  If the name enlarged either axis, keep the natural box for label
+% ink but publish the empty node as the glyph silhouette; the annotation
+% stage will place that box at the atom's ordinary label station.  Equations
+% retain their shared name measure and never enter this probe.
+\cs_new_protected:Npn \__tenkz_kernel_hull_standalone_spill:n #1
+  {
+    \__tenkz_kernel_eq_extent_named:n {#1}
+    \bool_lazy_all:nT
+      {
+        { ! \bool_if_p:N \l__tenkz_kernel_ineq_bool }
+        { ! \tl_if_empty_p:N \l__tenkz_kernel_hull_a_tl }
+        { \bool_if_p:N \l__tenkz_kernel_eq_extent_named_bool }
+      }
+      {
+        \tl_set_eq:NN \l__tenkz_kernel_hull_natural_name_tl
+          \l__tenkz_kernel_hull_measure_name_tl
+        \__tenkz_kernel_hull_anchor_x:nN {west}
+          \l__tenkz_kernel_hull_west_dim
+        \__tenkz_kernel_hull_anchor_x:nN {east}
+          \l__tenkz_kernel_hull_east_dim
+        \__tenkz_kernel_hull_anchor_y:nN {south}
+          \l__tenkz_kernel_hull_south_dim
+        \__tenkz_kernel_hull_anchor_y:nN {north}
+          \l__tenkz_kernel_hull_north_dim
+        \dim_set:Nn \l__tenkz_kernel_hull_natural_wd_dim
+          { \l__tenkz_kernel_hull_east_dim - \l__tenkz_kernel_hull_west_dim }
+        \dim_set:Nn \l__tenkz_kernel_hull_natural_ht_dim
+          { \l__tenkz_kernel_hull_north_dim - \l__tenkz_kernel_hull_south_dim }
+        \tl_put_right:Nn \l__tenkz_kernel_hull_measure_name_tl {_floor}
+        \group_begin:
+          \use:c {tenkz@bboxcapturefalse}
+          \bool_set_true:N \l__tenkz_kernel_extent_floor_probe_bool
+          % Geometry styles are materialized token lists, so rebuild the
+          % floor style while the probe flag is live.  In particular, a ring
+          % must not carry its natural name's corner-safe minimum width into
+          % the supposedly empty measurement.
+          \exp_args:NnV \__tenkz_kernel_r_atom_glyph_style:nnN
+            {#1} \l__tenkz_kernel_hull_skin_tl
+            \l__tenkz_kernel_hull_b_tl
+          \__tenkz_kernel_r_affine_page_padding:n {#1}
+          \__tenkz_kernel_r_affine_page_style:N
+            \l__tenkz_kernel_hull_b_tl
+          \exp_args:NVV \__tenkz_render_measure_node:nnn
+            \l__tenkz_kernel_hull_b_tl
+            \l__tenkz_kernel_hull_measure_name_tl
+            { }
+        \group_end:
+        \__tenkz_kernel_hull_anchor_x:nN {west}
+          \l__tenkz_kernel_hull_west_dim
+        \__tenkz_kernel_hull_anchor_x:nN {east}
+          \l__tenkz_kernel_hull_east_dim
+        \__tenkz_kernel_hull_anchor_y:nN {south}
+          \l__tenkz_kernel_hull_south_dim
+        \__tenkz_kernel_hull_anchor_y:nN {north}
+          \l__tenkz_kernel_hull_north_dim
+        \dim_set:Nn \l__tenkz_kernel_hull_floor_wd_dim
+          { \l__tenkz_kernel_hull_east_dim - \l__tenkz_kernel_hull_west_dim }
+        \dim_set:Nn \l__tenkz_kernel_hull_floor_ht_dim
+          { \l__tenkz_kernel_hull_north_dim - \l__tenkz_kernel_hull_south_dim }
+        \bool_lazy_or:nnTF
+          {
+            \dim_compare_p:nNn
+              { \l__tenkz_kernel_hull_natural_wd_dim } >
+              { \l__tenkz_kernel_hull_floor_wd_dim }
+          }
+          {
+            \dim_compare_p:nNn
+              { \l__tenkz_kernel_hull_natural_ht_dim } >
+              { \l__tenkz_kernel_hull_floor_ht_dim }
+          }
+          { \prop_put:Nnn \l__tenkz_kernel_hull_live_prop {#1/spill} { } }
+          {
+            \tl_set_eq:NN \l__tenkz_kernel_hull_measure_name_tl
+              \l__tenkz_kernel_hull_natural_name_tl
+          }
+      }
+  }
+
 % Author label tokens enter one unturned box.  Each glyph-local consumer
 % applies the inverse carrier turn around a copy; a deferred page-space label
 % copies the raw box directly.  Sizing therefore cannot execute the author's
@@ -3068,6 +3153,7 @@
             }
         }
     \group_end:
+    \__tenkz_kernel_hull_standalone_spill:n {#1}
     % The measuring run reads the name it has just set.  An unnamed glyph --
     % a bead, a junction, a void site -- shares nothing, so it contributes
     % nothing to the class measure.

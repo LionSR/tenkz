@@ -3314,6 +3314,60 @@ grep -Fq '|xmin=-660985|xmax=660985|ymin=-530808|ymax=530808|' \
   echo "FAIL: the measuring run left its panels in the event stream" >&2
   exit 1
 }
+# Outside an equation, a name that exceeds the class floor moves to the
+# station rule rather than enlarging the glyph.  The short and long boxes and
+# rings therefore have one complete silhouette, while exactly the long names
+# publish audited station labels owned by their glyphs.
+assert_standalone_class_extent() {
+  local log="$WORK/$1.tnlog"
+  local extents
+  extents=$(grep '^glyph-geometry|' "$log" |
+    awk -F'|' '
+      {
+        delete value
+        for (i = 1; i <= NF; i++) {
+          split($i, field, "=")
+          value[field[1]] = field[2]
+        }
+        print value["xmax"] - value["xmin"],
+              value["ymax"] - value["ymin"]
+      }' |
+    sort -u | wc -l | tr -d ' ')
+  [ "$extents" = "1" ] || {
+    echo "FAIL: a standalone name changed its class-fixed glyph extent" >&2
+    grep '^glyph-geometry|' "$log" >&2
+    exit 1
+  }
+  [ "$(grep -c '^glyph-geometry|' "$log" || true)" -eq 3 ] || {
+    echo "FAIL: the standalone extent fixture did not draw three glyphs" >&2
+    exit 1
+  }
+  [ "$(grep -c '^bbox|.*|class=label|' "$log" || true)" -eq 2 ] || {
+    echo "FAIL: the standalone spill did not move exactly two long names" >&2
+    exit 1
+  }
+  grep '^bbox|.*|class=label|.*|owner=2|' "$log" |
+    grep -Fq '|station=s|provenance=auto' || {
+    echo "FAIL: the spilled name did not use the automatic south station" >&2
+    exit 1
+  }
+  grep '^bbox|.*|class=label|.*|owner=3|' "$log" |
+    grep -Fq '|provenance=explicit' || {
+    echo "FAIL: an explicit station on a spilled name was not honoured" >&2
+    exit 1
+  }
+  local glyph_north label_south
+  glyph_north=$(grep '^glyph-geometry|.*|owner=3|' "$log" |
+    sed 's/.*|ymax=\([^|]*\).*/\1/')
+  label_south=$(grep '^bbox|.*|class=label|.*|owner=3|' "$log" |
+    sed 's/.*|ymin=\([^|]*\).*/\1/')
+  [ "$label_south" -gt "$glyph_north" ] || {
+    echo "FAIL: label pos=n did not place the explicit spill north" >&2
+    exit 1
+  }
+}
+assert_standalone_class_extent r_standalone_class_extent
+assert_standalone_class_extent r_standalone_ring_extent
 # Math-style sensing.  A picture standing on its own -- in running text or in
 # a display -- keeps the base class and the stream says nothing about it; one
 # sharing a line of mathematics takes the denser class and the stream records

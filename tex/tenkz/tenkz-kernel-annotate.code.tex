@@ -118,6 +118,31 @@
 \cs_new_protected:Npn \__tenkz_kernel_r_label_blind:n #1
   { \prop_gput:Nen \g__tenkz_kernel_lab_blind_prop {#1} { } }
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_blind:n { V }
+% Resolve the authored station word once for every atom label consumer and
+% bracket its audited node with the matching claim.  Written `auto` is the
+% chooser, just like an omitted field; blind and circular geometry receives a
+% fallback placement but cannot promise that the chosen station was clear.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_side_claim:nN #1#2
+  {
+    \__tenkz_model_get:nnN {#1} {label-pos} #2
+    \bool_lazy_or:nnTF
+      { \quark_if_no_value_p:N #2 }
+      { \str_if_eq_p:Vn #2 {auto} }
+      {
+        \__tenkz_kernel_r_label_auto_side:nN {#1} #2
+        \bool_lazy_or:nnF
+          { \prop_if_in_p:Nn \g__tenkz_kernel_lab_blind_prop {#1} }
+          { \str_if_eq_p:ee { \__tenkz_kernel_r_frame_word: } {circle} }
+          {
+            \use:e
+              {
+                \exp_not:c {tenkz@labelclaim} {auto}
+                  { \tl_use:N #2 }
+              }
+          }
+      }
+      { \use:c {tenkz@labelclaim} {explicit} { } }
+  }
 % The atom, if any, standing one cell past face #3 of cell (#1,#2).  A stub
 % or policy leg grows the length of its reach into that cell, and no table
 % charts its ink on the atom standing there, so that atom's own promise
@@ -1226,38 +1251,8 @@
                 % `auto` is the registry's own default and an author may
                 % write it out; the word names the chooser, not an angle,
                 % so it reaches the chooser as an absent field does.
-                \__tenkz_model_get:nnN {#1} {label-pos} \l__tenkz_kernel_r_c_tl
-                % The claim states who chose the station: the chooser's face
-                % word rides the bbox as station=, and provenance= says
-                % whether the kernel promised that face free or the author
-                % named it.  The claim covers exactly this label's node and
-                % is released after it.  An atom on the blind ledger got a
-                % default, not a promise: its station stays unclaimed.  A
-                % circle frame stands down whole: its occupancy reading is
-                % built on lanes, and a circle's closed ring of stations is
-                % no lane, so no station on it is a verified promise until
-                % the bearing reading of issue 6195 lands.
-                \bool_lazy_or:nnTF
-                  { \quark_if_no_value_p:N \l__tenkz_kernel_r_c_tl }
-                  { \str_if_eq_p:Vn \l__tenkz_kernel_r_c_tl {auto} }
-                  {
-                    \__tenkz_kernel_r_label_auto_side:nN {#1}
-                      \l__tenkz_kernel_r_c_tl
-                    \bool_lazy_or:nnF
-                      { \prop_if_in_p:Nn \g__tenkz_kernel_lab_blind_prop {#1} }
-                      {
-                        \str_if_eq_p:ee
-                          { \__tenkz_kernel_r_frame_word: } {circle}
-                      }
-                      {
-                        \use:e
-                          {
-                            \exp_not:c { tenkz@labelclaim } { auto }
-                              { \tl_use:N \l__tenkz_kernel_r_c_tl }
-                          }
-                      }
-                  }
-                  { \use:c { tenkz@labelclaim } { explicit } { } }
+                \__tenkz_kernel_r_label_side_claim:nN {#1}
+                  \l__tenkz_kernel_r_c_tl
                 \tl_set:Ne \l__tenkz_kernel_r_c_tl
                   {
                     \__tenkz_kernel_r_compass:n
@@ -1620,19 +1615,23 @@
 % every ring in the class, named or not; otherwise this is the atom's own.
 \cs_new_protected:Npn \__tenkz_kernel_r_ring_corner_min_width:nN #1#2
   {
-    \bool_lazy_all:nTF
+    \bool_if:NTF \l__tenkz_kernel_extent_floor_probe_bool
+      { \dim_zero:N #2 }
       {
-        { \bool_if_p:N \l__tenkz_kernel_ineq_bool }
-        { ! \bool_if_p:N \l__tenkz_kernel_eq_probe_bool }
-      }
-      {
-        \__tenkz_kernel_eq_extent_key:nN {#1} \l__tenkz_kernel_eq_extent_key_tl
-        \prop_get:NVNTF \g__tenkz_kernel_eq_ringpad_prop
-          \l__tenkz_kernel_eq_extent_key_tl \l__tenkz_kernel_eq_ringpad_stored_tl
-          { \dim_set:Nn #2 { \l__tenkz_kernel_eq_ringpad_stored_tl } }
+        \bool_lazy_all:nTF
+          {
+            { \bool_if_p:N \l__tenkz_kernel_ineq_bool }
+            { ! \bool_if_p:N \l__tenkz_kernel_eq_probe_bool }
+          }
+          {
+            \__tenkz_kernel_eq_extent_key:nN {#1} \l__tenkz_kernel_eq_extent_key_tl
+            \prop_get:NVNTF \g__tenkz_kernel_eq_ringpad_prop
+              \l__tenkz_kernel_eq_extent_key_tl \l__tenkz_kernel_eq_ringpad_stored_tl
+              { \dim_set:Nn #2 { \l__tenkz_kernel_eq_ringpad_stored_tl } }
+              { \__tenkz_kernel_r_ring_corner_own_width:nN {#1}#2 }
+          }
           { \__tenkz_kernel_r_ring_corner_own_width:nN {#1}#2 }
       }
-      { \__tenkz_kernel_r_ring_corner_own_width:nN {#1}#2 }
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_atom_glyph_geometry_append:nN #1#2
   {
@@ -2138,8 +2137,14 @@
 % axis; wires= spans rows)
 \cs_new_protected:Npn \__tenkz_kernel_r_atom_glyph:n #1
   {
+    % A spilled name is inked separately at its station.  Build the live
+    % silhouette under the same content-free ring rule as its floor probe,
+    % then release the flag before any later atom work.
+    \bool_set:Nn \l__tenkz_kernel_extent_floor_probe_bool
+      { \prop_if_in_p:Nn \l__tenkz_kernel_hull_live_prop {#1/spill} }
     \exp_args:NnV \__tenkz_kernel_r_atom_glyph_style:nnN
       {#1} \l__tenkz_kernel_r_tl \l__tenkz_kernel_r_c_tl
+    \bool_set_false:N \l__tenkz_kernel_extent_floor_probe_bool
     \tl_put_right:Nn \l__tenkz_kernel_r_c_tl { , alias = #1 }
     \__tenkz_model_get:nnN {#1} {species}
       \l__tenkz_kernel_r_species_tl
@@ -2165,34 +2170,41 @@
       {
         \prop_get:NnN \l__tenkz_kernel_hull_live_prop {#1/box}
           \l__tenkz_kernel_hull_box_tl
-        \bool_lazy_or:nnTF
-          {
-            \prop_if_in_p:Nn
-              \l__tenkz_kernel_skin_pairing_host_prop {#1}
-          }
-          { \bool_if_p:N \l__tenkz_kernel_r_basis_plane_bool }
+        \prop_if_in:NnTF \l__tenkz_kernel_hull_live_prop {#1/spill}
           {
             \__tenkz_render_atom_labelled:nen {#1}
-              { \l__tenkz_kernel_r_c_tl }
+              { \l__tenkz_kernel_r_c_tl } { }
+          }
+          {
+            \bool_lazy_or:nnTF
               {
-                \phantom
+                \prop_if_in_p:Nn
+                  \l__tenkz_kernel_skin_pairing_host_prop {#1}
+              }
+              { \bool_if_p:N \l__tenkz_kernel_r_basis_plane_bool }
+              {
+                \__tenkz_render_atom_labelled:nen {#1}
+                  { \l__tenkz_kernel_r_c_tl }
+                  {
+                    \phantom
+                      {
+                        \__tenkz_kernel_r_upright:n
+                          {
+                            \exp_args:Nc \tex_copy:D
+                              { \tl_use:N \l__tenkz_kernel_hull_box_tl }
+                          }
+                      }
+                  }
+              }
+              {
+                \__tenkz_render_atom_labelled:nen {#1}
+                  { \l__tenkz_kernel_r_c_tl }
                   {
                     \__tenkz_kernel_r_upright:n
                       {
                         \exp_args:Nc \tex_copy:D
                           { \tl_use:N \l__tenkz_kernel_hull_box_tl }
                       }
-                  }
-              }
-          }
-          {
-            \__tenkz_render_atom_labelled:nen {#1}
-              { \l__tenkz_kernel_r_c_tl }
-              {
-                \__tenkz_kernel_r_upright:n
-                  {
-                    \exp_args:Nc \tex_copy:D
-                      { \tl_use:N \l__tenkz_kernel_hull_box_tl }
                   }
               }
           }
@@ -2223,11 +2235,12 @@
       { \prop_put:Nnn \l__tenkz_kernel_glyph_owner_prop {#1} {0} }
     \__tenkz_kernel_r_skin_wires:n {#1}
     \__tenkz_kernel_r_skin_over_wires:n {#1}
-    \bool_lazy_or:nnT
+    \bool_lazy_any:nT
       {
-        \prop_if_in_p:Nn \l__tenkz_kernel_skin_pairing_host_prop {#1}
+        { \prop_if_in_p:Nn \l__tenkz_kernel_hull_live_prop {#1/spill} }
+        { \prop_if_in_p:Nn \l__tenkz_kernel_skin_pairing_host_prop {#1} }
+        { \bool_if_p:N \l__tenkz_kernel_r_basis_plane_bool }
       }
-      { \bool_if_p:N \l__tenkz_kernel_r_basis_plane_bool }
       { \__tenkz_kernel_r_skin_label:n {#1} }
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_skin_label:n #1
@@ -2236,7 +2249,7 @@
       {
         \prop_get:NnN \l__tenkz_kernel_glyph_owner_prop {#1}
           \l__tenkz_kernel_r_tl
-        \tl_set:Nn \l__tenkz_kernel_r_atom_style_tl
+        \tl_set:Ne \l__tenkz_kernel_r_atom_style_tl
           {
             tenkz~audited~label ,
             tenkz~audited~label~owner = \l__tenkz_kernel_r_tl ,
@@ -2251,14 +2264,50 @@
           }
         \prop_get:NnN \l__tenkz_kernel_hull_live_prop {#1/box}
           \l__tenkz_kernel_hull_box_tl
-        \exp_args:NV \__tenkz_render_labelnode:nnn
-          \l__tenkz_kernel_r_atom_style_tl
-          { (#1.center) }
+        \prop_if_in:NnTF \l__tenkz_kernel_hull_live_prop {#1/spill}
+          { \__tenkz_kernel_r_skin_label_station:n {#1} }
           {
-            \exp_args:Nc \tex_copy:D
-              { \tl_use:N \l__tenkz_kernel_hull_box_tl }
+            \exp_args:NV \__tenkz_render_labelnode:nnn
+              \l__tenkz_kernel_r_atom_style_tl
+              { (#1.center) }
+              {
+                \exp_args:Nc \tex_copy:D
+                  { \tl_use:N \l__tenkz_kernel_hull_box_tl }
+              }
           }
       }
+  }
+\cs_new_protected:Npn \__tenkz_kernel_r_skin_label_station:n #1
+  {
+    \__tenkz_kernel_r_label_side_claim:nN {#1}
+      \l__tenkz_kernel_r_c_tl
+    \tl_set:Ne \l__tenkz_kernel_r_c_tl
+      { \__tenkz_kernel_r_compass:n { \tl_use:N \l__tenkz_kernel_r_c_tl } }
+    \exp_args:NnV \__tenkz_kernel_r_page_face:nnN {#1}
+      \l__tenkz_kernel_r_c_tl
+      \l__tenkz_kernel_r_tl
+    \exp_args:NnV \__tenkz_kernel_r_glyph_anchor_or_site_xy:nnNN {#1}
+      \l__tenkz_kernel_r_c_tl
+      \l__tenkz_kernel_r_x_fp \l__tenkz_kernel_r_y_fp
+    \tl_put_right:Ne \l__tenkz_kernel_r_atom_style_tl
+      {
+        , anchor = \exp_args:NV \__tenkz_render_label_anchor:n
+            \l__tenkz_kernel_r_tl
+        , inner~sep = \__tenkz_dim:n {labelclear}
+      }
+    \exp_args:NV \__tenkz_render_labelnode:nnn
+      \l__tenkz_kernel_r_atom_style_tl
+      {
+        (
+          \__tenkz_kernel_r_pt:n { \l__tenkz_kernel_r_x_fp } ,
+          \__tenkz_kernel_r_pt:n { \l__tenkz_kernel_r_y_fp }
+        )
+      }
+      {
+        \exp_args:Nc \tex_copy:D
+          { \tl_use:N \l__tenkz_kernel_hull_box_tl }
+      }
+    \use:c {tenkz@labelrelease}
   }
 \tl_new:N \l__tenkz_kernel_r_ink_turn_tl
 \dim_new:N \l__tenkz_kernel_r_affine_page_padding_dim

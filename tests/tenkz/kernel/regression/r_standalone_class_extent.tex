@@ -1,0 +1,13 @@
+% Regression: outside an equation the class reference, not the atom's name,
+% fixes a glyph's extent.  The short name remains inscribed; the long name
+% moves to the ordinary automatic station without enlarging its box.
+\documentclass{standalone}
+\usepackage{tenkz}
+\begin{document}
+\tenkzkernel
+\begin{tenkz}[rows={wire}, cols=3, bonds=none, physical=none]
+  \tn[skin=box, name=short]{X} &
+  \tn[skin=box, name=auto]{\mathcal R_{j,a}} &
+  \tn[skin=box, name=explicit, label pos=n]{\mathcal R_{j,a}}
+\end{tenkz}
+\end{document}
