@@ -1,0 +1,41 @@
+% Regression: a string that declares a crossing keeps its declared species
+% hue (LionSR/tenkz#2).
+%
+% The report: `run' declares species=gauge (hue=source:blue) and a crossing
+% against `cutter', and drew black -- the declared hue lost.  The suspected
+% mechanism was that a declared species' derived styles are local to the
+% declaring group while the crossing surgery's deferred redraw strokes
+% outside it, so the style lookup missed and the ink fell back to plain.
+% Prelude species were said to survive because their hues resolve through the
+% kernel's own resolver instead.
+%
+% It no longer reproduces.  Nothing pinned it, though, and the event stream
+% cannot: the stream records `species=gauge' on the wire whether the ink came
+% out blue or black, so only pixels witness this.  Both directions are below,
+% and the pair is in the kernel pixel baseline.
+%
+% k1 is the report's own reproduction, which must ink blue.
+% k2 is the same picture with the species dropped, which must ink black --
+% without it a fixture that stopped inking blue everywhere would still pass.
+\documentclass{standalone}
+\usepackage{tenkz}
+\begin{document}
+\tenkzkernel
+\tndeclare{species}{gauge}{hue=source:blue}
+\begin{tenkz}[rows={wire,wire,wire}, cols=4, bonds=none]
+  \tn[at=(1,2), name=v, skin=box]{V}
+  \tn[at=(3,1), skin=none, name=p]{}
+  \tn[at=(3,4), name=b, skin=box]{B}
+  \tnwire[kind=string, name=cutter]{v.270}{open s}
+  \tnwire[kind=string, species=gauge, name=run,
+    cross={over at crossing of run and cutter}]{p}{b.180}
+\end{tenkz}
+\begin{tenkz}[rows={wire,wire,wire}, cols=4, bonds=none]
+  \tn[at=(1,2), name=v, skin=box]{V}
+  \tn[at=(3,1), skin=none, name=p]{}
+  \tn[at=(3,4), name=b, skin=box]{B}
+  \tnwire[kind=string, name=cutter]{v.270}{open s}
+  \tnwire[kind=string, name=run,
+    cross={over at crossing of run and cutter}]{p}{b.180}
+\end{tenkz}
+\end{document}
