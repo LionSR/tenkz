@@ -195,7 +195,10 @@ hole, its boundary entries — stands unchanged.
 straight segments rather than bent into one smooth curve through them. It
 says the same thing about a `closed` string, whose stations then close into
 a squared cycle rather than a smooth one -- the shape an author reaches for
-when the figure is a ring drawn as a square. `route=arc` bows a waypointless
+when the figure is a ring drawn as a square. A `wind=` string is the one
+exception: its curve is the string engine's torus projection of a homotopy
+class rather than a route through stations, so there are no turns to square
+and `route=orth` does not reach it. `route=arc` bows a waypointless
 string along its ends' faces; a string with waypoints already states its
 curve through them.
 
