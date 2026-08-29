@@ -814,15 +814,15 @@ note = "one plane basis now carries both rails, the diagonal transversal, the re
 
 [[verdict]]
 id = "rmp-iii-b-braid-one"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
 case_sha256 = "34f5ab9ab28d2d6879b20d883fd399feba8d7e94a2a6f8d2fe7b60a9585fb034"
-second_viewer = "braid-plane-remodel-second-pass-2026-08-06-400dpi"
-reviewed = "2026-08-06"
-renderer = "braid-plane-remodel-2026-08-06-200dpi"
-note = "the plane frame now carries the patch the source draws: the author paints all four lattice lines inside one xz plane and hangs one out-of-plane stub on each site, so every inter-site index is virtual and the four site legs end in air; the winding strings keep j, b, i, a at their stations and still do not cross each other; b's bead now sits where it laps the lattice line running north out of j, not on j's site leg; the source lattice extends its legs further than the stub reach and paints the anyons larger than the beads"
+second_viewer = "maintainer-k2-countersign-2026-08-29"
+reviewed = "2026-08-29"
+renderer = "opus-k2-plate-review-2026-08-29-110dpi"
+note = "Promoted to faithful 2026-08-29 on maintainer countersign of the 110dpi comparison plate (p.71). The first viewer flagged that tenkz floats the i and j labels in open space where the source pins each to its bead, and asked for that to be looked at hardest; the maintainer read the panel as correct. Eight beads a side, two red strands that neither cross, and all four labels present.  Prior note: the plane frame now carries the patch the source draws: the author paints all four lattice lines inside one xz plane and hangs one out-of-plane stub on each site, so every inter-site index is virtual and the four site legs end in air; the winding strings keep j, b, i, a at their stations and still do not cross each other; b's bead now sits where it laps the lattice line running north out of j, not on j's site leg; the source lattice extends its legs further than the stub reach and paints the anyons larger than the beads"
 
 [[verdict]]
 id = "rmp-iii-b-braid-two"
