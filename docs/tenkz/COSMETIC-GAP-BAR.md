@@ -31,7 +31,13 @@ This distinction controls the verdict:
   genuinely exceptional.
 - **K4 — small omission:** a finite source item such as a label, arrow, tensor,
   leg, or projection mark is absent or extra. Fix and re-review the individual
-  case.
+  case. *Extra* means an extra **source** item — one the reader would take for
+  part of the author's figure. A mark that names something the case itself
+  declares, such as a label carrying a declared species' own name, is house
+  annotation rather than a source item, and does not make the case K4: it adds
+  a name without removing one, which is the preamble's test. `rmp-workbench-iii-g-injective-pull`
+  is the standing example — it labels `g` where the source leaves the reader to
+  know it, and stays `faithful`.
 - **X — not cosmetic:** the ledger itself contradicts the cosmetic status by
   recording a topological, boundary, contraction, ordering, or crossing
   defect. Move the case to the appropriate ordinary RMP verdict before any
@@ -86,7 +92,7 @@ hash-pinned visual check required before changing a verdict.
 | `rmp-iii-a-spt-intertwiner` | — | X resolved 2026-08-05 (wave 7): the source factor order gh X (g/h)(g/h) = gh gh X (g/h) is restored on the kernel and the mirrored spelling is retired; promoted to `faithful` with the gh row quantization noted as house placement. |
 | `rmp-iii-a-g-injective-projector` | — | Promoted to `faithful` 2026-08-29 on maintainer countersign (p.59): four L_g insertions, four ring tensors, one marked corner, and matching arrow directions on both sides; the rounded-rectangle L_g glyph against the source's circle is house style. The follow-up this row recorded — the red ring routing as a spline where the author draws a rounded-corner square — is closed: `route=orth` reaches a closed string since #249, and the ring now draws the square. |
 | `rmp-iii-a-mpo-action` | — | Resolved 2026-08-05: the kernel redraw restores the source's diagonal virtual pair on both panels; promoted to `faithful`. |
-| `rmp-iii-a-mpo-injective` | K2 | Repaired 2026-08-29 on maintainer review (p.61), which asked why an isolated A stood in the middle of the ring: it carried `ports={45:physical}` and nothing else, so the four virtual legs it holds on the left had no counterpart on the right and the tensor bonded to nothing — a K4 omission the row's "ring topology is preserved" hid. The ring is now pulled around it as the target's formula says. Deleting the tensor instead is not available: the `tenkzeq` boundary guard rejects five open ends against four, and the author panel, which draws no central tensor, is schematic in exactly that way. Residue: the ring strokes house-black against the source's red and the MPO boxes are upright against its hatched parallelograms. Promote on a second-viewer countersign of the repaired render. |
+| `rmp-iii-a-mpo-injective` | — | Promoted to `faithful` 2026-08-29. The isolated A was bonded to its ring earlier the same day (#250); the ring now strokes the source's red, which answers the house-style question this row carried. The case declared no species at all and stroked house-black, alone in its family: `mpo`, `op`, `operator` and `projector` all declare `hue=source:red`, 38 of the corpus's 56 declarations. What remains is the MPO glyph, an upright box against the source's hatched parallelogram, which the preamble names cosmetic. |
 | `rmp-iii-a-torus-one` | — | Promoted to `faithful` 2026-08-04; wave-7 kernel migration reconfirmed 2026-08-05: the contract's own traced-lattice spelling carries both homotopy classes as wound strings crossing once at the outlined i, the canonical projection of the source's embedded donut. |
 | `rmp-iii-a-torus-two` | — | Kernel respell 2026-08-05: the periodic word is one closed operator string returning below the row; square return corners and the outlined marked box are house forms for the source's rounded loop and filled blue tensor. |
 | `rmp-iii-a-torus-three` | — | Promoted to `faithful` 2026-08-25 with the waypoint-thinning re-review: outline versus solid fill on the enlarged crossing is house style, and the current-hash render carries an independent countersign. |

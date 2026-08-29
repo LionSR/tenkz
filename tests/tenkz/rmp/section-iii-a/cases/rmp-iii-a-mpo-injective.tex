@@ -7,6 +7,9 @@
 % Capabilities: kernel, ring-closure, pulling-through
 \[
   \tenkzkernel
+  % The ring is the MPO, and the source strokes it red; the family's other
+  % cases declare the same source hue.
+  \tndeclare{species}{mpo}{hue=source:red}
   \begin{tenkzeq}
     \begin{tenkz}[rows={wire,wire,wire}, cols=3, bonds=none]
       % The physical leg takes its own bearing and stays source-short; the
@@ -35,10 +38,10 @@
         ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
       \tn[skin=mpo, at=(3,2), name=S,
         ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
-      \tnwire[route=arc]{W.90}{N.180}
-      \tnwire[route=arc]{N.0}{E.90}
-      \tnwire[route=arc]{E.270}{S.0}
-      \tnwire[route=arc]{S.180}{W.270}
+      \tnwire[route=arc, species=mpo]{W.90}{N.180}
+      \tnwire[route=arc, species=mpo]{N.0}{E.90}
+      \tnwire[route=arc, species=mpo]{E.270}{S.0}
+      \tnwire[route=arc, species=mpo]{S.180}{W.270}
       \tnwire{A.180}{W.0} \tnwire{A.90}{N.270}
       \tnwire{A.0}{E.180} \tnwire{A.270}{S.90}
       \tnwire{open w}{W.180} \tnwire{E.0}{open e}
