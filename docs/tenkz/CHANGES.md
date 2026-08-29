@@ -254,6 +254,12 @@ compatibility rules are declared in `TNLOG.md`.
 - The stock `mpo` and `pill` skins are prelude declarations rather than object
   flags.
 - The alias count is zero and no public name carries two value types.
+- `route=orth` squares a `closed` string's turns as well as an open one's, so
+  a ring an author draws as a square is a square. The kernel consulted the key
+  only on the open branch before, and a closed route drew the smooth cycle
+  whatever was asked for. The same change routes every orth path through the
+  string engine, so an orth route states its `string` record like any other
+  declared curve; it previously drew without speaking.
 
 ## The version string
 

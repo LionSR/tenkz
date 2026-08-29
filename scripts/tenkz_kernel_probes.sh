@@ -1985,7 +1985,8 @@ for pixel_fixture in \
     r_trace_row_closure r_trace_over_deferred_leg r_wire_stroke \
     r_noncell_port_slot r_noncell_port_slot_cell \
     r_wide_policy_legs r_wide_policy_ports \
-    r_route_noncell_slots r_route_noncell_slots_cell; do
+    r_route_noncell_slots r_route_noncell_slots_cell \
+    r_closed_orth_ring; do
   if ! pdftoppm -singlefile -png -r 300 \
       "$WORK/$pixel_fixture.pdf" "$WORK/$pixel_fixture" >/dev/null 2>&1; then
     echo "FAIL: $pixel_fixture fixture could not be rasterized" >&2
@@ -2056,7 +2057,7 @@ for path in sys.argv[1:]:
   "$WORK/r_ring_corner_pad_clear.png" "$WORK/r_ring_corner_pad_skin.png" \
   "$WORK/r_trace_return_rows.png" "$WORK/r_trace_row_closure.png" \
   "$WORK/r_trace_over_deferred_leg.png" \
-  "$WORK/r_wire_stroke.png" \
+  "$WORK/r_wire_stroke.png" "$WORK/r_closed_orth_ring.png" \
   >"$PIXEL_CURRENT"
 
 negative="$KERNEL/negative/n_diagonal_port.tex"
@@ -3552,6 +3553,23 @@ for pair in s1 s2 s3 s4 s5 s6 s7 s8 s9 s10 s11; do
 done
 [ "$fail" -eq 0 ] &&
   echo "PASS: 11 sugar spellings byte-identical to their expansions in events and pixels"
+
+# route=orth on a closed string squares the cycle's turns instead of drawing
+# the smooth Hobby cycle, and every orth route states its `string' record.
+# Both were silent before the K2 review of 2026-08-29: the closed branch never
+# read route=, and the kernel built the orth path by hand without registering
+# it with the string engine, so an orth curve was drawn and never recorded.
+awk '
+  /^string[|]id=square[|]kind=closed[|]pts=8$/ { square = 1 }
+  /^string[|]id=step[|]kind=open[|]pts=3$/     { step = 1 }
+  END { exit !(square && step) }
+' "$WORK/r_closed_orth_ring.tnlog" || {
+  echo "FAIL: an orth route did not state its string record" >&2
+  exit 1
+}
+# The squared cycle and the smooth one state the same record -- kind=closed
+# with the same point count -- so the shape itself is pinned in the pixel
+# baseline below, not here.
 
 CURRENT="$WORK/current.sha256"
 ( cd "$WORK"
