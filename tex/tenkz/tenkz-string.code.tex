@@ -1446,11 +1446,7 @@
 % Markings positions are arclength fractions.  Keep this helper outside expl3
 % so TikZ key punctuation is parsed with document catcodes.
 \def\tenkz@string@beadpath#1#2#3{%
-  \path[
-    spath/use=#1,
-    decoration={markings,mark=at position #2 with {\coordinate (#3);}},
-    decorate
-  ];%
+  \tenkz@string@beadframe{#1}{#2}{#3}%
 }
 
 % The marking frame's first matrix column is the rendered path tangent at the
