@@ -47,11 +47,11 @@ status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
-case_sha256 = "71ab001a3b8d2bfeb7a8f9aa02fdcc8002d048a6627faf0d1517a94917ad6517"
-reviewed = "2026-08-05"
-renderer = "fable-w5-vision-2026-08-05-200dpi"
-second_viewer = "fable-w5-second-pass-2026-08-05-400dpi"
-note = "K2 promotion 2026-08-30 from the unchanged case hash and its existing 2026-08-05 200/400dpi two-viewer review: the doubled sheet keeps every open transverse ket-bra leg and closes the traced fourth column site by site, matching the author panel index for index. The contract bilayer's compact east wraps in place of the source's longer separated-sheet connectors are equivalent house layout under the cosmetic-gap bar. Under #5582 the four closures are recorded physical by the transverse pairing rule; the case bytes and boundary signature stayed unchanged."
+case_sha256 = "5749fa4a14543652736b50fd2697c4f5b02024340160ef3bbceca8425270213b"
+reviewed = "2026-08-30"
+renderer = "codex-peps-marginal-repair-review-2026-08-30-200-400dpi"
+second_viewer = "codex-independent-peps-marginal-repair-countersign-2026-08-30-200-400dpi"
+note = "Boundary repair and K2 promotion 2026-08-30 on a fresh exact-hash 200/400dpi two-viewer review: explicit north/south state-sheet openings restore all sixteen virtual perimeter ends alongside its sixteen physical legs; the doubled sheet keeps all thirty-two virtual ends, twenty-four open transverse ket-bra legs, and four separately traceable sitewise closures. The contract bilayer's compact east wraps and overlapping affine sheets in place of the source's taller separated-sheet connectors are legible equivalent house layout under the cosmetic-gap bar, with no topology, boundary, multiplicity, clipping, or crossing loss."
 
 [[verdict]]
 id = "rmp-ii-mpo-sheet"

@@ -50,16 +50,18 @@ the mathematical contract is intact, its verdict and note should become
 
 ## Current classification
 
-This table classifies the 98 `cosmetic-gap` verdicts at merge
-`c3b4667c10faa7cadaf4a18fdbab3bc72b85fa18`. The reason column records the
-disposition of the current verdict note; it is not a substitute for the
-hash-pinned visual check required before changing a verdict.
+This table began with the 98 `cosmetic-gap` verdicts at merge
+`c3b4667c10faa7cadaf4a18fdbab3bc72b85fa18` and now also includes the three
+class-fixed-extent rows first classified on 2026-08-29.  Resolved rows remain
+as disposition history.  The reason column records the verdict note's
+disposition; it is not a substitute for the hash-pinned visual check required
+before changing a verdict.
 
 | Target | Kind | Reason / next action |
 |---|---:|---|
 | `rmp-ii-peps-projection` | — | Promoted to `faithful` 2026-08-04, reconfirmed on the kernel 2026-08-05 (wave 5, Fable-verified): the plane respell preserves the drawn model; A takes the east station and |phi) becomes a port label, both clearer than the 0.7 placements. |
 | `rmp-ii-mps-marginal` | — | Promoted to `faithful` 2026-08-05: the kernel migration replaced the heavy racetrack with minimal straight trace closures, and the state row regained its upward legs and open chain stubs; verified against the author panel at 200/400dpi. |
-| `rmp-ii-peps-marginal` | — | Promoted to `faithful` 2026-08-30 from its unchanged hash and existing 2026-08-05 200/400dpi two-viewer review: every open transverse ket-bra leg and sitewise trace closure matches; compact east wraps are equivalent house layout for the source's longer separated-sheet connectors. |
+| `rmp-ii-peps-marginal` | — | Repaired and promoted to `faithful` 2026-08-30 on a fresh exact-hash 200/400dpi two-viewer review: explicit north/south openings restore the state sheet's full virtual boundary; the doubled sheet keeps every open ket-bra leg and sitewise closure, while compact east wraps and overlapping affine sheets are equivalent house layout. |
 | `rmp-ii-mpu-brickwork` | — | Promoted to `faithful` 2026-08-04: twelve legs, alternating layers, and labels match; labelled boxes for dotted gate pairs are the inherent circuit presentation. |
 | `rmp-ii-mpu-blocking` | K1 | New 2026-08-05 with the kernel migration: the model records hull-routed side closures for the a/b beads, but the renderer does not yet ink a hull route on an endpoint index wire, so each closure draws along its column axis over the U-Ubar bond. Ink the contracted face-departure arc (LANGUAGE-1.0 s5) in the shared renderer, then re-review; the grid-tier predecessor's side-cup policy inked this correctly. |
 | `rmp-ii-mpu-two-shift` | K1 | Resolved 2026-08-04: the case now carries the workbench-twin skin-pairings model with the published palette; the row channels keep house ink where the panel colours the movers. |
