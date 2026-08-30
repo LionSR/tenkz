@@ -1038,17 +1038,25 @@ def verify_author_source_tree(
 
 
 def pairing_digest(targets: Sequence[Target]) -> str:
-    """Bind pairing judgments to source identities and extraction boundaries."""
+    """Bind pairing judgments to author extraction and paper placement identity."""
     digest = hashlib.sha256()
     digest.update(sha256(AUTHOR_SOURCE_HASHES).encode("ascii"))
     digest.update(b"\n")
     for target in sorted(targets, key=lambda item: item.id):
+        placement_fields = tuple(
+            f"{item['order']}:{item['line']}:{item['asset']}"
+            for item in sorted(
+                target.placements,
+                key=lambda item: (item["order"], item["line"], item["asset"]),
+            )
+        )
         fields = (
             target.id,
             target.author_source.as_posix() if target.author_source else "",
             target.author_lines or "",
             target.extraction_override or "",
             "context-only" if target.paper_context_only else "paired",
+            *placement_fields,
         )
         digest.update("\0".join(fields).encode("utf-8"))
         digest.update(b"\n")
@@ -1231,8 +1239,8 @@ def load_verdicts(targets: Sequence[Target]) -> dict[str, TargetVerdict]:
     current_pairing = pairing_digest(targets)
     if recorded_pairing != current_pairing:
         fail(
-            "stale pairing verdicts; author-source identities or extraction "
-            "boundaries changed since review "
+            "stale pairing verdicts; author-source identities, extraction "
+            "boundaries, or paper placements changed since review "
             f"(recorded {recorded_pairing[:12]}, current {current_pairing[:12]})"
         )
     recorded_campaign = raw.get("campaign_sha256")

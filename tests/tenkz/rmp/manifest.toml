@@ -441,51 +441,51 @@ author_lines = "208-236"
 placements = [{ order = 27, line = 667, asset = "fig2_fig2-pepe_PTA.pdf" }]
 
 [[target]]
-id = "rmp-ii-boundary-lasso"
-corpus = "published"
-section = "section-ii"
-order = 28
-case = "tests/tenkz/rmp/section-ii/cases/rmp-ii-boundary-lasso.tex"
-formula = "A^I = U^A_I sigma^A and B^Ibar = sigma^B U^B_Ibar."
-ink = "Kernel flat frame; the singular-value decompositions carry the source palette as declared species (the bar's X row on this target)."
-boundary = "The A lasso seals its west side; the B lasso seals its east side; physical legs stay open."
-source = "paper TN-Review-main.tex line 804; author source ImagesReview Section II/ImagesReview Section II.tex lines 618-649"
-capabilities = ["kernel", "typed-ports"]
-paper_context_only = false
-author_source = "ImagesReview Section II/ImagesReview Section II.tex"
-author_lines = "618-649"
-placements = [{ order = 28, line = 804, asset = "fig2_fig2-pepe_Figboundary-theorya-1.pdf" }]
-
-[[target]]
 id = "rmp-ii-boundary-region"
 corpus = "published"
 section = "section-ii"
-order = 29
+order = 28
 case = "tests/tenkz/rmp/section-ii/cases/rmp-ii-boundary-region.tex"
 formula = "|psi> = sum_{I,Ibar} A^I_{partial R} B^Ibar_{partial R}."
 ink = "Kernel plane frame; the R contour is the house enclosure over the declared charge species, with the published Rbar complement label, and the reduced pair splits its rail red-then-black at partial R."
 boundary = "The sheet exterior is open; the reduced pair seals outer virtual sides at partial R."
-source = "paper TN-Review-main.tex line 806; author source ImagesReview Section II/ImagesReview Section II.tex lines 597-617"
+source = "paper TN-Review-main.tex line 804; author source ImagesReview Section II/ImagesReview Section II.tex lines 597-617"
 capabilities = ["kernel", "plane-frame", "regions", "typed-ports"]
 paper_context_only = false
 author_source = "ImagesReview Section II/ImagesReview Section II.tex"
 author_lines = "597-617"
-placements = [{ order = 29, line = 806, asset = "fig2_fig2-pepe_Figboundary-theoryc.pdf" }]
+placements = [{ order = 28, line = 804, asset = "fig2_fig2-pepe_Figboundary-theorya-1.pdf" }]
 
 [[target]]
 id = "rmp-ii-boundary-state"
 corpus = "published"
 section = "section-ii"
-order = 30
+order = 29
 case = "tests/tenkz/rmp/section-ii/cases/rmp-ii-boundary-state.tex"
 formula = "rho_R factorizes through the A and B boundary lassos and sigma_partial R."
 ink = "Kernel flat frame."
 boundary = "The east cup closes the virtual pair, the west side is sealed, and physical legs stay open."
-source = "paper TN-Review-main.tex line 807; author source ImagesReview Section II/ImagesReview Section II.tex lines 650-684"
+source = "paper TN-Review-main.tex line 806; author source ImagesReview Section II/ImagesReview Section II.tex lines 650-684"
 capabilities = ["kernel", "typed-ports"]
 paper_context_only = false
 author_source = "ImagesReview Section II/ImagesReview Section II.tex"
 author_lines = "650-684"
+placements = [{ order = 29, line = 806, asset = "fig2_fig2-pepe_Figboundary-theoryc.pdf" }]
+
+[[target]]
+id = "rmp-ii-boundary-lasso"
+corpus = "published"
+section = "section-ii"
+order = 30
+case = "tests/tenkz/rmp/section-ii/cases/rmp-ii-boundary-lasso.tex"
+formula = "A^I = U^A_I sigma^A and B^Ibar = sigma^B U^B_Ibar."
+ink = "Kernel flat frame; the singular-value decompositions carry the source palette as declared species (the bar's X row on this target)."
+boundary = "The A lasso seals its west side; the B lasso seals its east side; physical legs stay open."
+source = "paper TN-Review-main.tex line 807; author source ImagesReview Section II/ImagesReview Section II.tex lines 618-649"
+capabilities = ["kernel", "typed-ports"]
+paper_context_only = false
+author_source = "ImagesReview Section II/ImagesReview Section II.tex"
+author_lines = "618-649"
 placements = [{ order = 30, line = 807, asset = "fig2_fig2-pepe_Figboundary-theoryb-1.pdf" }]
 
 [[target]]
