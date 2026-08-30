@@ -2,7 +2,7 @@
 # Schema: scripts/tenkz_rmp.py (load_verdicts).  Any status may be
 # recorded, including failure; the check rejects lies, never gaps.
 schema_version = 1
-pairing_sha256 = "8080d498397036533fa13015da164e74f9b86e7bf66b2f6e33f7a4719a59c317"
+pairing_sha256 = "9b209e7a9d03b4c2e96a3b82ab71faed08815d3dea58bbc59aa97804a3d2836e"
 campaign_sha256 = "f5b0f38b8381e5166f10595be62a70fd63c896a50acfd695f484358b339fc98c"
 
 [[verdict]]
@@ -326,9 +326,9 @@ note = "S4 swap migration: the four canonical windows respell as kernel op-op fr
 id = "rmp-ii-boundary-lasso"
 status = "faithful"
 pairing = "verified"
-pairing_by = "pairing-sweep-two-viewers-2026-07-23"
+pairing_by = "codex-boundary-paper-placement-two-viewers-2026-08-31"
 defects = []
-case_sha256 = "e065827aad149dac8e8217758dc0d1af2d1437f62ac98d924d246bb7da3ed45a"
+case_sha256 = "2312268c61392fd91c512c4e643397f2d5eb3341043c54942527468351742531"
 reviewed = "2026-08-30"
 renderer = "codex-boundary-host-hue-review-2026-08-30-200-400dpi"
 second_viewer = "codex-independent-boundary-host-hue-countersign-2026-08-30-200-400dpi"
@@ -338,9 +338,9 @@ note = "PR #245 resolved the sole K1 residue: generated physical stubs now inher
 id = "rmp-ii-boundary-region"
 status = "faithful"
 pairing = "verified"
-pairing_by = "pairing-sweep-two-viewers-2026-07-23"
+pairing_by = "codex-boundary-paper-placement-two-viewers-2026-08-31"
 defects = []
-case_sha256 = "0fa681677a4ecb329da7ea8ee3c44fdc2cca0c5e4a22bc6a7bff4ab1f5384941"
+case_sha256 = "ac78262a86758e2e2658165afe781121dd46a146f363ca0ad31eb749d87b2a61"
 reviewed = "2026-08-31"
 renderer = "codex-enclosure-tint-review-2026-08-31-200-400dpi"
 second_viewer = "codex-independent-enclosure-tint-countersign-2026-08-31-200-400dpi"
@@ -350,9 +350,9 @@ note = "The existing public enclosure tint restores the source's translucent red
 id = "rmp-ii-boundary-state"
 status = "faithful"
 pairing = "verified"
-pairing_by = "pairing-sweep-two-viewers-2026-07-23"
+pairing_by = "codex-boundary-paper-placement-two-viewers-2026-08-31"
 defects = []
-case_sha256 = "f8428a928de9eea853969d288aa2ebb3b52f85e7fc1de4dfc7557a3f3730b703"
+case_sha256 = "c856fc11a286a318662e809e338516647cc32951719499d8cc442915c16bd083"
 reviewed = "2026-08-29"
 renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
 second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"

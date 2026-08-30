@@ -5059,3 +5059,19 @@ M1, M2, M3, M4, M5, and M6 are unchanged.  The verdict census moves from
 113 faithful / 13 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+### 2026-08-31 — bind boundary panels to their paper placements
+
+The three boundary targets already pointed to the correct author-source blocks,
+but their paper placement records formed a three-cycle: region, boundary state,
+and lasso each owned a neighboring panel's paper line and PDF asset.  The
+manifest and mirrored source comments now follow the paper's actual `(a)`,
+`(c)`, `(b)` include order, while every executable case body remains unchanged.
+
+`pairing_sha256` now binds each target to its canonical paper placement triples
+as well as its author extraction.  This removes the aggregate-only validation
+gap that allowed a target-level cycle to preserve the global asset list.  No
+parser, kernel, rendered ink, verdict status, census, or shrink meter changes;
+M1, M2, M3, M4, M5, and M6 are unchanged.
+
+Provenance-correction: #13

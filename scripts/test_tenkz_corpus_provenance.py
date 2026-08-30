@@ -1907,6 +1907,18 @@ def test_rmp_author_source_identity() -> None:
 
 def test_rmp_pairing_identity() -> None:
     targets = load_manifest(DEFAULT_MANIFEST)
+    paired = next(target for target in targets if target.placements)
+    changed_placement = dict(paired.placements[0])
+    changed_placement["line"] += 1
+    changed_target = dataclasses.replace(
+        paired,
+        placements=(changed_placement, *paired.placements[1:]),
+    )
+    changed_targets = [
+        changed_target if target.id == paired.id else target for target in targets
+    ]
+    if tenkz_rmp.pairing_digest(targets) == tenkz_rmp.pairing_digest(changed_targets):
+        raise AssertionError("paper placement changes do not invalidate pairing identity")
     with tempfile.TemporaryDirectory(prefix="tenkz-rmp-pairing-") as tmp:
         stale = Path(tmp) / "verdicts.toml"
         text = DEFAULT_VERDICT.read_text(encoding="utf-8")
