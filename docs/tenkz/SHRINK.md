@@ -4930,3 +4930,37 @@ four `rmp-workbench-iii-eq59-now` declarations readable after adding their
 verdict and found no new semantic gap.
 
 Census-correction: #14
+
+### 2026-08-30 — correction: the waypoint sentence is withdrawn (#3)
+
+The standing verdicts
+`flag:consumers:key:kernel-wire:via dies at the S4 swap` and
+`flag:lonely-type:address-list dies with its last carrier` are withdrawn.
+They were passed on the claim that a waypoint is only a side of a selection,
+but the corpus disproved that claim. The retirement survey found 78 authored
+sites; after every compile-verified candidate was rendered, only three
+respellings survived. The remaining 75 sites included interior threading,
+piercing and self-referential rings, port-bucket arcs, and explicit bulge and
+corner control. After later corpus movement, the current tree still has 69
+live authored `via=` key uses (72 source mentions when catalogue prose and a
+comment are included), and the kernel reads those waypoints for dependency
+ordering, path construction, and label incidence and tangents.
+
+The attempted junction-chain migration does not supply contrary evidence.
+Its append-only correction above records at least twenty-one semantic or
+geometric changes among sixty conversions and restores the thirty-two paths
+it touched. An exterior convex hull is a useful alternative where the author
+means exterior clearance; it is not a single source of truth for authored
+interior geometry. The parser and registry rows remain ordinary kernel
+surface.
+
+| flag | verdict |
+|---|---|
+| flag:consumers:key:kernel-wire:via | keep-because: authored string geometry and the kernel's dependency, path, and annotation stages consume it; permanent |
+| flag:lonely-type:address-list | keep-because: it is the waypoint grammar's one value type; permanent |
+
+The separate `weight=` sentence was executed earlier and remains retired.
+No parser, kernel, fixture, generated reference, or census baseline changes
+here. M1, M2, M3, M4, M5, and M6 are unchanged; this correction aligns the
+sentence header, normative key table, and immutable verdict ledger with the
+reviewed corpus evidence.

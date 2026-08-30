@@ -1,5 +1,15 @@
 # Amendment to LANGUAGE-1.0: the remaining demand
 
+> **Status correction — 2026-08-30.** This document preserves the amendment
+> proposal and its original accounting. Its sentence against `via=` was
+> overturned by the subsequent corpus-wide compile and render survey: of the
+> 78 surveyed sites, only three respellings survived, while the retained
+> waypoint geometry has no equivalent exterior-hull spelling. Every retirement claim
+> for `via=` below is withdrawn; `address-list` remains its live value type.
+> Consequently the proposal's aggregate key and value-type savings are
+> historical estimates, not the current contract census. LANGUAGE-1.0 §2.4
+> and the latest correction in SHRINK are authoritative.
+
 Seven further amendments to the signed kernel contract, companion to the
 corridor and crossing-order note. Each is argued from the benchmark's own
 demand, each removes more of the language than it adds, and none needs a

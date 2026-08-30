@@ -176,12 +176,13 @@ no glyph and, by the `skin=none` rule it inherits, no label — unless the
 author declares a skin, while every record — the bonds bridging an open
 hole, its boundary entries — stands unchanged.
 
-### 2.4 Wire keys (10)
+### 2.4 Wire keys (11)
 
 | Key | Type | Values | Default | Diagnostic family |
 |---|---|---|---|---|
 | `kind=` | small-enum | `index` `string` | `index` | `TKZ-WIRE-*` |
 | `route=` | route-spec | `straight` `orth` `arc` `{<side> of <selector>}` | `straight` | `TKZ-ROUTE-*` |
+| `via=` | address-list | — | empty | `TKZ-LANG-ADDRESS`, `TKZ-WIND-VIA` |
 | `species=` | identifier | — | empty | `TKZ-SPECIES-*` |
 | `closed` | flag | — | false | `TKZ-WIRE-*` |
 | `wind=` | pair | cycle `{p,q}` | zero | `TKZ-WIND-*` |
@@ -228,9 +229,11 @@ picture draws but does not contract; a dotted rail carries a lattice lying
 under the sheet being drawn. The dash lengths are house metrics, so a client
 never spells a length of its own.
 
-A wire carries no waypoint list, no bend factor, and no stroke weight: a
-route names the records it must clear, an arc leaves and enters along its
-ends' faces, and the stroke follows the resolved endpoint type (§5).
+A string may carry a `via=` list to state authored stations along its curve.
+An index bond does not read waypoints. Where the intended geometry is an exterior clearance,
+`route={<side> of <selector>}` is the declarative spelling; an arc leaves and
+enters along its ends' faces, and the stroke follows the resolved endpoint
+type (§5).
 
 ### 2.5 Mark keys (5)
 
@@ -1103,7 +1106,6 @@ row is what names where the meaning went.
 | `inline`, `compact` | math-style sensing + `size=`; a page-constrained picture declares `metrics=compact` (§2.2) |
 | `sizes=` | `size=` on the picture or atom; the bundled metric table is fixed |
 | `theme=` | the house theme binds at load; source-tagged literal ink is declared by `\tndeclare{species}{<name>}{hue=source:<colour>}` |
-| `via=` | `route={<side> of <selector>}` where the waypoint cleared records (§12.3); nothing where it only bent a line past cells that hold none (§12.1), and nothing on a wound string, whose class is already its path (§5, §12.2) |
 | `bend=` | nothing: an arc leaves and enters along its ends' faces |
 | `weight=` | nothing: the port type decides the stroke, and multiplicity is mathematics carried by the index label |
 | `nudge=` (atom and mark) | a basis member `(r,c,k)`, an ordinary address, or the label station rule (§6) |
@@ -1197,13 +1199,14 @@ twenty-six there rather than here, so the one arrival is counted once.
 \end{tenkz}\]
 ```
 
-The strands carry no route, and this is where the waypoint list is seen to
-have carried two different things. Its two waypoints here named cells of a
+The strands carry no route. In the attempted waypoint retirement, their two
+waypoints named cells of a
 wire row; a wire row populates no site, so those cells hold no record, and a
 selection is a set of records whose silhouettes a hull is measured from (§3,
 §5). There was nothing to clear, and two straight strands already cross once,
-which is the braid. A waypoint that cleared records becomes the side of their
-selection (§12.3); one that only bent a line goes the way of `bend=`.
+which is the braid. These particular waypoints were unnecessary; §12.3 shows
+the distinct case where an exterior clearance is stated as the side of a
+selection.
 
 ### 12.2 Torus with wound string (`rmp-iii-a-torus-one`)
 
@@ -1215,10 +1218,9 @@ selection (§12.3); one that only bent a line goes the way of `bend=`.
 \end{tenkz}\]
 ```
 
-The wound string takes no route either, for a second reason: its class is its
+The wound string takes no route either: its class is its
 path. The rendered curve realizes `{1,0}` or the picture is refused (§5), and
-waypoint routing was already mutually exclusive with winding before the
-waypoint list retired. A route may perfectly well name the whole picture,
+waypoint routing is mutually exclusive with winding. A route may perfectly well name the whole picture,
 which is a record like any other and answers to `picture` (§3, §12.7); what
 no route can do is stand in for a class the string states itself.
 
@@ -1372,19 +1374,21 @@ confirmation at L1 acceptance:
    The default inherits the whole `skin=none` reading: a void's authored
    label is suppressed with its glyph, so a labelled anchor that must stay
    visible declares a skin.
-8. **Three sketches now compile as printed — corrected 2026-08-12.** The
-   waypoint retirement rewrote the sketches of §12.1, §12.2 and §12.3 without
+8. **Three sketches now compile as printed — corrected 2026-08-12 and
+   clarified 2026-08-30.** The attempted waypoint retirement rewrote the
+   sketches of §12.1, §12.2 and §12.3 without
    compiling the results, and all three were refused. Each is settled against
-   the tables above rather than by widening the language. §12.1's two routes
+   the tables above. §12.1's two routes
    named cells of a wire row, which holds no record for a hull to be measured
-   from, and the strands lose them; the migration hint for `via=` in §10 no
-   longer claims that every waypoint of these sketches was a side of a
-   selection, because two of them cleared nothing. §12.2's route asked the
+   from, and the strands lose them. §12.2's route asked the
    whole picture for a side, and a wound string wants no route at all; the
    whole-picture selection stands as §3 and §12.7 have it, unchanged. §12.3's
    derived crossings were left without an order, which the crossing rule
    refuses whether a crossing is derived or declared, so the second panel now
-   states the string's habit once.
+   states the string's habit once. Those three local repairs do not establish
+   a general replacement: the corpus-wide migration changed at least
+   twenty-one converted uses, so `via=` remains the string's spelling for
+   authored interior geometry and is no longer a tombstone.
 9. **`crossing=` joins the wire table — corrected 2026-08-12.** The wire keys
    read ten while the parser carried eleven: the habit key arrived with the
    route that derives a crossing set, under the extension gate the amendment
