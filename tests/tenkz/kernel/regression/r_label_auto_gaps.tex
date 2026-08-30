@@ -6,8 +6,8 @@
 % circle frames.
 % Circle bearings still choose a fallback position, but the frame-wide guard
 % withholds their claims because a nonincident chord can cross the band.  The
-% remaining blind pins distinguish the later bead-tangent and label-order
-% steps of issue #15 from this resolved-incidence step.
+% remaining blind pins distinguish unsupported circle and span-internal
+% geometry from the later label-order step of issue #15.
 \documentclass{standalone}
 \usepackage{tenkz}
 \makeatletter
@@ -22,8 +22,10 @@
   \__tenkz_kernel_r_label_route_point:nnNN
 \cs_set_protected:Npn \__tenkz_kernel_r_label_route_point:nnNN #1#2#3#4
   {
-    \str_if_eq:nnT {#1} {hz}
-      { \errmessage{generated~hull~bearing~used~a~fixed~arclength~sample} }
+    \bool_lazy_or:nnT
+      { \str_if_eq_p:nn {#1} {hz} }
+      { \str_if_eq_p:nn {#1} {RS} }
+      { \errmessage{label~bearing~used~a~fixed~arclength~sample} }
     \__tenkz_test_route_point:nnNN {#1} {#2} #3 #4
   }
 \cs_set_protected:Npn \tenkz@labelclaim #1#2
@@ -48,11 +50,6 @@
     \__tenkz_model_get:nnN {#1} {label} \l__tenkz_test_side_label_tl
     \str_case:VnF \l__tenkz_test_side_label_tl
       {
-        {T}
-          {
-            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
-              { \errmessage{routed~carrier~bead~made~an~unverified~claim} }
-          }
         {W}
           {
             \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
@@ -92,8 +89,8 @@
           }
         {T}
           {
-            \str_if_eq:VnF #2 {s}
-              { \errmessage{routed~carrier~bead~answered:~update~the~pin} }
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{routed~carrier~bead~tangent~regressed} }
           }
         {M}
           {
@@ -256,12 +253,14 @@
   \tn[at=(3,1), name=H]{}
   \tnwire[kind=string, route=orth, via={(2,1)}]{F}{H}
 \end{tenkz}
-% A bead on a string that bends through its own waypoints: which faces the
-% carrier crosses at the bead is a property of the route at that arc length.
+% A bead on a string that bends through its own waypoints reads the rendered
+% tangent at its own arclength.  This half-turn-symmetric Hobby route gives the
+% midpoint a north/south-bearing tangent, so those faces are occupied and T
+% moves east.  Its endpoint chord is horizontal and would leave T south.
 \begin{tenkz}[lattice={3x3}, bonds=none]
-  \tn[at=(1,1), name=J]{}
-  \tn[at=(1,3), name=K]{}
-  \tnwire[kind=string, name=RS, via={(3,1),(3,3)}]{J}{K}
+  \tn[at=(2,1), name=J]{}
+  \tn[at=(2,3), name=K]{}
+  \tnwire[kind=string, name=RS, via={(1,2),(2,2),(3,2)}]{J}{K}
   \tn[at=on RS 0.5, skin=dot]{T}
 \end{tenkz}
 % Two basis members of one outer cell share its row and column, but their

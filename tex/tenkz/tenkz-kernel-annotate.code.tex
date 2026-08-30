@@ -72,6 +72,7 @@
 \tl_new:N \l__tenkz_kernel_lab_host_tl
 \tl_new:N \l__tenkz_kernel_lab_face_tl
 \tl_new:N \l__tenkz_kernel_lab_via_tl
+\tl_new:N \l__tenkz_kernel_lab_route_tl
 \tl_new:N \l__tenkz_kernel_lab_node_tl
 \tl_new:N \l__tenkz_kernel_lab_t_tl
 \tl_new:N \l__tenkz_kernel_lab_owner_tl
@@ -94,6 +95,7 @@
 \bool_new:N \l__tenkz_kernel_lab_far_bool
 \bool_new:N \l__tenkz_kernel_lab_span_bool
 \bool_new:N \l__tenkz_kernel_lab_closed_bool
+\bool_new:N \l__tenkz_kernel_lab_bead_tangent_bool
 \fp_new:N \l__tenkz_kernel_lab_before_x_fp
 \fp_new:N \l__tenkz_kernel_lab_before_y_fp
 \fp_new:N \l__tenkz_kernel_lab_centre_x_fp
@@ -102,6 +104,8 @@
 \fp_new:N \l__tenkz_kernel_lab_atom_centre_y_fp
 \fp_new:N \l__tenkz_kernel_lab_next_x_fp
 \fp_new:N \l__tenkz_kernel_lab_next_y_fp
+\dim_new:N \l__tenkz_kernel_lab_tangent_x_dim
+\dim_new:N \l__tenkz_kernel_lab_tangent_y_dim
 \tl_new:N \l__tenkz_kernel_lab_local_u_tl
 \tl_new:N \l__tenkz_kernel_lab_local_v_tl
 \tl_new:N \l__tenkz_kernel_lab_path_tl
@@ -1272,6 +1276,35 @@
           }
       }
   }
+% Reserve the path-forward tangent at a bead, with the same endpoint/interior
+% incidence count as the older axis reading.  Every vector still crosses the
+% atom's carrier inverse in `r_label_mark_vector` before selecting a face.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_bead_mark_vector:nNN #1#2#3
+  {
+    \bool_set_false:N \l__tenkz_kernel_lab_segment_cell_bool
+    \fp_compare:nNnTF { \l__tenkz_kernel_lab_t_tl } = {0}
+      {
+        \__tenkz_kernel_r_label_mark_vector:nee {#1}
+          { \dim_to_fp:n {#2} / \dim_to_fp:n { \tenkz@pitch } }
+          { \dim_to_fp:n {#3} / \dim_to_fp:n { \tenkz@pitch } }
+      }
+      {
+        \fp_compare:nNnTF { \l__tenkz_kernel_lab_t_tl } = {1}
+          {
+            \__tenkz_kernel_r_label_mark_vector:nee {#1}
+              { -\dim_to_fp:n {#2} / \dim_to_fp:n { \tenkz@pitch } }
+              { -\dim_to_fp:n {#3} / \dim_to_fp:n { \tenkz@pitch } }
+          }
+          {
+            \__tenkz_kernel_r_label_mark_vector:nee {#1}
+              { \dim_to_fp:n {#2} / \dim_to_fp:n { \tenkz@pitch } }
+              { \dim_to_fp:n {#3} / \dim_to_fp:n { \tenkz@pitch } }
+            \__tenkz_kernel_r_label_mark_vector:nee {#1}
+              { -\dim_to_fp:n {#2} / \dim_to_fp:n { \tenkz@pitch } }
+              { -\dim_to_fp:n {#3} / \dim_to_fp:n { \tenkz@pitch } }
+          }
+      }
+  }
 % A generated closure has no straight model chord: its saved route is the
 % geometry that `on <wire> t` already reads.  Sample that route on the two
 % sides of the bead, without emitting another bead event, and reserve a face
@@ -1363,13 +1396,43 @@
       }
       { \__tenkz_kernel_r_label_blind:n {#2} }
   }
+% A smooth routed string exposes its exact arclength tangent through the same
+% marking traversal that placed the bead.  Orthogonal corners need both
+% one-sided tangents, and a circle cannot yet certify labels against unrelated
+% chords, so those deliberately retain conservative blindness here.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_smooth_bead:nn #1#2
+  {
+    \__tenkz_model_get:nnN {#1} {route} \l__tenkz_kernel_lab_route_tl
+    \bool_set_true:N \l__tenkz_kernel_lab_bead_tangent_bool
+    \str_if_eq:VnT \l__tenkz_kernel_lab_route_tl {orth}
+      { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
+    \prop_if_in:NeT \l__tenkz_model_record_prop { #1 / closed }
+      { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
+    \str_if_eq:eeT { \__tenkz_kernel_r_frame_word: } {circle}
+      { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
+    \bool_if:NTF \l__tenkz_kernel_lab_bead_tangent_bool
+      {
+        \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
+        \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
+          {
+            \exp_args:NVV \__tenkz_string_bead_frame:nnnNN
+              \l__tenkz_kernel_lab_owner_tl
+              \l__tenkz_kernel_lab_t_tl
+              {tenkz-label-bead-frame}
+              \l__tenkz_kernel_lab_tangent_x_dim
+              \l__tenkz_kernel_lab_tangent_y_dim
+            \__tenkz_kernel_r_label_bead_mark_vector:nNN {#2}
+              \l__tenkz_kernel_lab_tangent_x_dim
+              \l__tenkz_kernel_lab_tangent_y_dim
+          }
+          { \__tenkz_kernel_r_label_blind:n {#2} }
+      }
+      { \__tenkz_kernel_r_label_blind:n {#2} }
+  }
+
 % A policy leg grows outward from the face its host names, so it leaves a
-% bead at the host end by that face and arrives at the tip from its
-% opposite.  An index wire between two cells runs along the axis those cells
-% share.  A string bending through its own waypoints turns where the route
-% says and reaches the bead by no face this stage can name; that gap is the
-% frame-cell reading's own limit, and the bearing reading tracked in issue
-% issue #15 answers it in the bead-tangent step.
+% bead at the host end by that face and arrives at the tip from its opposite.
+% An index wire between two cells continues to use its exact axis doctrine.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_carrier_faces:nn #1#2
   {
     \__tenkz_model_get:nnN {#1} {origin} \l__tenkz_kernel_lab_owner_tl
@@ -1391,11 +1454,7 @@
               }
             \quark_if_no_value:NTF \l__tenkz_kernel_lab_via_tl
               { \__tenkz_kernel_r_label_carrier_run:nn {#1} {#2} }
-              {
-                % a route that bends through its own waypoints reaches the
-                % bead by no face this stage can name
-                \__tenkz_kernel_r_label_blind:n {#2}
-              }
+              { \__tenkz_kernel_r_label_smooth_bead:nn {#1} {#2} }
           }
           {
             \__tenkz_kernel_r_label_bead_mark:nnn {#2}
