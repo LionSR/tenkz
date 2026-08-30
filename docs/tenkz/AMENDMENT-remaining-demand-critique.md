@@ -1,5 +1,16 @@
 # Shrink critique of the remaining-demand amendments
 
+> **Status correction — 2026-08-30.** The corpus-wide compile and render
+> survey overturned this critique's `via=` retirement: of the 78 surveyed
+> sites, only three respellings survived, and an exterior selection hull
+> cannot state the retained interior waypoint geometry. The governing strike rule below
+> therefore excludes that sentence. In this proposal's own accounting the
+> correction changes kernel key rows 52 → 44 (net −8), leaves
+> `address-list` live, and changes the approximate value-type result to 21
+> (net −3). LANGUAGE-1.0 §2.4 and the latest correction in SHRINK are
+> authoritative; the superseded figures remain below as historical review
+> evidence.
+
 The verdict that governs the companion note: where a proposal is struck here,
 it stays struck; where a unification is found here, the note presents the
 unified element and not the two originals.
