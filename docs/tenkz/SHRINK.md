@@ -5041,3 +5041,21 @@ unchanged.  The verdict census moves from
 111 faithful / 15 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+### 2026-08-31 — restore the boundary-region tints
+
+The published boundary-region panel and its archival `(a)old` twin fill their
+red enclosures translucently.  Both kernel cases already declared the charge
+species, and their sole recorded K1 residue was the omitted public `tint` flag.
+Adding that flag records the intended pale species fill before
+wires and glyphs; topology, boundary signatures, labels, and reduced rails are
+unchanged.  Fresh exact-hash two-viewer review at 200 and 400 dpi confirms both
+panels against their sources with unchanged audit findings.
+
+No parser, kernel, fixture, generated reference, or census baseline changes.
+The cases keep the same line counts and add only two public-key occurrences, so
+M1, M2, M3, M4, M5, and M6 are unchanged.  The verdict census moves from
+111 faithful / 15 cosmetic-gap / 4 structural-gap to
+113 faithful / 13 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
