@@ -154,8 +154,12 @@ order s, n, e, w, read from the frozen wire records: any wire endpoint or
 policy leg standing on a face reserves it, and an atom threaded on a wire
 reserves the two faces its carrier runs through. An atom spanning an even
 number of cells stands its dot halfway between two lanes, so the stations
-facing those lanes are reserved by the ink running along them too. When every
-face carries ink the station falls back to south, so the station is
+facing those lanes are reserved by the ink running along them too. An
+explicitly cardinal label mark on the same named ordinary dot also reserves
+that station before the dot's automatic label chooses. A west-to-east traced
+row may move the atom label beyond that ordinary band; the mark reserves only
+when the renderer's shared clearance rule leaves the two stations identical.
+When every face carries ink the station falls back to south, so the station is
 deterministic and an explicit `label pos=` always wins.
 
 A typed-port list is a braced comma-separated list of ports, each written

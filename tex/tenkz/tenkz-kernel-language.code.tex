@@ -1859,7 +1859,10 @@
       { \fp_eval:n { #2 - 360 * floor( (#2) / 360 ) } }
   }
 
-\cs_new_protected:Npn \__tenkz_kernel_signature_bearing:nN #1#2
+% Normalize a bearing and name it when it is exactly cardinal.  Boundary
+% signatures and pre-render label occupancy share this one interpretation of
+% a full turn and of the four compass sides.
+\cs_new_protected:Npn \__tenkz_kernel_bearing_cardinal:nN #1#2
   {
     \__tenkz_kernel_bearing_normalize:nN {#1} #2
     \str_case:Vn #2
@@ -1876,7 +1879,7 @@
       \l__tenkz_kernel_port_record_tl
       \l__tenkz_kernel_port_face_tl
       \l__tenkz_kernel_r_leg_turn_tl
-    \exp_args:NV \__tenkz_kernel_signature_bearing:nN
+    \exp_args:NV \__tenkz_kernel_bearing_cardinal:nN
       \l__tenkz_kernel_r_leg_turn_tl \l__tenkz_kernel_port_face_tl
     \__tenkz_model_get:nnN {#1} {port-type} \l__tenkz_kernel_port_type_tl
     \tl_set:Ne #2
@@ -1893,7 +1896,7 @@
       {
         \__tenkz_kernel_policy_slot_bearing:nnnN {#1} {#2} {##1}
           \l__tenkz_kernel_r_leg_turn_tl
-        \exp_args:NV \__tenkz_kernel_signature_bearing:nN
+        \exp_args:NV \__tenkz_kernel_bearing_cardinal:nN
           \l__tenkz_kernel_r_leg_turn_tl
           \l__tenkz_kernel_port_face_tl
         \seq_put_right:Ne \l__tenkz_kernel_emit_seq
@@ -1958,7 +1961,7 @@
                           \l__tenkz_kernel_r_physical_x_tl
                           \l__tenkz_kernel_r_physical_y_tl
                         \exp_args:Ne
-                          \__tenkz_kernel_signature_bearing:nN
+                          \__tenkz_kernel_bearing_cardinal:nN
                           {
                             \fp_eval:n
                               {
