@@ -4977,8 +4977,8 @@ sites, twenty-four internal bonds, sixteen virtual perimeter openings, and
 sixteen physical legs, while the doubled panel retains its complete boundary,
 kept legs, and four sitewise trace closures.
 
-M4 rises from 26.47 to 26.50 because the eight added non-comment lines state
-missing source boundary data.  They use the existing `\tnwire` and open-end
+M4 rises from 26.47 to 26.50 because four added non-comment lines declare the
+eight missing source boundary wires.  They use the existing `\tnwire` and open-end
 grammar: M1, M2, M3, M5, and M6 do not move, and no escape or parser path is
 added.
 
