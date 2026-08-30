@@ -4983,3 +4983,20 @@ preserving their rendered geometry and boundary signature.  M1, M2, M3, M5,
 and M6 do not move, and no escape or parser path is added.
 
 Census-correction: #13
+
+### 2026-08-30 — reconcile stale cosmetic verdicts
+
+Five exact-hash cases whose recorded renderer defects had already been removed
+or reduced to the cosmetic bar's K2 house presentation now carry complete
+two-viewer evidence.  The MPU blocking and MPDO closure cases received fresh
+200/400 dpi countersigns; the published and workbench GHZ cases received a
+paired countersign against their authoritative source range; and the
+two-shift MPU already had two viewers and an empty defect list.  Their stale
+K1 rows are retained as resolved disposition history.
+
+No case, parser, kernel, fixture, generated reference, or census baseline
+changes.  M1, M2, M3, M4, M5, and M6 are unchanged; the current verdict census
+moves from 101 faithful / 25 cosmetic-gap / 4 structural-gap to
+106 faithful / 20 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
