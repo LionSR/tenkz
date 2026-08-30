@@ -12,18 +12,12 @@
 \[
 \begin{gathered}
   % The state sheet |psi>: every site keeps its transverse physical leg.
-  \begin{tenkz}[lattice={4x4}, frame=plane, physical=up, boundary=open]
+  \begin{tenkz}[lattice={4x4}, frame=plane, physical=up, boundary=open,
+    north=open, south=open]
     \tn{} & \tn{} & \tn{} & \tn{} \\
     \tn{} & \tn{} & \tn{} & \tn{} \\
     \tn{} & \tn{} & \tn{} & \tn{} \\
     \tn{} & \tn{} & \tn{} & \tn{}
-    % The plane boundary policy supplies the west/east sides.  Spell the
-    % north/south virtual openings explicitly alongside the page-vertical
-    % physical legs so the state sheet keeps all sixteen perimeter indices.
-    \tnwire{(1,1)}{open n} \tnwire{(1,2)}{open n}
-    \tnwire{(1,3)}{open n} \tnwire{(1,4)}{open n}
-    \tnwire{(4,1)}{open s} \tnwire{(4,2)}{open s}
-    \tnwire{(4,3)}{open s} \tnwire{(4,4)}{open s}
   \end{tenkz}
   \\[1em]
   % The doubled sheet |psi><psi|: the plane frame owns both sheets through
