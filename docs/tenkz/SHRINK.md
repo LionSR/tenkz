@@ -5000,3 +5000,27 @@ moves from 101 faithful / 25 cosmetic-gap / 4 structural-gap to
 106 faithful / 20 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+### 2026-08-30 — retire stale K1/K3/K4 residues
+
+Four exact-hash cosmetic verdicts now have complete evidence that their recorded
+residues are either fixed or contract-faithful presentation.  PR #245 already
+made the boundary-lasso and boundary-b-old physical stubs inherit their host
+species; fresh 200/400 dpi two-viewer review confirms the resulting source
+palettes.  A fresh countersign confirms that the g-injective MPO's box-versus-
+circle glyph is K2 house presentation.  The PEPS-renormalization bundle case
+already carried a 200/400 dpi two-viewer record and the contract says its hatch
+multiplicity owes no additional ink.
+
+The condensation row's K4 instruction was unsupported: neither its verdict nor
+the authoritative source contains the alleged finite projection mark.  It is
+reclassified K3 for its actual shared geometry residue.  Two neighboring
+boundary rows retain K1 for their enclosure fill while dropping the stale
+port-stub subclaim.
+
+No case, parser, kernel, fixture, generated reference, or census baseline
+changes.  M1, M2, M3, M4, M5, and M6 are unchanged; the verdict census moves
+from 106 faithful / 20 cosmetic-gap / 4 structural-gap to
+110 faithful / 16 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
