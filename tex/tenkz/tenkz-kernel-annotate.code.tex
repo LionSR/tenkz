@@ -1525,10 +1525,29 @@
       }
       { \__tenkz_kernel_r_label_blind:n {#2} }
   }
-% A smooth routed string exposes its exact arclength tangent through the same
-% marking traversal that placed the bead.  Orthogonal corners need both
-% one-sided tangents, and a circle cannot yet certify labels against unrelated
-% chords, so those deliberately retain conservative blindness here.
+% Read a bead's exact arclength tangent through the same marking traversal
+% that placed it.  This geometry operation is shared by routed strings and
+% circle carriers; their eligibility policies remain with their callers.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_bead_tangent:nn #1#2
+  {
+    \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
+    \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
+      {
+        \exp_args:NVV \__tenkz_string_bead_frame:nnnNN
+          \l__tenkz_kernel_lab_owner_tl
+          \l__tenkz_kernel_lab_t_tl
+          {tenkz-label-bead-frame}
+          \l__tenkz_kernel_lab_tangent_x_dim
+          \l__tenkz_kernel_lab_tangent_y_dim
+        \__tenkz_kernel_r_label_bead_mark_vector:nNN {#2}
+          \l__tenkz_kernel_lab_tangent_x_dim
+          \l__tenkz_kernel_lab_tangent_y_dim
+      }
+      { \__tenkz_kernel_r_label_blind:n {#2} }
+  }
+% Smooth routed strings can use the shared tangent unless an orthogonal corner
+% needs both one-sided tangents or a closed route needs seam-aware incidence.
+% Whether that local answer may emit a verified claim is decided separately.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_smooth_bead:nn #1#2
   {
     \__tenkz_model_get:nnN {#1} {route} \l__tenkz_kernel_lab_route_tl
@@ -1537,25 +1556,8 @@
       { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
     \prop_if_in:NeT \l__tenkz_model_record_prop { #1 / closed }
       { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
-    \str_if_eq:eeT { \__tenkz_kernel_r_frame_word: } {circle}
-      { \bool_set_false:N \l__tenkz_kernel_lab_bead_tangent_bool }
     \bool_if:NTF \l__tenkz_kernel_lab_bead_tangent_bool
-      {
-        \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
-        \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
-          {
-            \exp_args:NVV \__tenkz_string_bead_frame:nnnNN
-              \l__tenkz_kernel_lab_owner_tl
-              \l__tenkz_kernel_lab_t_tl
-              {tenkz-label-bead-frame}
-              \l__tenkz_kernel_lab_tangent_x_dim
-              \l__tenkz_kernel_lab_tangent_y_dim
-            \__tenkz_kernel_r_label_bead_mark_vector:nNN {#2}
-              \l__tenkz_kernel_lab_tangent_x_dim
-              \l__tenkz_kernel_lab_tangent_y_dim
-          }
-          { \__tenkz_kernel_r_label_blind:n {#2} }
-      }
+      { \__tenkz_kernel_r_label_bead_tangent:nn {#1} {#2} }
       { \__tenkz_kernel_r_label_blind:n {#2} }
   }
 
@@ -1580,6 +1582,14 @@
               {
                 \__tenkz_model_get:nnN
                   {#1} {via} \l__tenkz_kernel_lab_via_tl
+                % An authored empty waypoint list renders exactly like no
+                % waypoint list.  Normalize it before choosing the incidence
+                % policy so route=orth cannot make those spellings diverge.
+                \quark_if_no_value:NF \l__tenkz_kernel_lab_via_tl
+                  {
+                    \tl_if_blank:VT \l__tenkz_kernel_lab_via_tl
+                      { \tl_set:Nn \l__tenkz_kernel_lab_via_tl { \q_no_value } }
+                  }
               }
             \quark_if_no_value:NTF \l__tenkz_kernel_lab_via_tl
               { \__tenkz_kernel_r_label_carrier_run:nn {#1} {#2} }
@@ -1660,17 +1670,16 @@
       { \quark_if_no_value_p:N \l__tenkz_kernel_lab_from_tl }
       { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_to_tl }
       { \__tenkz_kernel_r_label_carrier_open:nnn {#1} {#2} {from} }
-    % Two model ends: the run is read from their cells, and that reading
-    % stands down on a circle exactly as the endpoint one does.  An open
-    % side names its direction outright, so it answers on every frame.
-    % Either stand-down leaves the bead's ink uncharted, so the bead joins
-    % the blind ledger rather than passing for a verified station.
+    % Two model ends: a circle's cell chord is not a local carrier direction,
+    % so read its already-rendered tangent.  Other frames retain their exact
+    % cell-axis doctrine.  An open side names its direction outright, so it
+    % answers on every frame.
     \bool_lazy_and:nnT
       { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_from_tl }
       { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_to_tl }
       {
         \str_if_eq:eeT { \__tenkz_kernel_r_frame_word: } {circle}
-          { \__tenkz_kernel_r_label_blind:n {#2} }
+          { \__tenkz_kernel_r_label_bead_tangent:nn {#1} {#2} }
       }
     \bool_lazy_all:nT
       {

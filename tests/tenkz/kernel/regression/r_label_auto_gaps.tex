@@ -6,20 +6,40 @@
 % circle frames.
 % Circle bearings still choose a fallback position, but the frame-wide guard
 % withholds their claims because a nonincident chord can cross the band.  The
-% remaining blind pins distinguish unsupported circle and span-internal
-% geometry from the later label-order step of issue #15.
+% The remaining blind pins distinguish unsupported span-internal geometry
+% from the later label-order step of issue #15.
 \documentclass{standalone}
 \usepackage{tenkz}
 \makeatletter
 \ExplSyntaxOn
 \file_input:n { tenkz-kernel.code.tex }
 \int_new:N \l__tenkz_test_side_count_int
+\int_new:N \l__tenkz_test_rs_frame_count_int
+\int_new:N \l__tenkz_test_cw_frame_count_int
+\int_new:N \l__tenkz_test_cv_frame_count_int
+\int_new:N \l__tenkz_test_ce_frame_count_int
 \tl_new:N \l__tenkz_test_side_label_tl
 \cs_new_eq:NN
   \__tenkz_test_side_auto:nN \__tenkz_kernel_r_label_auto_side:nN
 \cs_new_eq:NN \__tenkz_test_labelclaim:nn \tenkz@labelclaim
 \cs_new_eq:NN \__tenkz_test_route_point:nnNN
   \__tenkz_kernel_r_label_route_point:nnNN
+\cs_new_eq:NN \__tenkz_test_bead_frame:nnnNN
+  \__tenkz_string_bead_frame:nnnNN
+\cs_set_protected:Npn \__tenkz_string_bead_frame:nnnNN #1#2#3#4#5
+  {
+    \str_case:nnF {#1}
+      {
+        {RS} { \int_gincr:N \l__tenkz_test_rs_frame_count_int }
+        {CW} { \int_gincr:N \l__tenkz_test_cw_frame_count_int }
+        {CV} { \int_gincr:N \l__tenkz_test_cv_frame_count_int }
+        {CE} { \int_gincr:N \l__tenkz_test_ce_frame_count_int }
+      }
+      { \errmessage{unexpected~label~bead-frame~owner~#1} }
+    \fp_compare:nNnF {#2} = {0.5}
+      { \errmessage{label~bead-frame~left~the~midpoint} }
+    \__tenkz_test_bead_frame:nnnNN {#1} {#2} {#3} #4 #5
+  }
 \cs_set_protected:Npn \__tenkz_kernel_r_label_route_point:nnNN #1#2#3#4
   {
     \bool_lazy_or:nnT
@@ -50,11 +70,6 @@
     \__tenkz_model_get:nnN {#1} {label} \l__tenkz_test_side_label_tl
     \str_case:VnF \l__tenkz_test_side_label_tl
       {
-        {W}
-          {
-            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
-              { \errmessage{circle~carrier~bead~made~an~unverified~claim} }
-          }
         {I}
           {
             \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
@@ -114,8 +129,18 @@
           }
         {W}
           {
-            \str_if_eq:VnF #2 {s}
-              { \errmessage{circle~carrier~bead~answered:~update~the~pin} }
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{circle~carrier~bead~tangent~regressed} }
+          }
+        {B}
+          {
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{routed~circle~bead~tangent~regressed} }
+          }
+        {C}
+          {
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{empty-via~circle~bead~tangent~regressed} }
           }
         {X}
           {
@@ -289,13 +314,32 @@
   \tnwire{(1,1)}{(1,3)}
   \tnmark[form=label, label pos=n]{CU}{$c$}
 \end{tenkz}
-% A bead on a circle carrier still lacks its carrier tangent, so it remains
-% blind and keeps its south fallback.
+% A bead on a circle carrier reads the already-rendered local tangent.  The
+% vertical chord occupies north and south, so W takes east.  Circle-wide claim
+% certification remains suppressed independently by the frame guard.
 \begin{tenkz}[rows={wire}, cols=4, bonds=none, frame=circle]
   \tn[at=(1,1), name=C1]{}
   \tn[at=(1,3), name=C3]{}
   \tnwire[name=CW]{C1}{C3}
   \tn[at=on CW 0.5, skin=dot]{W}
+\end{tenkz}
+% The same local reading applies to a smooth circle string with an authored
+% waypoint.  The rightmost midpoint has a north/south tangent, so B also takes
+% east without turning the frame-wide answer into a verified claim.
+\begin{tenkz}[rows={wire}, cols=4, bonds=none, frame=circle]
+  \tn[at=(1,1), name=V1]{}
+  \tn[at=(1,3), name=V3]{}
+  \tnwire[kind=string, name=CV, via={(1,2)}]{V1}{V3}
+  \tn[at=on CV 0.5, skin=dot]{B}
+\end{tenkz}
+% An explicit empty waypoint list is the same route as an omitted list.  Even
+% with route=orth there is no corner here, so the circle tangent remains
+% answerable and C takes east.
+\begin{tenkz}[rows={wire}, cols=4, bonds=none, frame=circle]
+  \tn[at=(1,1), name=E1]{}
+  \tn[at=(1,3), name=E3]{}
+  \tnwire[kind=string, name=CE, route=orth, via={}]{E1}{E3}
+  \tn[at=on CE 0.5, skin=dot]{C}
 \end{tenkz}
 % A fixed cardinal mark station on the exact same named ordinary dot is known
 % before either label is measured.  The wire takes south and the explicit
@@ -348,13 +392,24 @@
     {Z}{ZE}
 \end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {19}
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {21}
   {
     \errmessage
       {
         gap~fixture~stationed~\int_use:N \l__tenkz_test_side_count_int
-        ~labels,~not~nineteen
+        ~labels,~not~twenty-one
       }
   }
+% A string bead uses the frame service once for placement and again for the
+% label-incidence read.  The ordinary carrier uses it only for that new read.
+% A chord shortcut would therefore leave one call for RS/CV/CE and none for CW.
+\int_compare:nNnF { \l__tenkz_test_rs_frame_count_int } = {2}
+  { \errmessage{routed~bead~did~not~reuse~its~exact~tangent} }
+\int_compare:nNnF { \l__tenkz_test_cw_frame_count_int } = {1}
+  { \errmessage{circle~bead~did~not~reuse~its~exact~tangent} }
+\int_compare:nNnF { \l__tenkz_test_cv_frame_count_int } = {2}
+  { \errmessage{routed~circle~bead~did~not~reuse~its~exact~tangent} }
+\int_compare:nNnF { \l__tenkz_test_ce_frame_count_int } = {2}
+  { \errmessage{empty-via~circle~bead~did~not~reuse~its~exact~tangent} }
 \ExplSyntaxOff
 \end{document}
