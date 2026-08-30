@@ -336,14 +336,15 @@ note = "PR #245 resolved the sole K1 residue: generated physical stubs now inher
 
 [[verdict]]
 id = "rmp-ii-boundary-region"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-case_sha256 = "063d92b2785444cf60e7fd4fee8d2a4a8a6cb62dcfbff69901f2a90597ebe090"
-reviewed = "2026-08-05"
-renderer = "fable-w6-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration verified against the published Figboundary-theorya-1 panel: the sheet, the charge-species region contour with R inside, the recovered Rbar complement label at the top-left, and the reduced pair whose rail runs red then black with partial R at the seam are all present. PR #245 resolved the stale port-stub subclaim: the charge-hosted stub now inherits source red while the plain counterpart remains house black. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill stays unrecorded ink (K1); the region label takes the contour's species red where the source letters it black, and the house contour is a rounded parallelogram for the source ellipse."
+defects = []
+case_sha256 = "0fa681677a4ecb329da7ea8ee3c44fdc2cca0c5e4a22bc6a7bff4ab1f5384941"
+reviewed = "2026-08-31"
+renderer = "codex-enclosure-tint-review-2026-08-31-200-400dpi"
+second_viewer = "codex-independent-enclosure-tint-countersign-2026-08-31-200-400dpi"
+note = "The existing public enclosure tint restores the source's translucent red region fill, closing the sole K1 residue. Fresh exact-hash 200/400dpi two-viewer review against authoritative author lines 597-617 confirms the sheet, R enclosure, recovered Rbar complement label, red-then-black reduced rail, partial-R seam, topology, and openings. The rounded contour and species-colored R label are faithful K2 shape/color presentation."
 
 [[verdict]]
 id = "rmp-ii-boundary-state"
@@ -1172,14 +1173,15 @@ note = "Kernel flat frame keeps the direct V-A physical bond and the west cup, w
 
 [[verdict]]
 id = "rmp-workbench-ii-boundary-a-old"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-case_sha256 = "6673e1bce5015a2cc092db75cd8e35ae4c3e2fc496cede5ec877dc67970fbb48"
-reviewed = "2026-08-05"
-renderer = "fable-w6-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration against the archival (a)old PDF: the reduced pair carries the archival R and R^c names and the all-red partial R rail (the previous case duplicated the published A^I/B^Ibar twin), and the region is the charge-species enclosure. The old note's 'arrows' and 'Rbar label' claims are misreadings of the published panel: the archival PDF has neither. PR #245 resolved the stale port-stub subclaim: the charge-hosted stub now inherits source red while the plain counterpart remains house black. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill and darkened interior sites stay unrecorded ink (K1), and the house contour is a rounded parallelogram for the source ellipse."
+defects = []
+case_sha256 = "9fed1efba2ec867fadd95d37291ac8b41dbab5020da6c617df0f498618f2826d"
+reviewed = "2026-08-31"
+renderer = "codex-enclosure-tint-review-2026-08-31-200-400dpi"
+second_viewer = "codex-independent-enclosure-tint-countersign-2026-08-31-200-400dpi"
+note = "The existing public enclosure tint restores the archival panel's translucent red region fill, closing the sole K1 residue. Fresh exact-hash 200/400dpi two-viewer review confirms the charge enclosure, archival R and R^c reduced-site names, all-red partial-R rail, topology, and openings. The rounded contour and house-black interior sites against the source's tint-darkened sites are faithful K2 shape/color presentation."
 
 [[verdict]]
 id = "rmp-workbench-ii-boundary-b-old"
