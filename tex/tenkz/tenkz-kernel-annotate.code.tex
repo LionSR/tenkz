@@ -87,6 +87,8 @@
 \tl_new:N \l__tenkz_kernel_lab_elane_tl
 \clist_new:N \l__tenkz_kernel_lab_route_clist
 \seq_new:N \l__tenkz_kernel_lab_route_seq
+\int_new:N \l__tenkz_kernel_lab_route_start_int
+\int_new:N \l__tenkz_kernel_lab_route_end_int
 \bool_new:N \l__tenkz_kernel_lab_cell_bool
 \bool_new:N \l__tenkz_kernel_lab_segment_cell_bool
 \bool_new:N \l__tenkz_kernel_lab_far_bool
@@ -399,8 +401,8 @@
                       {#1} {#3} {#4} \l__tenkz_kernel_lab_node_tl
                     \quark_if_no_value:NTF \l__tenkz_kernel_lab_node_tl
                       {
-                        \__tenkz_kernel_r_label_open_face:Vnn
-                          \l__tenkz_kernel_lab_atom_tl {#1} {#4}
+                        \__tenkz_kernel_r_label_path_end_bearing:nnV
+                          {#1} {#4} \l__tenkz_kernel_lab_atom_tl
                       }
                       {
                         \exp_args:NV \__tenkz_kernel_r_node:n
@@ -492,11 +494,12 @@
     \quark_if_no_value:NT #4 { \tl_set:Nn #4 {#2} }
   }
 
-% A smooth string's authored neighbour chord need not share its rendered
+% An authored neighbour chord or open-side word need not share the rendered
 % endpoint tangent, and a generated hull has no authored neighbour at all.
 % Their common frozen path is already available here, so read its exact
 % endpoint tangent.  This cannot skip a short first/last segment as a fixed
-% arclength fraction could.
+% arclength fraction could, and keeps cardinal and diagonal opens in the same
+% renderer-owned bearing path.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_path_end_bearing:nnn #1#2#3
   {
     \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
@@ -716,6 +719,7 @@
         \quark_if_no_value:NF \l__tenkz_kernel_lab_via_tl
           {
             \seq_clear:N \l__tenkz_kernel_lab_route_seq
+            \int_set:Nn \l__tenkz_kernel_lab_route_start_int {1}
             \prop_if_in:NeTF \l__tenkz_model_record_prop { #1 / closed }
               { \bool_set_true:N \l__tenkz_kernel_lab_closed_bool }
               {
@@ -724,6 +728,7 @@
                   {
                     \seq_put_right:NV \l__tenkz_kernel_lab_route_seq
                       \l__tenkz_kernel_lab_from_tl
+                    \int_incr:N \l__tenkz_kernel_lab_route_start_int
                   }
               }
             \clist_set:NV \l__tenkz_kernel_lab_route_clist
@@ -742,6 +747,12 @@
                       \l__tenkz_kernel_lab_to_tl
                   }
               }
+            \int_set:Nn \l__tenkz_kernel_lab_route_end_int
+              { \seq_count:N \l__tenkz_kernel_lab_route_seq }
+            \bool_lazy_and:nnT
+              { ! \l__tenkz_kernel_lab_closed_bool }
+              { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_to_tl }
+              { \int_decr:N \l__tenkz_kernel_lab_route_end_int }
             \bool_if:NTF \l__tenkz_kernel_lab_closed_bool
               {
                 \int_compare:nNnT
@@ -767,8 +778,9 @@
                   }
               }
               {
-                \int_step_inline:nnnn {2}{1}
-                  { \seq_count:N \l__tenkz_kernel_lab_route_seq - 1 }
+                \int_step_inline:nnnn
+                  { \l__tenkz_kernel_lab_route_start_int } {1}
+                  { \l__tenkz_kernel_lab_route_end_int }
                   {
                     \__tenkz_kernel_r_label_waypoint:nnnn
                       {#1} {##1} { ##1 - 1 } { ##1 + 1 }
@@ -828,39 +840,49 @@
 
 % A segment joining two stations on the same atom, or joining an atom to a
 % geometric point inside its claimed span, cannot establish a free label
-% face.  Suppress just that side and put the owner in the blind ledger.
+% face.  Suppress just that side and put the owner in the blind ledger.  An
+% index outside the authored sequence names an open boundary; it has no node
+% to inspect, and the frozen path remains authoritative for that tangent.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint_neighbor:nN #1#2
   {
-    \tl_set:Ne \l__tenkz_kernel_lab_node_tl
-      { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#1} }
-    \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
-      \l__tenkz_kernel_lab_node_tl
-      \l__tenkz_kernel_lab_far_atom_tl
-      \l__tenkz_kernel_lab_far_row_tl
-      \l__tenkz_kernel_lab_far_col_tl
-      \l__tenkz_kernel_lab_far_bool
-    \quark_if_no_value:NTF \l__tenkz_kernel_lab_far_atom_tl
+    \bool_lazy_and:nnT
+      { \int_compare_p:nNn {#1} > {0} }
       {
-        \exp_args:NV \__tenkz_kernel_r_node:n
-          \l__tenkz_kernel_lab_node_tl
-        \exp_args:NV \__tenkz_kernel_r_xy:nNN
-          \l__tenkz_kernel_lab_node_tl
-          \l__tenkz_kernel_lab_next_x_fp
-          \l__tenkz_kernel_lab_next_y_fp
-        \__tenkz_kernel_r_label_geometric_neighbor_hidden:T
-          {
-            \bool_set_false:N #2
-            \__tenkz_kernel_r_label_blind:V
-              \l__tenkz_kernel_lab_atom_tl
-          }
+        \int_compare_p:nNn {#1} <
+          { \seq_count:N \l__tenkz_kernel_lab_route_seq + 1 }
       }
       {
-        \str_if_eq:VVT \l__tenkz_kernel_lab_atom_tl
+        \tl_set:Ne \l__tenkz_kernel_lab_node_tl
+          { \seq_item:Nn \l__tenkz_kernel_lab_route_seq {#1} }
+        \exp_args:NV \__tenkz_kernel_r_label_end_atom:nNNNN
+          \l__tenkz_kernel_lab_node_tl
           \l__tenkz_kernel_lab_far_atom_tl
+          \l__tenkz_kernel_lab_far_row_tl
+          \l__tenkz_kernel_lab_far_col_tl
+          \l__tenkz_kernel_lab_far_bool
+        \quark_if_no_value:NTF \l__tenkz_kernel_lab_far_atom_tl
           {
-            \bool_set_false:N #2
-            \__tenkz_kernel_r_label_blind:V
-              \l__tenkz_kernel_lab_atom_tl
+            \exp_args:NV \__tenkz_kernel_r_node:n
+              \l__tenkz_kernel_lab_node_tl
+            \exp_args:NV \__tenkz_kernel_r_xy:nNN
+              \l__tenkz_kernel_lab_node_tl
+              \l__tenkz_kernel_lab_next_x_fp
+              \l__tenkz_kernel_lab_next_y_fp
+            \__tenkz_kernel_r_label_geometric_neighbor_hidden:T
+              {
+                \bool_set_false:N #2
+                \__tenkz_kernel_r_label_blind:V
+                  \l__tenkz_kernel_lab_atom_tl
+              }
+          }
+          {
+            \str_if_eq:VVT \l__tenkz_kernel_lab_atom_tl
+              \l__tenkz_kernel_lab_far_atom_tl
+              {
+                \bool_set_false:N #2
+                \__tenkz_kernel_r_label_blind:V
+                  \l__tenkz_kernel_lab_atom_tl
+              }
           }
       }
   }
@@ -1200,29 +1222,6 @@
           \l__tenkz_kernel_lab_host_tl {e}
       }
   }
-% A wire with one authored end and one open end keeps the open side as a
-% word rather than as a node, so no cell says where the ink goes.  The four
-% compass words say it outright: the stub leaves the authored end by that
-% face.  The field also carries words that name no direction of their own --
-% `route`, which defers to the route, and the physical axis words -- and
-% those answer nothing.
-\cs_new_protected:Npn \__tenkz_kernel_r_label_open_face:nnn #1#2#3
-  {
-    \str_if_eq:nnTF {#3} {first}
-      { \__tenkz_model_get:nnN {#2} {to-open} \l__tenkz_kernel_lab_face_tl }
-      { \__tenkz_model_get:nnN {#2} {from-open} \l__tenkz_kernel_lab_face_tl }
-    \quark_if_no_value:NF \l__tenkz_kernel_lab_face_tl
-      {
-        \str_case:Vn \l__tenkz_kernel_lab_face_tl
-          {
-            {n} { \__tenkz_kernel_r_label_mark_side:nn {#1} {n} }
-            {e} { \__tenkz_kernel_r_label_mark_side:nn {#1} {e} }
-            {s} { \__tenkz_kernel_r_label_mark_side:nn {#1} {s} }
-            {w} { \__tenkz_kernel_r_label_mark_side:nn {#1} {w} }
-          }
-      }
-  }
-\cs_generate_variant:Nn \__tenkz_kernel_r_label_open_face:nnn { Vnn }
 % An atom threaded on a wire has no cell, so no endpoint names it.  Its
 % carrier runs through the bead, and the faces that run crosses are taken.
 % The fraction the bead stands at says how many: at an end of the route the

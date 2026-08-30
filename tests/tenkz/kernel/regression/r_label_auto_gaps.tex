@@ -148,6 +148,16 @@
             \str_if_eq:VnF #2 {n}
               { \errmessage{smooth~endpoint~tangent~regressed} }
           }
+        {A}
+          {
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{open-boundary~waypoint~bearing~regressed} }
+          }
+        {D}
+          {
+            \str_if_eq:VnF #2 {e}
+              { \errmessage{diagonal~open~bearing~regressed} }
+          }
         {I}
           {
             \str_if_eq:VnF #2 {s}
@@ -199,6 +209,24 @@
   \tn[at=1 s of LA, name=L, skin=dot]{L}
   \tn[at=2 e of L, name=LE]{}
   \tnwire[kind=string, via={1 se of L}]{L}{LE}
+\end{tenkz}
+% An authored waypoint at either end of the via list is still interior when
+% the string opens on that side.  A is the sole via between two open ends, so
+% both frozen tangents must be read; north and south are occupied and A moves
+% east.  Skipping either boundary leaves an earlier fallback available.
+\begin{tenkz}[lattice={1x1}, bonds=none]
+  \tn[at=(1,1), name=OPEN, skin=dot]{A}
+  \tnwire[kind=string, via={OPEN}]{open n}{open s}
+\end{tenkz}
+% Open words are renderer-owned directions, including diagonals.  D stands
+% off-cell and has a south stub plus a northeast stub: south and north are
+% occupied, so its first free verified station is east.  Reading only the
+% four cardinal words would leave the northeast ink falsely free.
+\begin{tenkz}[lattice={1x1}, bonds=none]
+  \tn[at=(1,1), name=DA]{}
+  \tn[at=1 s of DA, name=D, skin=dot]{D}
+  \tnwire{D}{open s}
+  \tnwire{D}{open ne}
 \end{tenkz}
 % The endpoint names I's west cell, while its first geometric waypoint lies
 % at the east cell inside the same three-cell span.  Measuring containment
@@ -309,12 +337,12 @@
     {Z}{ZE}
 \end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {16}
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {18}
   {
     \errmessage
       {
         gap~fixture~stationed~\int_use:N \l__tenkz_test_side_count_int
-        ~labels,~not~sixteen
+        ~labels,~not~eighteen
       }
   }
 \ExplSyntaxOff
