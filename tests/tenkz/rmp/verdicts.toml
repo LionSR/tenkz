@@ -322,13 +322,15 @@ note = "S4 swap migration: the four canonical windows respell as kernel op-op fr
 
 [[verdict]]
 id = "rmp-ii-boundary-lasso"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
+defects = []
 case_sha256 = "e065827aad149dac8e8217758dc0d1af2d1437f62ac98d924d246bb7da3ed45a"
-reviewed = "2026-08-04"
-renderer = "kimi-kernel-species-source-review-2026-08-04-400dpi"
-note = "The source palette is now model-recorded as declared species (the bar's X row is resolved); the physical policy legs stay house-ink because the policy stub does not read the host species (K1), and the kernel spells the bar accent as overline."
+reviewed = "2026-08-30"
+renderer = "codex-boundary-host-hue-review-2026-08-30-200-400dpi"
+second_viewer = "codex-independent-boundary-host-hue-countersign-2026-08-30-200-400dpi"
+note = "PR #245 resolved the sole K1 residue: generated physical stubs now inherit their host atom's declared species, so the charge factors are source-red and the flux factors source-gray. Fresh exact-hash 200/400dpi two-viewer review on 2026-08-30 confirms both equations, openings, factor order, labels, contractions, and palette against authoritative author lines 618-649. Larger house dot/box/capsule forms and overline typography are faithful K2 presentation."
 
 [[verdict]]
 id = "rmp-ii-boundary-region"
@@ -339,7 +341,7 @@ case_sha256 = "063d92b2785444cf60e7fd4fee8d2a4a8a6cb62dcfbff69901f2a90597ebe090"
 reviewed = "2026-08-05"
 renderer = "fable-w6-vision-review-2026-08-05-200dpi"
 second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration verified against the published Figboundary-theorya-1 panel: the sheet, the charge-species region contour with R inside, the newly recovered Rbar complement label at the top-left, and the reduced pair whose rail runs red then black with partial R at the seam are all present. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill stays unrecorded ink (K1), the region label takes the contour's species red where the source letters it black, the house contour is a rounded parallelogram for the source ellipse, and the physical stubs stay house-black (K1, port ink does not read the host species)."
+note = "Kernel migration verified against the published Figboundary-theorya-1 panel: the sheet, the charge-species region contour with R inside, the recovered Rbar complement label at the top-left, and the reduced pair whose rail runs red then black with partial R at the seam are all present. PR #245 resolved the stale port-stub subclaim: the charge-hosted stub now inherits source red while the plain counterpart remains house black. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill stays unrecorded ink (K1); the region label takes the contour's species red where the source letters it black, and the house contour is a rounded parallelogram for the source ellipse."
 
 [[verdict]]
 id = "rmp-ii-boundary-state"
@@ -1175,17 +1177,19 @@ case_sha256 = "6673e1bce5015a2cc092db75cd8e35ae4c3e2fc496cede5ec877dc67970fbb48"
 reviewed = "2026-08-05"
 renderer = "fable-w6-vision-review-2026-08-05-200dpi"
 second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration against the archival (a)old PDF: the reduced pair now carries the archival R and R^c names and the all-red partial R rail (the previous case duplicated the published A^I/B^Ibar twin), and the region is the charge-species enclosure. The old note's 'arrows' and 'Rbar label' claims are misreadings of the published panel: the archival PDF has neither. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill and darkened interior sites stay unrecorded ink (K1), the house contour is a rounded parallelogram for the source ellipse, and the reduced pair's physical stubs stay house-black because port ink does not read the host species (K1, as on rmp-ii-boundary-lasso)."
+note = "Kernel migration against the archival (a)old PDF: the reduced pair carries the archival R and R^c names and the all-red partial R rail (the previous case duplicated the published A^I/B^Ibar twin), and the region is the charge-species enclosure. The old note's 'arrows' and 'Rbar label' claims are misreadings of the published panel: the archival PDF has neither. PR #245 resolved the stale port-stub subclaim: the charge-hosted stub now inherits source red while the plain counterpart remains house black. Residue: the kernel enclosure draws contour-only, so the source's translucent red fill and darkened interior sites stay unrecorded ink (K1), and the house contour is a rounded parallelogram for the source ellipse."
 
 [[verdict]]
 id = "rmp-workbench-ii-boundary-b-old"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
+defects = []
 case_sha256 = "326373a0ea708fa1397c87b7ed794b467c0ff4db0eba9dbc577bd3c686cd63f3"
-reviewed = "2026-08-29"
-renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
-note = "The source colour coding is recovered from the author code (the red A row and the gray B row are explicit fill colours at lines 618-649, matching the published twin's charge/flux palette) and is now model-recorded as declared species; as on rmp-ii-boundary-lasso, the physical policy legs stay house-ink because the policy stub does not read the host species (K1)."
+reviewed = "2026-08-30"
+renderer = "codex-boundary-host-hue-review-2026-08-30-200-400dpi"
+second_viewer = "codex-independent-boundary-host-hue-countersign-2026-08-30-200-400dpi"
+note = "PR #245 resolved the sole K1 residue: generated physical stubs now inherit their hosts, making the charge factor and stub source-red and the flux factor and stub declared gray. Fresh exact-hash 200/400dpi two-viewer review on 2026-08-30 confirms both factors, openings, order, labels, contractions, and authoritative lines 618-649 palette. The extra external A^I and B^overline I names are legible annotations of the case-declared factors; remaining glyph and typography differences are faithful K2 presentation."
 
 [[verdict]]
 id = "rmp-workbench-ii-peps-fine-graining"
@@ -1481,13 +1485,14 @@ note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintaine
 
 [[verdict]]
 id = "rmp-workbench-iii-g-injective-mpo"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 case_sha256 = "346f43d8d9219e6c9a0f25b0f574b5a83475954e91ea0bb03d8168aa11113528"
-reviewed = "2026-08-04"
+reviewed = "2026-08-30"
 renderer = "claude-open-half-edge-verification-2026-08-04-200dpi"
-note = "The eight sector labels sit on genuine open boundary half-edges (NW a north, h west; NE b north, c east; SE e south, d east; SW f south, g west), each with its own open wire, matching the source's outward stubs; the four plaquette bonds are internal and unlabelled. Residue: the house box stands in for the source's circle glyph."
+second_viewer = "codex-independent-ginjective-mpo-k2-countersign-2026-08-30-200-400dpi"
+note = "Fresh exact-hash 200/400dpi countersign on 2026-08-30 confirms four tensors, four internal plaquette bonds, and eight correctly associated labelled openings (NW a north, h west; NE b north, c east; SE e south, d east; SW f south, g west), with no lost or invented crossings. The stock MPO box against the source circle, looser spacing, and external label stations are legible faithful K2 house presentation."
 
 [[verdict]]
 id = "rmp-workbench-iii-peps-renormalization-one"
@@ -1503,12 +1508,12 @@ note = "The X contradiction is resolved: the four edge-centred PEPS sites the ma
 
 [[verdict]]
 id = "rmp-workbench-iii-peps-renormalization-two"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
 case_sha256 = "90fde6ac0e7f3aab2e426a5cb108f7b5ccf62fb22cd9ce9c173e2ab65fe02ca1"
-reviewed = "2026-08-05"
+reviewed = "2026-08-30"
 renderer = "fable-w7-crossings-vision-review-2026-08-05-200dpi"
 second_viewer = "fable-w7-crossings-recheck-2026-08-05-400dpi"
-note = "Kernel respell: central effective tensor, four corner blocks, connecting and free diagonal half-edges all present as angle ports. Residue: each source box carries four hatch ticks marking the blocked physical bundle, drawn here as one 60-degree physical leg per box -- bundle multiplicity owes no ink under the kernel contract (LANGUAGE-1.0 s5, #4931)."
+note = "Promoted under the exact-hash 200/400dpi two-viewer record: the central effective tensor, four corner blocks, connecting and free diagonal half-edges are all present as angle ports. The source's hatch ticks denote blocked physical bundles; one 60-degree physical leg per box is the contract-faithful presentation because bundle multiplicity owes no additional ink under LANGUAGE-1.0 section 5."
