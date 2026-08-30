@@ -132,6 +132,8 @@
 \dim_new:N \l__tenkz_string_endpoint_y_dim
 \dim_new:N \l__tenkz_string_distance_dim
 \dim_new:N \l__tenkz_string_nearest_dim
+\dim_new:N \l__tenkz_string_bead_dx_dim
+\dim_new:N \l__tenkz_string_bead_dy_dim
 \int_new:N \l__tenkz_string_n_int
 \int_new:N \l__tenkz_string_cubic_int
 \int_new:N \l__tenkz_string_recount_int
@@ -1392,24 +1394,37 @@
   }
 \prg_generate_conditional_variant:Nnn \__tenkz_string_inked:n {V} {T,F,TF}
 
-% The point at arclength fraction #2 along string #1, exposed as TikZ
-% coordinate #3 and reported as an event.  PGF's markings decoration advances
-% by actual path distance, unlike spath's segment-count coordinate system.
-\cs_new_protected:Npn \__tenkz_string_bead:nnn #1#2#3
+% Freeze the pre-surgery route a bead reads.  Resolution may ask before the
+% complete string pass freezes every route; both timings retain the same path.
+\cs_new_protected:Npn \__tenkz_string_bead_path:n #1
   {
     \prop_if_in:NnF \l__tenkz_string_kind_prop {#1}
       { \msg_error:nnn {tenkz}{string-unknown} {#1} }
-    % A bead reads the route before any crossing cut it.  Resolution freezes
-    % that copy for every string at once; a bead asked for earlier -- because
-    % something stands at the point it names -- freezes its own, and the two
-    % are the same route.
     \cs_if_exist:cF { \l__tikzspath_prefix_tl tenkz-bead-#1 }
       {
         \cs_set_eq:cc
           { \l__tikzspath_prefix_tl tenkz-bead-#1 }
           { \l__tikzspath_prefix_tl #1 }
       }
-    \tenkz@string@beadpath {tenkz-bead-#1} {#2} {#3}
+  }
+
+% The point and path-forward tangent at arclength fraction #2 along string
+% #1.  One PGF marking traversal owns both answers: spath coordinates count
+% segments, while the marking decoration advances by actual rendered length.
+% The two output dimensions are the page-space tangent vector; a degenerate
+% route returns zero so its caller can retain conservative blindness.
+\cs_new_protected:Npn \__tenkz_string_bead_frame:nnnNN #1#2#3#4#5
+  {
+    \__tenkz_string_bead_path:n {#1}
+    \tenkz@string@beadframe {tenkz-bead-#1} {#2} {#3}
+    \dim_set:Nn #4 { \tenkz@string@beadx pt }
+    \dim_set:Nn #5 { \tenkz@string@beady pt }
+  }
+% Expose the same arclength point as a TikZ coordinate and event.
+\cs_new_protected:Npn \__tenkz_string_bead:nnn #1#2#3
+  {
+    \__tenkz_string_bead_frame:nnnNN {#1} {#2} {#3}
+      \l__tenkz_string_bead_dx_dim \l__tenkz_string_bead_dy_dim
     \pgfpointanchor {#3} {center}
     \tenkz@event{stringbead|id=#1|t=#2|
       x=\fp_eval:n { round( \dim_to_fp:n { \pgf@x } , 4 ) }pt|
@@ -1431,9 +1446,56 @@
 % Markings positions are arclength fractions.  Keep this helper outside expl3
 % so TikZ key punctuation is parsed with document catcodes.
 \def\tenkz@string@beadpath#1#2#3{%
+  \tenkz@string@beadframe{#1}{#2}{#3}%
+}
+
+% The marking frame's first matrix column is the rendered path tangent at the
+% same arclength station used for the bead point.  Capture the column directly:
+% starting a nested TikZ path here would inherit `decorate` and recurse.  PGF
+% normalizes that column, so first verify the current segment's raw derivative;
+% an ill-conditioned derivative must leave the initialized zero vector blind.
+\def\tenkz@string@capturebeadframe{%
+  \ifx\pgfdecorationcurrentinputsegment\pgfdecorationinputsegmentcurveto%
+    \pgfpointcurveattime{\pgf@decorate@inputsegmenttime}%
+      {\pgf@decorate@inputsegment@first}%
+      {\pgf@decorate@inputsegment@supporta}%
+      {\pgf@decorate@inputsegment@supportb}%
+      {\pgf@decorate@inputsegment@last}%
+    \pgf@x=\pgf@xa%
+    \pgf@y=\pgf@ya%
+    \advance\pgf@x by-\pgf@xb%
+    \advance\pgf@y by-\pgf@yb%
+  \else%
+    \pgfpointdiff
+      {\pgf@decorate@inputsegment@first}%
+      {\pgf@decorate@inputsegment@last}%
+  \fi%
+  \ifdim\pgf@x<0pt \pgf@x=-\pgf@x \fi%
+  \ifdim\pgf@y<0pt \pgf@y=-\pgf@y \fi%
+  \advance\pgf@x by\pgf@y%
+  % Arclength-to-curve-time conversion is approximate.  Treat a derivative
+  % below one percent of its segment length as ill-conditioned rather than
+  % normalizing numerical drift into an authoritative face.
+  \pgf@xa=\pgfdecoratedinputsegmentlength\relax%
+  \divide\pgf@xa by100\relax%
+  \ifdim\pgf@x>\pgf@xa%
+    \pgfgettransformentries%
+      \tenkz@string@frameaa\tenkz@string@frameab%
+      \tenkz@string@frameba\tenkz@string@framebb%
+      \tenkz@string@frameshiftx\tenkz@string@frameshifty%
+    \xdef\tenkz@string@beadx{\tenkz@string@frameaa}%
+    \xdef\tenkz@string@beady{\tenkz@string@frameab}%
+  \fi%
+}
+\def\tenkz@string@beadframe#1#2#3{%
+  \gdef\tenkz@string@beadx{0}%
+  \gdef\tenkz@string@beady{0}%
   \path[
     spath/use=#1,
-    decoration={markings,mark=at position #2 with {\coordinate (#3);}},
+    decoration={markings,mark=at position #2 with {%
+      \coordinate (#3);%
+      \tenkz@string@capturebeadframe
+    }},
     decorate
   ];%
 }

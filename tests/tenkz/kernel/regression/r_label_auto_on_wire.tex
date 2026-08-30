@@ -11,8 +11,27 @@
 \file_input:n { tenkz-kernel.code.tex }
 \int_new:N \l__tenkz_test_side_count_int
 \tl_new:N \l__tenkz_test_side_label_tl
+\dim_new:N \l__tenkz_test_bead_dx_dim
+\dim_new:N \l__tenkz_test_bead_dy_dim
 \cs_new_eq:NN
   \__tenkz_test_side_auto:nN \__tenkz_kernel_r_label_auto_side:nN
+\cs_new_protected:Npn \__tenkz_test_stationary_bead:
+  {
+    \prop_put:Nnn \l__tenkz_string_kind_prop { stationary-probe } { open }
+    \path [ spath/save = stationary-probe ]
+      (0,0) .. controls (1,0) and (0,0) .. (1,0) ;
+    \__tenkz_string_bead_frame:nnnNN
+      {stationary-probe} {0.5} {tenkz-stationary-probe}
+      \l__tenkz_test_bead_dx_dim \l__tenkz_test_bead_dy_dim
+    \dim_compare:nNnF
+      {
+        \dim_abs:n { \l__tenkz_test_bead_dx_dim }
+        + \dim_abs:n { \l__tenkz_test_bead_dy_dim }
+      }
+      = {0pt}
+      { \errmessage{stationary~cubic~bead~returned~a~direction} }
+  }
+\cs_new_eq:NN \tenkzteststationarybead \__tenkz_test_stationary_bead:
 \cs_set_protected:Npn \__tenkz_kernel_r_label_auto_side:nN #1#2
   {
     \__tenkz_test_side_auto:nN {#1} #2
@@ -39,6 +58,16 @@
           {
             \str_if_eq:VnF #2 {s}
               { \errmessage{a~bead~at~the~tail~of~a~route~gave~up~south} }
+          }
+        {K}
+          {
+            \str_if_eq:VnF #2 {n}
+              { \errmessage{a~routed~head~bead~lost~its~forward~tangent} }
+          }
+        {L}
+          {
+            \str_if_eq:VnF #2 {s}
+              { \errmessage{a~routed~tail~bead~lost~its~reverse~tangent} }
           }
         {H}
           {
@@ -86,6 +115,14 @@
   \tnwire[name=W1]{P1}{Q1}
   \tn[at=on W1 1, skin=dot]{G}
 \end{tenkz}
+% Smooth routed strings use the same endpoint incidence count.  This pins the
+% forward sign at the head and its reversal at the tail; the curved midpoint
+% fixture in r_label_auto_gaps.tex separately distinguishes tangent from chord.
+\begin{tenkz}[lattice={3x1}, bonds=none]
+  \tnwire[kind=string, name=BE, via={(2,1)}]{open n}{open s}
+  \tn[at=on BE 0, skin=dot]{K}
+  \tn[at=on BE 1, skin=dot]{L}
+\end{tenkz}
 % A policy leg carries its bead too: the leg grows south out of its host, so
 % the bead's north and south both carry ink and east is the first face free.
 \begin{tenkz}[rows={wire}, cols=2, physical=down]
@@ -99,8 +136,13 @@
   \tnwire[name=WZ]{Z}{open s}
   \tn[at=on WZ 0.5, skin=dot]{J}
 \end{tenkz}
+% PGF's arclength inversion lands slightly beside this cubic's stationary
+% midpoint.  Numerical drift there must not become a normalized direction.
+\begin{tikzpicture}[overlay]
+  \tenkzteststationarybead
+\end{tikzpicture}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {6}
-  { \errmessage{on-wire~fixture~did~not~station~six~labels} }
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {8}
+  { \errmessage{on-wire~fixture~did~not~station~eight~labels} }
 \ExplSyntaxOff
 \end{document}
