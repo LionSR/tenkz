@@ -55,6 +55,11 @@
             \str_if_eq:VnF #2 {n}
               { \errmessage{closure~corner~lost~one~of~its~two~faces} }
           }
+        {E}
+          {
+            \str_if_eq:VnF #2 {w}
+              { \errmessage{unshifted~trace-row~mark~reservation~regressed} }
+          }
       }
       { \errmessage{unexpected~label~in~frame-cell~fixture} }
   }
@@ -104,9 +109,21 @@
   \tn[at=(1,1)]{}
   \tn[at=on wrap-1 0.19449155, skin=dot]{U}
 \end{tenkz}
+% A trace shifts a label only when its chosen side points beyond the row.
+% This interior dot's north and south faces carry wires; its explicit
+% same-dot mark stands east with zero trace step, so E must reserve east and
+% choose west.  A blanket exclusion of traced pictures would leave E east.
+\begin{tenkz}[lattice={3x3}, bonds=none, west=trace, east=trace]
+  \tn[at=(2,2), name=EC, skin=dot]{E}
+  \tn[at=(1,2), name=EN]{}
+  \tn[at=(3,2), name=ES]{}
+  \tnwire{EC}{EN}
+  \tnwire{EC}{ES}
+  \tnmark[form=label, label pos=e]{EC}{$m$}
+\end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_frame_side_count_int } = {5}
-  { \errmessage{frame-cell~fixture~did~not~station~five~labels} }
+\int_compare:nNnF { \l__tenkz_test_frame_side_count_int } = {6}
+  { \errmessage{frame-cell~fixture~did~not~station~six~labels} }
 \int_compare:nNnF { \l__tenkz_test_frame_route_count_int } = {6}
   { \errmessage{closure~occupancy~did~not~sample~two~frozen~routes} }
 \ExplSyntaxOff

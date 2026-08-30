@@ -41,6 +41,8 @@
 %     closed route;
 %   * an atom threaded on a wire stands at no cell of its own, and takes the
 %     two faces its carrier runs through at the bead.
+%   * an explicitly cardinal label mark on the same named ordinary dot takes
+%     that station before the dot's automatic label chooses one.
 %
 % A dot stands at the middle of the rectangle its atom claims, so an atom
 % spanning an even number of cells stands half a pitch from the two lanes
@@ -118,6 +120,16 @@
 \tl_new:N \l__tenkz_kernel_lab_initial_point_tl
 \tl_new:N \l__tenkz_kernel_lab_final_point_tl
 \tl_new:N \l__tenkz_kernel_lab_tangent_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_label_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_pos_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_node_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_base_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_class_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_side_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_row_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_col_tl
+\tl_new:N \l__tenkz_kernel_lab_mark_page_tl
+\bool_new:N \l__tenkz_kernel_lab_mark_carrier_bool
 \fp_const:Nn \c__tenkz_kernel_lab_route_sample_fp { 1 / 10000 }
 \fp_const:Nn \c__tenkz_kernel_lab_axis_tol_fp { 1 / 100 }
 % PGF stores path dimensions at scaled-point precision, so a coordinate
@@ -134,6 +146,8 @@
       { \__tenkz_kernel_r_label_wire_faces:n {##1} }
     \__tenkz_model_map_ids:nn {atom}
       { \__tenkz_kernel_r_label_bead_faces:n {##1} }
+    \__tenkz_model_map_marks_form:nN {label}
+      \__tenkz_kernel_r_label_mark_face:n
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_label_auto_side:nN #1#2
   {
@@ -207,6 +221,121 @@
       \l__tenkz_kernel_r_face_side_tl
   }
 \cs_generate_variant:Nn \__tenkz_kernel_r_label_mark:nn { ne, Ve, VV }
+% A fixed cardinal mark label and an automatic atom label on the exact same
+% named dot share one station geometry.  The mark's authored choice is known
+% before either label is measured, so reserve it with the wire faces rather
+% than waiting for the general measured-box ordering problem.  Indirect
+% targets, non-cardinal bearings, and non-dot skins stay outside this
+% deliberately literal collision rule.  A traced-row label may take an extra
+% clearance step; the same renderer helper decides that here and at ink time.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_face:n #1
+  {
+    \__tenkz_model_get:nnN {#1} {label}
+      \l__tenkz_kernel_lab_mark_label_tl
+    \__tenkz_model_get:nnN {#1} {label-pos}
+      \l__tenkz_kernel_lab_mark_pos_tl
+    \__tenkz_model_get:nnN {#1} {node}
+      \l__tenkz_kernel_lab_mark_node_tl
+    \bool_lazy_all:nT
+      {
+        { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_mark_label_tl }
+        { ! \tl_if_blank_p:V \l__tenkz_kernel_lab_mark_label_tl }
+        { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_mark_pos_tl }
+        { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_mark_node_tl }
+        {
+          \str_if_eq_p:ee
+            {
+              \__tenkz_kernel_node_item:Nn
+                \l__tenkz_kernel_lab_mark_node_tl {kind}
+            }
+            {record}
+        }
+      }
+      {
+        \exp_args:Ne \__tenkz_kernel_bearing_cardinal:nN
+          {
+            \__tenkz_kernel_r_compass:n
+              { \l__tenkz_kernel_lab_mark_pos_tl }
+          }
+          \l__tenkz_kernel_lab_mark_side_tl
+        \exp_args:NnV \clist_if_in:nnT {e,n,w,s}
+          \l__tenkz_kernel_lab_mark_side_tl
+          { \__tenkz_kernel_r_label_mark_face_target: }
+      }
+  }
+\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_face_target:
+  {
+    \prop_get:NeN \l__tenkz_kernel_named_prop
+      {
+        \__tenkz_kernel_node_item:Nn
+          \l__tenkz_kernel_lab_mark_node_tl {name}
+      }
+      \l__tenkz_kernel_lab_atom_tl
+    \quark_if_no_value:NF \l__tenkz_kernel_lab_atom_tl
+      {
+        \prop_get:NVN \l__tenkz_model_class_prop
+          \l__tenkz_kernel_lab_atom_tl
+          \l__tenkz_kernel_lab_mark_class_tl
+        \str_if_eq:VnT \l__tenkz_kernel_lab_mark_class_tl {atom}
+          {
+            \__tenkz_model_get:nnN { \l__tenkz_kernel_lab_atom_tl } {label}
+              \l__tenkz_kernel_lab_face_tl
+            \__tenkz_model_get:nnN
+              { \l__tenkz_kernel_lab_atom_tl } {label-pos}
+              \l__tenkz_kernel_lab_route_tl
+            \__tenkz_model_get:nnN { \l__tenkz_kernel_lab_atom_tl } {cluster}
+              \l__tenkz_kernel_lab_via_tl
+            \__tenkz_model_get:nnN
+              { \l__tenkz_kernel_lab_atom_tl } {cluster-of}
+              \l__tenkz_kernel_lab_host_tl
+            \exp_args:NV \__tenkz_kernel_atom_skin_base:nN
+              \l__tenkz_kernel_lab_atom_tl
+              \l__tenkz_kernel_lab_mark_base_tl
+            \bool_lazy_all:nT
+              {
+                { ! \quark_if_no_value_p:N \l__tenkz_kernel_lab_face_tl }
+                { ! \tl_if_blank_p:V \l__tenkz_kernel_lab_face_tl }
+                { \quark_if_no_value_p:N \l__tenkz_kernel_lab_route_tl }
+                { \quark_if_no_value_p:N \l__tenkz_kernel_lab_via_tl }
+                { \quark_if_no_value_p:N \l__tenkz_kernel_lab_host_tl }
+                { \str_if_eq_p:Vn \l__tenkz_kernel_lab_mark_base_tl {dot} }
+              }
+              { \__tenkz_kernel_r_label_mark_face_reserve: }
+          }
+      }
+  }
+\cs_new_protected:Npn \__tenkz_kernel_r_label_mark_face_reserve:
+  {
+    \fp_zero:N \l__tenkz_kernel_r_label_step_fp
+    \exp_args:NV \__tenkz_kernel_r_record_carrier:nNNN
+      \l__tenkz_kernel_lab_atom_tl
+      \l__tenkz_kernel_lab_mark_row_tl
+      \l__tenkz_kernel_lab_mark_col_tl
+      \l__tenkz_kernel_lab_mark_carrier_bool
+    \bool_if:NT \l__tenkz_kernel_lab_mark_carrier_bool
+      {
+        \__tenkz_geom_local_bearing:nnnnN {kpic}
+          { \l__tenkz_kernel_lab_mark_row_tl }
+          { \l__tenkz_kernel_lab_mark_col_tl }
+          {
+            \__tenkz_kernel_r_compass:n
+              { \l__tenkz_kernel_lab_mark_side_tl }
+          }
+          \l__tenkz_kernel_lab_mark_page_tl
+        \use:e
+          {
+            \exp_not:N \__tenkz_kernel_r_trace_label_step:nn
+              { \tl_use:N \l__tenkz_kernel_lab_mark_row_tl }
+              { \tl_use:N \l__tenkz_kernel_lab_mark_page_tl }
+          }
+      }
+    \fp_compare:nNnT { \l__tenkz_kernel_r_label_step_fp } = {0}
+      {
+        \__tenkz_kernel_r_label_mark:Ve
+          \l__tenkz_kernel_lab_atom_tl
+          { \l__tenkz_kernel_lab_mark_side_tl }
+      }
+  }
 % Mark the face through which the segment from the resolved incident point in
 % `lab_centre` to page point (#2,#3) leaves atom #1.  Geometry owns the atom's
 % complete carrier basis; applying its
