@@ -231,13 +231,15 @@ note = "Kernel migration (wave 1B), Fable-verified against the published panel: 
 
 [[verdict]]
 id = "rmp-ii-staircase"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
-case_sha256 = "4146c0cffbb0248a36d06a4c5296eb094056f9790d4c9caedc571648609255c5"
-reviewed = "2026-08-29"
-renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
-note = "Issue #5363: the four V isometries respelled from the house box onto the stock pill silhouette, giving the source's rounded V glyph (Vtensor, ImagesReview Section II.tex lines 75-81); the 225- and 45-degree bond ports meet and trim to the measured rounded boundary. Remaining residue: the |0> label sits south rather than east of its dot."
+defects = []
+case_sha256 = "40188bf5eaebc82be31fad69f4108c9e86a98220f3fceb78b50950e4f0b6fca0"
+reviewed = "2026-08-30"
+renderer = "codex-staircase-label-repair-review-2026-08-30-200-400dpi"
+second_viewer = "codex-independent-staircase-label-countersign-2026-08-30-200-400dpi"
+note = "The sole remaining residue is repaired: the ket-zero label now sits east of its dot, matching the author's west-anchored text at ImagesReview Section II.tex line 542, and clears the outgoing 45-degree bond. Fresh exact-hash 200/400dpi two-viewer review confirms the staircase orientation, four rounded V isometries, bonds, physical openings, and labels with zero audit findings."
 
 [[verdict]]
 id = "rmp-ii-circuit"
