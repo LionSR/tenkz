@@ -34,7 +34,10 @@
       { \errmessage{circle~frame~emitted~an~automatic~label~claim} }
     \bool_lazy_and:nnT
       { \str_if_eq_p:nn {#1} {auto} }
-      { \str_if_eq_p:Vn \l__tenkz_test_side_label_tl {I} }
+      {
+        \str_if_eq_p:Vn \l__tenkz_test_side_label_tl {I}
+        || \str_if_eq_p:Vn \l__tenkz_test_side_label_tl {O}
+      }
       { \errmessage{span-internal~waypoint~emitted~a~label~claim} }
     \__tenkz_test_labelclaim:nn {#1} {#2}
   }
@@ -59,6 +62,11 @@
           {
             \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
               { \errmessage{hidden~waypoint~made~an~unverified~claim} }
+          }
+        {O}
+          {
+            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
+              { \errmessage{hidden~interior~waypoint~made~a~claim} }
           }
       }
       {
@@ -145,6 +153,11 @@
             \str_if_eq:VnF #2 {s}
               { \errmessage{hidden~waypoint~fallback~regressed} }
           }
+        {O}
+          {
+            \str_if_eq:VnF #2 {s}
+              { \errmessage{hidden~interior~fallback~regressed} }
+          }
       }
       { \errmessage{unexpected~label~in~gap~fixture} }
   }
@@ -187,13 +200,23 @@
   \tn[at=2 e of L, name=LE]{}
   \tnwire[kind=string, via={1 se of L}]{L}{LE}
 \end{tenkz}
-% The first geometric waypoint lies inside I's three-cell span.  Its hidden
-% eastward run cannot certify the face where the orthogonal path eventually
-% emerges, so I keeps the deterministic south fallback but remains blind.
+% The endpoint names I's west cell, while its first geometric waypoint lies
+% at the east cell inside the same three-cell span.  Measuring containment
+% from the incidence cell would miss that hidden two-cell run; the atom centre
+% keeps I on its deterministic south fallback and in the blind ledger.
 \begin{tenkz}[lattice={4x5}, bonds=none]
   \tn[at=(3,2), wide=3, name=I, skin=dot]{I}
   \tn[at=(1,4), name=IE]{}
-  \tnwire[kind=string, route=orth, via={1 e of I}]{I}{IE}
+  \tnwire[kind=string, route=orth, via={1 e of I}]{(3,2)}{IE}
+\end{tenkz}
+% The same span-internal neighbour can follow a labelled interior waypoint.
+% The path enters O visibly from the west, then turns north at the internal
+% east point; that hidden side is disabled and makes the station unverified.
+\begin{tenkz}[lattice={4x5}, bonds=none]
+  \tn[at=(3,2), wide=3, name=O, skin=dot]{O}
+  \tn[at=(3,1), name=OF]{}
+  \tn[at=(1,4), name=OE]{}
+  \tnwire[kind=string, route=orth, via={O,1 e of O}]{OF}{OE}
 \end{tenkz}
 % An atom named as an interior orthogonal waypoint is entered from north and
 % left south, even though neither endpoint names it; east is its first free
@@ -286,12 +309,12 @@
     {Z}{ZE}
 \end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {15}
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {16}
   {
     \errmessage
       {
         gap~fixture~stationed~\int_use:N \l__tenkz_test_side_count_int
-        ~labels,~not~fifteen
+        ~labels,~not~sixteen
       }
   }
 \ExplSyntaxOff

@@ -96,6 +96,8 @@
 \fp_new:N \l__tenkz_kernel_lab_before_y_fp
 \fp_new:N \l__tenkz_kernel_lab_centre_x_fp
 \fp_new:N \l__tenkz_kernel_lab_centre_y_fp
+\fp_new:N \l__tenkz_kernel_lab_atom_centre_x_fp
+\fp_new:N \l__tenkz_kernel_lab_atom_centre_y_fp
 \fp_new:N \l__tenkz_kernel_lab_next_x_fp
 \fp_new:N \l__tenkz_kernel_lab_next_y_fp
 \tl_new:N \l__tenkz_kernel_lab_local_u_tl
@@ -556,15 +558,19 @@
       { \int_compare_p:nNn { \l__tenkz_kernel_lab_wide_tl } > {1} }
       { \int_compare_p:nNn { \l__tenkz_kernel_lab_rows_tl } > {1} }
       {
+        \exp_args:NV \__tenkz_kernel_r_xy:nNN
+          \l__tenkz_kernel_lab_atom_tl
+          \l__tenkz_kernel_lab_atom_centre_x_fp
+          \l__tenkz_kernel_lab_atom_centre_y_fp
         \__tenkz_kernel_r_local_vector:VeeNN
           \l__tenkz_kernel_lab_atom_tl
           {
             \l__tenkz_kernel_lab_next_x_fp
-            - \l__tenkz_kernel_lab_centre_x_fp
+            - \l__tenkz_kernel_lab_atom_centre_x_fp
           }
           {
             \l__tenkz_kernel_lab_next_y_fp
-            - \l__tenkz_kernel_lab_centre_y_fp
+            - \l__tenkz_kernel_lab_atom_centre_y_fp
           }
           \l__tenkz_kernel_lab_local_u_tl
           \l__tenkz_kernel_lab_local_v_tl
@@ -820,9 +826,9 @@
       }
   }
 
-% A segment joining two stations on the same atom lies under that atom's
-% glyph.  It cannot establish a free label face, so suppress just that side
-% of the waypoint scan and put the owner in the conservative blind ledger.
+% A segment joining two stations on the same atom, or joining an atom to a
+% geometric point inside its claimed span, cannot establish a free label
+% face.  Suppress just that side and put the owner in the blind ledger.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_waypoint_neighbor:nN #1#2
   {
     \tl_set:Ne \l__tenkz_kernel_lab_node_tl
@@ -833,7 +839,21 @@
       \l__tenkz_kernel_lab_far_row_tl
       \l__tenkz_kernel_lab_far_col_tl
       \l__tenkz_kernel_lab_far_bool
-    \quark_if_no_value:NF \l__tenkz_kernel_lab_far_atom_tl
+    \quark_if_no_value:NTF \l__tenkz_kernel_lab_far_atom_tl
+      {
+        \exp_args:NV \__tenkz_kernel_r_node:n
+          \l__tenkz_kernel_lab_node_tl
+        \exp_args:NV \__tenkz_kernel_r_xy:nNN
+          \l__tenkz_kernel_lab_node_tl
+          \l__tenkz_kernel_lab_next_x_fp
+          \l__tenkz_kernel_lab_next_y_fp
+        \__tenkz_kernel_r_label_geometric_neighbor_hidden:T
+          {
+            \bool_set_false:N #2
+            \__tenkz_kernel_r_label_blind:V
+              \l__tenkz_kernel_lab_atom_tl
+          }
+      }
       {
         \str_if_eq:VVT \l__tenkz_kernel_lab_atom_tl
           \l__tenkz_kernel_lab_far_atom_tl
