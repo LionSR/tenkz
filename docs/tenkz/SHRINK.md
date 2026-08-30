@@ -4964,3 +4964,22 @@ No parser, kernel, fixture, generated reference, or census baseline changes
 here. M1, M2, M3, M4, M5, and M6 are unchanged; this correction aligns the
 sentence header, normative key table, and immutable verdict ledger with the
 reviewed corpus evidence.
+
+### 2026-08-30 — restore the PEPS marginal state boundary
+
+The source state panel in `rmp-ii-peps-marginal` exposes four virtual indices
+on every side of its 4-by-4 PEPS patch.  The plane boundary policy supplied only
+the west and east sides, leaving the north and south virtual openings absent
+beside the separate page-vertical physical legs.  The picture now asks that
+same policy to own all four sides.  A fresh
+exact-hash two-viewer review at 200 and 400 dpi confirms all sixteen state
+sites, twenty-four internal bonds, sixteen virtual perimeter openings, and
+sixteen physical legs, while the doubled panel retains its complete boundary,
+kept legs, and four sitewise trace closures.
+
+M4 rises from 26.47 to 26.48 for the one added option line.  Reusing the
+existing boundary policy removes eight duplicated wire declarations while
+preserving their rendered geometry and boundary signature.  M1, M2, M3, M5,
+and M6 do not move, and no escape or parser path is added.
+
+Census-correction: #13

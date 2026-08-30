@@ -50,16 +50,18 @@ the mathematical contract is intact, its verdict and note should become
 
 ## Current classification
 
-This table classifies the 98 `cosmetic-gap` verdicts at merge
-`c3b4667c10faa7cadaf4a18fdbab3bc72b85fa18`. The reason column records the
-disposition of the current verdict note; it is not a substitute for the
-hash-pinned visual check required before changing a verdict.
+This table began with the 98 `cosmetic-gap` verdicts at merge
+`c3b4667c10faa7cadaf4a18fdbab3bc72b85fa18` and now also includes the three
+class-fixed-extent rows first classified on 2026-08-29.  Resolved rows remain
+as disposition history.  The reason column records the verdict note's
+disposition; it is not a substitute for the hash-pinned visual check required
+before changing a verdict.
 
 | Target | Kind | Reason / next action |
 |---|---:|---|
 | `rmp-ii-peps-projection` | — | Promoted to `faithful` 2026-08-04, reconfirmed on the kernel 2026-08-05 (wave 5, Fable-verified): the plane respell preserves the drawn model; A takes the east station and |phi) becomes a port label, both clearer than the 0.7 placements. |
 | `rmp-ii-mps-marginal` | — | Promoted to `faithful` 2026-08-05: the kernel migration replaced the heavy racetrack with minimal straight trace closures, and the state row regained its upward legs and open chain stubs; verified against the author panel at 200/400dpi. |
-| `rmp-ii-peps-marginal` | K2 | Migrated to the kernel 2026-08-05 (#5507, Fable-verified): the bilayer basis now spells open transverse ket-bra legs, so the kept sites keep their legs and the traced column closes site by site; the recorded trace-loop overshoot is gone. Residue: the contract bilayer offset overlaps the two sheets where the source separates them vertically. |
+| `rmp-ii-peps-marginal` | — | Repaired and promoted to `faithful` 2026-08-30 on a fresh exact-hash 200/400dpi two-viewer review: explicit north/south openings restore the state sheet's full virtual boundary; the doubled sheet keeps every open ket-bra leg and sitewise closure, while compact east wraps and overlapping affine sheets are equivalent house layout. |
 | `rmp-ii-mpu-brickwork` | — | Promoted to `faithful` 2026-08-04: twelve legs, alternating layers, and labels match; labelled boxes for dotted gate pairs are the inherent circuit presentation. |
 | `rmp-ii-mpu-blocking` | K1 | New 2026-08-05 with the kernel migration: the model records hull-routed side closures for the a/b beads, but the renderer does not yet ink a hull route on an endpoint index wire, so each closure draws along its column axis over the U-Ubar bond. Ink the contracted face-departure arc (LANGUAGE-1.0 s5) in the shared renderer, then re-review; the grid-tier predecessor's side-cup policy inked this correctly. |
 | `rmp-ii-mpu-two-shift` | K1 | Resolved 2026-08-04: the case now carries the workbench-twin skin-pairings model with the published palette; the row channels keep house ink where the panel colours the movers. |
@@ -87,6 +89,7 @@ hash-pinned visual check required before changing a verdict.
 | `rmp-iii-a-proof-three` | — | Reconfirmed `faithful` on the kernel 2026-08-05 (wave 3, Fable-verified): the full stack matches level for level in the source's all-black ink, with equal audited signatures around the lambda coefficient. |
 | `rmp-iii-a-ghz-state` | K1 | Resolved: the case now records the full six-by-eight staggered model on the kernel (all junctions, bonds, and legs verified present 2026-07-30); only the shared kernel spacing and stroke profile differ. |
 | `rmp-iii-a-ghz-tensor` | — | Kernel redraw 2026-08-05 retires the labelled box with orthogonal legs in favour of the author's own glyphless junction with the 45-degree physical tick; four open indices and the equation are unchanged. |
+| `rmp-iii-a-symmetry-sector` | K3 | Class-fixed extent keeps both loop constructions, closures, bonds, and insertions intact and every name legible, but the R/X names sit beside empty capsules rather than inside; review label inscription and placement at the family level. |
 | `rmp-iii-a-hadamard` | — | Resolved 2026-08-05: the paired panel (lines 359-360) IS the author's Hadamard glyph — paper line 1449 equates that extraction with the matrix, and the cluster state draws H as the filled dot on every internal bond; the case is redrawn as the dot-on-bond and promoted to `faithful`. |
 | `rmp-iii-a-spt-mpo` | — | Promoted to `faithful` 2026-08-04: string pull, both crossings, action boxes, and the U_g insertion verified under the boundary audit. |
 | `rmp-iii-a-spt-intertwiner` | — | X resolved 2026-08-05 (wave 7): the source factor order gh X (g/h)(g/h) = gh gh X (g/h) is restored on the kernel and the mirrored spelling is retired; promoted to `faithful` with the gh row quantization noted as house placement. |
@@ -96,12 +99,14 @@ hash-pinned visual check required before changing a verdict.
 | `rmp-iii-a-torus-one` | — | Promoted to `faithful` 2026-08-04; wave-7 kernel migration reconfirmed 2026-08-05: the contract's own traced-lattice spelling carries both homotopy classes as wound strings crossing once at the outlined i, the canonical projection of the source's embedded donut. |
 | `rmp-iii-a-torus-two` | — | Kernel respell 2026-08-05: the periodic word is one closed operator string returning below the row; square return corners and the outlined marked box are house forms for the source's rounded loop and filled blue tensor. |
 | `rmp-iii-a-torus-three` | — | Promoted to `faithful` 2026-08-25 with the waypoint-thinning re-review: outline versus solid fill on the enlarged crossing is house style, and the current-hash render carries an independent countersign. |
-| `rmp-iii-b-anyon-pair` | K2 | New 2026-08-11: the 2026-08-03 source-topology review moved the case to `cosmetic-gap` after this table's snapshot. Nine PEPS sites, two affine beads, twelve grid bonds, twelve perimeter openings, nine physical legs, and the five-position string with two declared crossings all match; only stroke weight and endpoint styling remain, both faithful differences under this bar. Re-review the hash-pinned render and promote to `faithful`. |
+| `rmp-iii-b-anyon-pair` | — | Promoted to `faithful` 2026-08-30 on an independent exact-hash 200/400dpi countersign: all sites, bonds, openings, physical legs, beads, crossings, endpoints, and labels match; stroke, projection, bead, stub, and label-station differences are legible house presentation. |
 | `rmp-iii-b-dyon` | — | Promoted to `faithful` 2026-08-29 on maintainer countersign (p.67). The first viewer proposed reclassifying to K1 because the enclosure inks contour-only against the source's filled region; the maintainer judged the contour faithful here, so the enclosure-fill question stays with `rmp-ii-boundary-region` alone. |
+| `rmp-iii-b-r-tensor-right` | K3 | R_{i,b} remains legible above an empty white resolver box rather than inside; review the same family-level inscription and placement policy as the other class-fixed-extent cases. |
 | `rmp-iii-b-self-braiding` | X | Moved to `structural-gap` 2026-08-29 on maintainer review (p.68): completely wrong, not the complete match this row previously claimed. The route to a fix is redrawing the case against the author's TikZ at `ImagesReview Section III` lines 704-738, not a kernel change. Exotic; no kernel work directed. |
 | `rmp-iii-b-braid-one` | — | Promoted to `faithful` 2026-08-29 on maintainer countersign (p.71). The first viewer flagged that tenkz floats the i and j labels in open space where the source pins each to its bead and named it the weakest case in the promote set; the maintainer read the panel as correct. Eight beads a side, two strands that neither cross, all four labels present. |
 | `rmp-iii-b-braid-two` | X | Moved to `structural-gap` 2026-08-29 on maintainer review (p.72): one node more than the source, and a string that should run to an open end instead terminates on an anyon -- the case header declares six open string endpoints while the body opens only two. Exotic; no kernel work directed. |
 | `rmp-iii-b-braid-three` | X | Moved to `structural-gap` 2026-08-29 on maintainer review (p.73): the R_{j,a} attachment is physically and mathematically wrong, not the upright-vs-sheared contour residue this row recorded. Exotic; no kernel work directed. |
+| `rmp-iii-b-braid-four` | K3 | Both resolver names remain legible immediately outside their white boxes rather than inside; include both in the class-fixed-extent family-level inscription and placement review. |
 | `rmp-iii-b-condensation` | K4 | Add the finite projection mark named by the verdict note. |
 | `rmp-iv-ground-space-1d` | — | Promoted to `faithful` 2026-08-22 with the arc-route landing (#6201, Fable-verified): the recorded corner arcs of the return now ink as rounded turns, the house racetrack form of the source's square-cornered rectangle; X remains the stock box on the return. |
 | `rmp-iv-ground-space-2d` | K3 | Reclassified from X 2026-08-05 (wave 6, Fable-verified): the X row's premise is false — both GS2D.pdf and the paper's fig4 twin draw plain undirected legs at 900dpi, so `physical=up` records the source faithfully and #5360 is not implicated. Actual residue: physical legs pierce both region windows at the hull's full page-up reach, crowding the sheet where the source draws short ticks; prefer a family-level leg-reach metric fix, then re-review. |
