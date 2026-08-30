@@ -34,10 +34,11 @@
 %   * a transverse plane closure names its two hosts and the axes it leaves
 %     them by;
 %   * an endpoint port names its record and its face angle;
-%   * every other endpoint resolves its owner and the next route point, then
-%     reads that page-space bearing in the atom's complete carrier basis;
+%   * every other claimable string endpoint reads its frozen route tangent,
+%     while non-string endpoints read the next resolved point, in the atom's
+%     basis;
 %   * string waypoints read both frozen route tangents, cyclically for a
-%     closed route, while a generated hull reads its exact endpoint tangent;
+%     closed route;
 %   * an atom threaded on a wire stands at no cell of its own, and takes the
 %     two faces its carrier runs through at the bead.
 %
@@ -115,6 +116,8 @@
 % round-trip through the frozen soft path can differ by a few millionths of a
 % pitch from the resolver's floating-point station.
 \fp_const:Nn \c__tenkz_kernel_lab_point_tol_fp { 1 / 100000 }
+\cs_generate_variant:Nn \__tenkz_kernel_r_span:nNN { VNN }
+\cs_generate_variant:Nn \__tenkz_kernel_r_local_vector:nnnNN { VeeNN }
 % One pass over the frozen records fills the table the atom pass reads.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_occupancy:
   {
@@ -355,8 +358,8 @@
 % Endpoint #2 of wire #1 stands on the atom it names.  A port names its
 % record and the angle its ink leaves at, which is the answer outright.
 % Every other endpoint resolves its owner and the next point of the route.
-% A hull route owns generated points absent from the authored address chain,
-% so that one case samples the already-frozen route beside the endpoint.
+% A string then reads its frozen endpoint tangent; this covers smooth curves
+% and generated hull points absent from the authored address chain alike.
 \cs_new_protected:Npn \__tenkz_kernel_r_label_end_faces:nnnn #1#2#3#4
   {
     \quark_if_no_value:nF {#2}
@@ -419,15 +422,42 @@
                               \l__tenkz_kernel_lab_atom_tl
                           }
                           {
-                            \__tenkz_kernel_r_label_mark_bearing:VVV
-                              \l__tenkz_kernel_lab_atom_tl
-                              \l__tenkz_kernel_lab_next_x_fp
-                              \l__tenkz_kernel_lab_next_y_fp
+                            \__tenkz_model_get:nnN {#1} {kind}
+                              \l__tenkz_kernel_lab_owner_tl
+                            \str_if_eq:VnTF
+                              \l__tenkz_kernel_lab_owner_tl {string}
+                              {
+                                \quark_if_no_value:NTF
+                                  \l__tenkz_kernel_lab_far_atom_tl
+                                  {
+                                    \__tenkz_kernel_r_label_geometric_neighbor_hidden:TF
+                                      {
+                                        \__tenkz_kernel_r_label_blind:V
+                                          \l__tenkz_kernel_lab_atom_tl
+                                      }
+                                      {
+                                        \__tenkz_kernel_r_label_path_end_bearing:nnV
+                                          {#1} {#4}
+                                          \l__tenkz_kernel_lab_atom_tl
+                                      }
+                                  }
+                                  {
+                                    \__tenkz_kernel_r_label_path_end_bearing:nnV
+                                      {#1} {#4}
+                                      \l__tenkz_kernel_lab_atom_tl
+                                  }
+                              }
+                              {
+                                \__tenkz_kernel_r_label_mark_bearing:VVV
+                                  \l__tenkz_kernel_lab_atom_tl
+                                  \l__tenkz_kernel_lab_next_x_fp
+                                  \l__tenkz_kernel_lab_next_y_fp
+                              }
                           }
                       }
                   }
                   {
-                    \__tenkz_kernel_r_label_hull_bearing:nnV
+                    \__tenkz_kernel_r_label_path_end_bearing:nnV
                       {#1} {#4} \l__tenkz_kernel_lab_atom_tl
                   }
               }
@@ -460,10 +490,12 @@
     \quark_if_no_value:NT #4 { \tl_set:Nn #4 {#2} }
   }
 
-% A generated hull lane has no authored neighbour address.  Its frozen path
-% is already available here, so read its exact endpoint tangent.  This cannot
-% skip a short first/last segment as a fixed arclength fraction could.
-\cs_new_protected:Npn \__tenkz_kernel_r_label_hull_bearing:nnn #1#2#3
+% A smooth string's authored neighbour chord need not share its rendered
+% endpoint tangent, and a generated hull has no authored neighbour at all.
+% Their common frozen path is already available here, so read its exact
+% endpoint tangent.  This cannot skip a short first/last segment as a fixed
+% arclength fraction could.
+\cs_new_protected:Npn \__tenkz_kernel_r_label_path_end_bearing:nnn #1#2#3
   {
     \__tenkz_kernel_r_sid:nN {#1} \l__tenkz_kernel_lab_owner_tl
     \__tenkz_string_inked:VTF \l__tenkz_kernel_lab_owner_tl
@@ -507,7 +539,59 @@
       }
       { \__tenkz_kernel_r_label_blind:n {#3} }
   }
-\cs_generate_variant:Nn \__tenkz_kernel_r_label_hull_bearing:nnn { nnV }
+\cs_generate_variant:Nn \__tenkz_kernel_r_label_path_end_bearing:nnn { nnV }
+
+% True when a string's nearest semantic neighbour is a geometric construction
+% inside the rectangle claimed by a spanning endpoint atom.  This includes a
+% waypoint and a geometric opposite end alike: such a hidden segment does not
+% say which face the rendered path eventually leaves through.  Named stations
+% are handled by owner identity before this test, and single-cell atoms retain
+% their exact rendered tangent rather than treating the whole cell as glyph ink.
+\prg_new_conditional:Npnn
+  \__tenkz_kernel_r_label_geometric_neighbor_hidden: { T , F , TF }
+  {
+    \__tenkz_kernel_r_span:VNN \l__tenkz_kernel_lab_atom_tl
+      \l__tenkz_kernel_lab_wide_tl \l__tenkz_kernel_lab_rows_tl
+    \bool_lazy_or:nnTF
+      { \int_compare_p:nNn { \l__tenkz_kernel_lab_wide_tl } > {1} }
+      { \int_compare_p:nNn { \l__tenkz_kernel_lab_rows_tl } > {1} }
+      {
+        \__tenkz_kernel_r_local_vector:VeeNN
+          \l__tenkz_kernel_lab_atom_tl
+          {
+            \l__tenkz_kernel_lab_next_x_fp
+            - \l__tenkz_kernel_lab_centre_x_fp
+          }
+          {
+            \l__tenkz_kernel_lab_next_y_fp
+            - \l__tenkz_kernel_lab_centre_y_fp
+          }
+          \l__tenkz_kernel_lab_local_u_tl
+          \l__tenkz_kernel_lab_local_v_tl
+        \bool_lazy_all:nTF
+          {
+            {
+              \fp_compare_p:n
+                {
+                  abs(\l__tenkz_kernel_lab_local_u_tl)
+                  <= \l__tenkz_kernel_lab_wide_tl / 2
+                    + \c__tenkz_kernel_lab_point_tol_fp
+                }
+            }
+            {
+              \fp_compare_p:n
+                {
+                  abs(\l__tenkz_kernel_lab_local_v_tl)
+                  <= \l__tenkz_kernel_lab_rows_tl / 2
+                    + \c__tenkz_kernel_lab_point_tol_fp
+                }
+            }
+          }
+          { \prg_return_true: }
+          { \prg_return_false: }
+      }
+      { \prg_return_false: }
+  }
 % The atom a wire endpoint stands on, and the cell it stands at.  A cell or
 % basis-member address names the cell outright and the frame answers which
 % atom claimed it, so an end anywhere in a spanning atom's rectangle finds

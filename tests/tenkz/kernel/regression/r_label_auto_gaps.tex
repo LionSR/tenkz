@@ -32,6 +32,10 @@
       { \str_if_eq_p:nn {#1} {auto} }
       { \str_if_eq_p:ee { \__tenkz_kernel_r_frame_word: } {circle} }
       { \errmessage{circle~frame~emitted~an~automatic~label~claim} }
+    \bool_lazy_and:nnT
+      { \str_if_eq_p:nn {#1} {auto} }
+      { \str_if_eq_p:Vn \l__tenkz_test_side_label_tl {I} }
+      { \errmessage{span-internal~waypoint~emitted~a~label~claim} }
     \__tenkz_test_labelclaim:nn {#1} {#2}
   }
 \cs_set_protected:Npn \__tenkz_kernel_r_label_auto_side:nN #1#2
@@ -50,6 +54,11 @@
           {
             \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
               { \errmessage{circle~carrier~bead~made~an~unverified~claim} }
+          }
+        {I}
+          {
+            \prop_if_in:NnF \g__tenkz_kernel_lab_blind_prop {#1}
+              { \errmessage{hidden~waypoint~made~an~unverified~claim} }
           }
       }
       {
@@ -126,6 +135,16 @@
             \str_if_eq:VnF #2 {s}
               { \errmessage{affine~local~bearing~regressed} }
           }
+        {L}
+          {
+            \str_if_eq:VnF #2 {n}
+              { \errmessage{smooth~endpoint~tangent~regressed} }
+          }
+        {I}
+          {
+            \str_if_eq:VnF #2 {s}
+              { \errmessage{hidden~waypoint~fallback~regressed} }
+          }
       }
       { \errmessage{unexpected~label~in~gap~fixture} }
   }
@@ -157,6 +176,24 @@
   \tn[at=(1,1), name=Q, skin=dot]{Q}
   \tn[at=(1,3), name=E]{}
   \tnwire[kind=string, via={1 s of Q}]{Q}{E}
+\end{tenkz}
+% A non-cell endpoint on a smooth string must read the rendered endpoint
+% tangent, not the chord to its first authored waypoint.  The southeast chord
+% would occupy east and leave L south; the Hobby tangent occupies south, so L
+% moves north and can make a verified claim.
+\begin{tenkz}[lattice={3x4}, bonds=none]
+  \tn[at=(1,1), name=LA]{}
+  \tn[at=1 s of LA, name=L, skin=dot]{L}
+  \tn[at=2 e of L, name=LE]{}
+  \tnwire[kind=string, via={1 se of L}]{L}{LE}
+\end{tenkz}
+% The first geometric waypoint lies inside I's three-cell span.  Its hidden
+% eastward run cannot certify the face where the orthogonal path eventually
+% emerges, so I keeps the deterministic south fallback but remains blind.
+\begin{tenkz}[lattice={4x5}, bonds=none]
+  \tn[at=(3,2), wide=3, name=I, skin=dot]{I}
+  \tn[at=(1,4), name=IE]{}
+  \tnwire[kind=string, route=orth, via={1 e of I}]{I}{IE}
 \end{tenkz}
 % An atom named as an interior orthogonal waypoint is entered from north and
 % left south, even though neither endpoint names it; east is its first free
@@ -249,7 +286,13 @@
     {Z}{ZE}
 \end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \l__tenkz_test_side_count_int } = {13}
-  { \errmessage{gap~fixture~did~not~station~thirteen~labels} }
+\int_compare:nNnF { \l__tenkz_test_side_count_int } = {15}
+  {
+    \errmessage
+      {
+        gap~fixture~stationed~\int_use:N \l__tenkz_test_side_count_int
+        ~labels,~not~fifteen
+      }
+  }
 \ExplSyntaxOff
 \end{document}
