@@ -5024,3 +5024,20 @@ from 106 faithful / 20 cosmetic-gap / 4 structural-gap to
 110 faithful / 16 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+### 2026-08-30 — restore the staircase ket-zero station
+
+The staircase's sole remaining residue was a written south label station where
+the authoritative source anchors the ket-zero text east of its dot.  Changing
+that public bearing from 270 to 0 moves only the measured label box; the atom,
+four bonds, four isometries, physical openings, and boundary events are
+unchanged.  Fresh exact-hash two-viewer review at 200 and 400 dpi confirms the
+source placement and clear separation from the outgoing diagonal bond.
+
+No parser, kernel, fixture, generated reference, or census baseline changes.
+The case keeps the same line and key counts, so M1, M2, M3, M4, M5, and M6 are
+unchanged.  The verdict census moves from
+110 faithful / 16 cosmetic-gap / 4 structural-gap to
+111 faithful / 15 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
