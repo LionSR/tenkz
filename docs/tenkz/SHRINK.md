@@ -5075,3 +5075,23 @@ parser, kernel, rendered ink, verdict status, census, or shrink meter changes;
 M1, M2, M3, M4, M5, and M6 are unchanged.
 
 Provenance-correction: #13
+
+### 2026-08-31 — restore the Diagram2 virtual return
+
+The Diagram2 panel's north/south trace policy recorded the intended closure but
+rendered only two identified open-looking ends.  The case now spells the
+source's rectangular return with four glyphless corners and six ordinary
+virtual index wires.  Y remains above A on the left side, their direct virtual
+bond remains, and A's east and west physical indices remain open.  Fresh
+exact-hash two-viewer review at 200 and 400 dpi confirms the complete loop,
+clear physical stubs and annotation, and no corner ink, collision, or crop.
+
+No parser, kernel, fixture, or generated reference changes.  M1, M2, M3, M5,
+and M6 are unchanged.  M4 moves from 26.48 to 26.53 because the
+formerly implicit but uninked closure is now an explicit, auditable six-wire
+cycle.
+The verdict census remains 113 faithful / 13 cosmetic-gap / 4 structural-gap:
+the K1 missing-ink defect is gone, while the roomier return is recorded
+honestly as K3 family geometry.
+
+Census-correction: #13

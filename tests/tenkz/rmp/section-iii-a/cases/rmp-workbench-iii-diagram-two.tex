@@ -1,16 +1,23 @@
 % Target: rmp-workbench-iii-diagram-two
 % Formula: Closing the virtual boundary of Y followed by A gives Y.
-% Ink: Kernel two-row flat frame; the Y ring stands over the A atom and the
-%   column closes on the traced north and south sides.
+% Ink: Kernel flat frame; the Y ring stands over the A atom and four glyphless
+%   corners carry the rectangular right-hand virtual return.
 % Boundary: The virtual word is traced; the two physical indices of A are open.
 % Source: author source ImagesReview Section III/ImagesReview Section III.tex
 %   lines 164-169; archival output Dia2.pdf
 % Capabilities: kernel, periodic-closure, boundary-insertion
 \[
   \tenkzkernel
-  \begin{tenkz}[rows={wire,wire}, cols=1, north=trace, south=trace]
-    \tn[at=(1,1), skin=ring]{Y}
-    \tn[at=(2,1), skin=mpo, ports={0:physical, 90:virtual, 180:physical,
-      270:virtual}]{A}
+  \begin{tenkz}[rows={wire,wire,wire,wire}, cols=2, bonds=none]
+    \tn[at=(2,1), skin=ring, name=Y,
+      ports={90:virtual, 270:virtual}]{Y}
+    \tn[at=(3,1), skin=mpo, name=A,
+      ports={0:physical, 90:virtual, 180:physical, 270:virtual}]{A}
+    \tn[at=(1,1), skin=none, name=NW, ports={0:virtual, 270:virtual}]{}
+    \tn[at=(1,2), skin=none, name=NE, ports={180:virtual, 270:virtual}]{}
+    \tn[at=(4,1), skin=none, name=SW, ports={0:virtual, 90:virtual}]{}
+    \tn[at=(4,2), skin=none, name=SE, ports={90:virtual, 180:virtual}]{}
+    \tnwire{NW.270}{Y.90} \tnwire{Y.270}{A.90} \tnwire{A.270}{SW.90}
+    \tnwire{SW.0}{SE.180} \tnwire{SE.90}{NE.270} \tnwire{NE.180}{NW.0}
   \end{tenkz} \;:\;Y
 \]

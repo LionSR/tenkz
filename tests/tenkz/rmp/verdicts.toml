@@ -1273,10 +1273,11 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
-case_sha256 = "3206dfc68adb9a9bf6c02419f7eeb797c205835e02f6f3307eb1c1bb72a8f04a"
-reviewed = "2026-08-05"
-renderer = "fable-kernel-migration-2026-08-05-200dpi"
-note = "kernel respell verified against Dia2.pdf: Y stands over A, the vertical word bonds them, and A keeps both horizontal indices open. Residue: north/south=trace renders as identified extended ends, not the source's right-hand return loop (same closure-ink gap as eq51)."
+case_sha256 = "2706a368898b103526290b1f646ad6f8b5ba90cda3334b2e364e091c187ae15e"
+reviewed = "2026-08-31"
+renderer = "codex-four-corner-return-2026-08-31-200dpi"
+second_viewer = "codex-independent-second-pass-2026-08-31-400dpi"
+note = "The explicit four-corner return resolves the K1 missing-ink defect: Y stands above A on the loop's left rail, the direct Y--A bond remains, and both horizontal physical indices of A stay open. Exact-hash review at 200 and 400 dpi confirms the complete rectangular return, clear glyphs and annotation, and no collision, clipping, or corner ink. The audit records six virtual contractions, no contracted physical index, and boundary signature phys:e, phys:w. Residue: the full-pitch return is substantially taller and wider than the source's compact rounded rectangle (K3 family geometry)."
 
 [[verdict]]
 id = "rmp-workbench-iii-diagram-three"
