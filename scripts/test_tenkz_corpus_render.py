@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression checks for deterministic, transactional tenkz corpus rendering."""
+"""Regression checks for fresh corpus artifacts and transactional rendering."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 RENDERER = ROOT / "scripts" / "tenkz_render_corpus.py"
 DRIVER = ROOT / "scripts" / "tenkz_corpus.sh"
+GOLDEN_DRIVER = ROOT / "scripts" / "tenkz_golden.sh"
 sys.path.insert(0, str(ROOT / "scripts"))
 import tenkz_render_corpus as render  # noqa: E402
 
@@ -90,15 +91,18 @@ def run_driver(*arguments: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def check_repo_relative_render_dir(work: Path) -> None:
+def prepare_driver_tools(work: Path) -> Path:
     bin_dir = work / "driver-bin"
-    capture = work / "render-dir.txt"
     bin_dir.mkdir()
     write_executable(
         bin_dir / "python3",
         """#!/bin/sh
 if [ "$1" = "-" ]; then
     cat >/dev/null
+    exit 0
+fi
+if [ "$1" = "-c" ]; then
+    printf 'fake  %s\n' "$3"
     exit 0
 fi
 case "$1" in
@@ -122,12 +126,26 @@ exit 0
         """#!/bin/sh
 for source do :; done
 stem=${source%.tex}
-: > "$stem.pdf"
-printf 'picture|id=fake\n' > "$stem.tnlog"
+case "${FAKE_XELATEX_MODE:-all}" in
+    none) ;;
+    stream)
+        printf 'picture|id=k1|lang=kernel\nkernel-boundary|signature=\n' \
+            > "$stem.tnlog"
+        ;;
+    *)
+        printf 'fake pdf\n' > "$stem.pdf"
+        printf 'picture|id=fake\n' > "$stem.tnlog"
+        ;;
+esac
 """,
     )
     for command in ("pdfinfo", "pdftocairo"):
         write_executable(bin_dir / command, "#!/bin/sh\nexit 0\n")
+    return bin_dir
+
+
+def check_repo_relative_render_dir(work: Path, bin_dir: Path) -> None:
+    capture = work / "render-dir.txt"
 
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
@@ -152,6 +170,69 @@ printf 'picture|id=fake\n' > "$stem.tnlog"
     expected = ROOT / "build" / "tenkz-relative-probe"
     if capture.read_text(encoding="utf-8").strip() != str(expected):
         raise AssertionError("relative --render-dir was not anchored to the repository root")
+
+
+def check_compile_artifact_freshness(work: Path, bin_dir: Path) -> None:
+    repo = work / "artifact-gate-repo"
+    scripts = repo / "scripts"
+    corpus = repo / "tests" / "tenkz"
+    scripts.mkdir(parents=True)
+    corpus.mkdir(parents=True)
+
+    corpus_driver = scripts / DRIVER.name
+    golden_driver = scripts / GOLDEN_DRIVER.name
+    shutil.copy2(DRIVER, corpus_driver)
+    shutil.copy2(GOLDEN_DRIVER, golden_driver)
+    (corpus / "case.tex").write_text(
+        "% Regression: compile artifacts must be fresh\n"
+        "% Formula: synthetic\n"
+        "fixture\n",
+        encoding="utf-8",
+    )
+    (corpus / "case.tnlog").write_text("stale stream\n", encoding="utf-8")
+    (corpus / "case.pdf").write_bytes(b"stale pdf")
+    (corpus / "golden-events.sha256").write_text(
+        "fake  case.tnlog\n", encoding="utf-8"
+    )
+
+    def run_gate(
+        driver: Path, mode: str, *arguments: str
+    ) -> subprocess.CompletedProcess[str]:
+        env = os.environ.copy()
+        env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+        env["FAKE_XELATEX_MODE"] = mode
+        env["TENKZ_CORPUS_JOBS"] = "1"
+        return subprocess.run(
+            ["bash", str(driver), *arguments],
+            cwd=repo,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=30,
+        )
+
+    def require_failure(
+        result: subprocess.CompletedProcess[str], diagnostic: str, context: str
+    ) -> None:
+        if result.returncode == 0 or diagnostic not in result.stderr:
+            raise AssertionError(context + ":\n" + result.stdout + result.stderr)
+
+    require_failure(
+        run_gate(corpus_driver, "none"),
+        "case.tex produced no case.tnlog",
+        "corpus gate accepted a copied stale stream",
+    )
+    require_failure(
+        run_gate(corpus_driver, "stream"),
+        "case.tex produced no nonempty case.pdf",
+        "corpus gate accepted a copied stale PDF",
+    )
+    require_failure(
+        run_gate(golden_driver, "none", "--check"),
+        "case compiled without emitting case.tnlog",
+        "golden gate accepted a copied stale stream",
+    )
 
 
 def main() -> int:
@@ -390,9 +471,11 @@ Path(sys.argv[-1] + '.png').write_bytes(
         if tree_bytes(output_dir) != before_missing:
             raise AssertionError("preflight failure changed the last complete baseline")
 
-        check_repo_relative_render_dir(work)
+        driver_bin = prepare_driver_tools(work)
+        check_repo_relative_render_dir(work, driver_bin)
+        check_compile_artifact_freshness(work, driver_bin)
 
-    print("PASS: tenkz corpus render baseline replacement")
+    print("PASS: tenkz corpus artifact freshness and render baseline replacement")
     return 0
 
 

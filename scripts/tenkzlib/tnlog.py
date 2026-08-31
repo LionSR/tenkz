@@ -309,6 +309,7 @@ FIELD_VALIDATORS: dict[str, dict[str, Callable[[str], bool]]] = {
 # whose result determines whether the record can authorize a boundary check.
 REQUIRED_FIELDS: dict[str, frozenset[str]] = {
     "picture": frozenset({"id", "lang"}),
+    "kernel-boundary": frozenset({"signature"}),
     "check": frozenset({"scope", "result"}),
     # `clear` is deliberately absent: it was added to an existing kind, and
     # section 7 of TNLOG.md holds a reader to accepting a stream written

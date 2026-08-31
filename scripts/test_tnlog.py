@@ -111,6 +111,38 @@ def main() -> int:
     )
     assert not malformed_parsed.by_id[1].events
 
+    boundary_findings: list[tuple[str, str, str]] = []
+    missing_boundary = parse_log(
+        "picture|id=k1|lang=kernel\n"
+        "kernel-boundary\n",
+        source_name="missing-boundary-signature.tnlog",
+        known_langs={"kernel"},
+        hard=lambda *finding: boundary_findings.append(finding),
+    )
+    assert len(boundary_findings) == 1
+    assert (
+        "kernel-boundary event lacks required field(s): signature"
+        in boundary_findings[0][2]
+    )
+    missing_boundary_event = next(
+        event for event in missing_boundary.events
+        if event.kind == "kernel-boundary"
+    )
+    assert not missing_boundary_event.valid
+    assert not missing_boundary.by_id["k1"].events
+    assert missing_boundary.by_id["k1"].kernel_boundary() is None
+
+    empty_boundary_findings: list[tuple[str, str, str]] = []
+    empty_boundary = parse_log(
+        "picture|id=k1|lang=kernel\n"
+        "kernel-boundary|signature=\n",
+        source_name="empty-boundary-signature.tnlog",
+        known_langs={"kernel"},
+        hard=lambda *finding: empty_boundary_findings.append(finding),
+    )
+    assert not empty_boundary_findings
+    assert empty_boundary.by_id["k1"].kernel_boundary() == ()
+
     stale_findings: list[tuple[str, str, str]] = []
     stale_owner = parse_log(
         "picture|id=k1|lang=kernel\n"
