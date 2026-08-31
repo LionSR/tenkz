@@ -14,21 +14,19 @@ timeout 120 env TEXINPUTS="<repo>/tex/tenkz//:" \
   xelatex -interaction=nonstopmode -halt-on-error <file>.tex
 ```
 
-Build the compact manual twice for contents and references:
+Build the compact manual until contents, references, and tables settle:
 
 ```sh
 python3 scripts/tenkz_manual_doctest.py
-cd docs/tenkz
-timeout 150 env TEXINPUTS="../../tex/tenkz//:" \
-  xelatex -interaction=nonstopmode -halt-on-error manual2.tex
-timeout 150 env TEXINPUTS="../../tex/tenkz//:" \
-  xelatex -interaction=nonstopmode -halt-on-error manual2.tex
+python3 scripts/tenkz_manual_build.py build --require-engine
 ```
 
-The release build is `python3 scripts/tenkz_manual_build.py check`: two
-isolated copies of the manual's sources, each compiled twice under a
-`SOURCE_DATE_EPOCH` read from `tenkz.sty`'s `\ProvidesPackage` date, the
-event stream audited, and the two PDFs required to agree byte for byte
+The release build is
+`python3 scripts/tenkz_manual_build.py check --require-engine`: two
+isolated copies of the manual's sources, each compiled until the engine stops
+requesting a rerun (at least two and at most six passes) under a
+`SOURCE_DATE_EPOCH` read from `tenkz.sty`'s `\ProvidesPackage` date, the event
+stream audited, and the two PDFs required to agree byte for byte
 before one is installed at `output/pdf/tenkz-manual.pdf`.  The title-page
 date must name the package's month and year or the build refuses.  CI runs
 it on every change and uploads the PDF as the `tenkz-manual` artifact.
@@ -95,7 +93,8 @@ missing capability all fail, while recorded gaps merely appear in the book's
 histogram.  A judged verdict pins the SHA-256 of its case; editing the case
 stales exactly that verdict.
 
-The ordinary corpus — 153 standalone fixtures in `PROVENANCE.tsv`, 159 files once the driver adds its six local fixtures — keeps its existing default interface:
+The ordinary corpus — 6 standalone fixtures in `PROVENANCE.tsv`, 9 files once
+the driver adds its three local fixtures — keeps its existing default interface:
 
 ```sh
 scripts/tenkz_corpus.sh

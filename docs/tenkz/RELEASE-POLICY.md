@@ -121,7 +121,7 @@ at the exact release head:
 | kernel and string probes | `scripts/tenkz_kernel_probes.sh`; `scripts/tenkz_string_probes.sh` | `pr-ci.yml`, `tenkz-corpus` |
 | corpus provenance, dimensions, render | `test_tenkz_corpus_provenance.py`, `test_tenkz_dimension_inventory.py`, `test_tenkz_corpus_render.py` | `pr-ci.yml`, `tenkz-corpus` |
 | manual doc-test | `python3 scripts/tenkz_manual_doctest.py` | `pr-ci.yml`, `tenkz-corpus` |
-| manual compile and event audit | `xelatex manual2.tex` twice; `python3 scripts/tenkz_audit.py manual2.tnlog` | `pr-ci.yml`, `blueprint` |
+| manual compile and event audit | `python3 scripts/tenkz_manual_build.py check --require-engine` (two isolated builds, each compiled until rerun warnings stop) | `pr-ci.yml` (`tenkz-corpus`), `tenkz-release-policy.yml` |
 | picture-source lint and shared parsers | `python3 scripts/tenkz_lint.py`; `test_tnlog.py`, `test_texcase.py`, `test_tenkz_kernel_audit.py` | `pr-ci.yml`, `blueprint` |
 | evidence-ledger validity | `python3 scripts/check_tenkz_policy.py` (+ `test_check_tenkz_policy.py`, `test_tenkz_policy_evidence.py`) | `tenkz-policy.yml` |
 | release harness, inventory, and assertions | `python3 tests/tenkz/release-harness/selftest.py`; `supervisor.py check-inventory`, `run-all`, `check-readiness` | `tenkz-release-policy.yml` |

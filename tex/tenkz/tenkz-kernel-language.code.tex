@@ -40,6 +40,9 @@
   { [TKZ-LANG-UNKNOWN-KEY]~'#1'~is~not~a~#2~key~(record~#3). }
 \msg_new:nnn {tenkz}{kernel-choice}
   { [TKZ-LANG-CHOICE]~#1=#2~is~not~in~the~alphabet~#3~(record~#4). }
+\msg_new:nnn {tenkz}{kernel-mark-tint-form}
+  { [TKZ-LANG-TINT-FORM]~tint=true~requires~form=enclosure;~form=#1~has~no~
+    tinted~interior~(record~#2). }
 \msg_new:nnn {tenkz}{kernel-restyle-transform}
   {
     [TKZ-WIRE-RESTYLE-TRANSFORM]~a~restyle~of~'#1'~moves~the~drawn~
@@ -2591,13 +2594,29 @@
   { \__tenkz_kernel_tnwire:nnnn {#1} {#2} {#3} {2} }
 
 % \tnmark[keys]{target}{label}: the target -- a cell set, an address set,
-% or a wire place -- is stored verbatim; a mark owns no topology, so the
-% address grammar is its only validation.
+% or a wire place -- is stored verbatim.  A mark owns no topology; validate
+% its form-specific ink before the target address is completed.
+\cs_new_protected:Npn \__tenkz_kernel_mark_validate_tint:
+  {
+    \prop_if_in:NnT \l__tenkz_kernel_stage_prop {tint}
+      {
+        \tl_set:Nn \l__tenkz_kernel_scratch_tl {label}
+        \prop_get:NnNT \l__tenkz_kernel_stage_prop {form}
+          \l__tenkz_kernel_scratch_tl { }
+        \str_if_eq:VnF \l__tenkz_kernel_scratch_tl {enclosure}
+          {
+            \msg_error:nnee {tenkz}{kernel-mark-tint-form}
+              { \tl_use:N \l__tenkz_kernel_scratch_tl }
+              { \tl_use:N \l__tenkz_model_last_tl }
+          }
+      }
+  }
 \cs_new_protected:Npn \__tenkz_kernel_tnmark:nnn #1#2#3
   {
     \__tenkz_model_record_mark:n { form = label }
     \prop_clear:N \l__tenkz_kernel_stage_prop
     \__tenkz_kernel_keys:nn { tenkz-kernel-mark } {#1}
+    \__tenkz_kernel_mark_validate_tint:
     \__tenkz_model_complete:nnn { \l__tenkz_model_last_tl } {target} {#2}
     % Opaque text, per the \tn label above (issue 5481): raw completion.
     % A mark's label is mathematics like every other, so it peels its shift

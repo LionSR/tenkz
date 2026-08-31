@@ -1334,7 +1334,7 @@ grep -Fq '|addr=(3,1)|kind=tn|label=B|name=B' \
   echo "FAIL: a new row did not advance past a multi-wire atom" >&2
   exit 1
 }
-for false_field in closed conjugate outline; do
+for false_field in closed conjugate tint; do
   if grep -Fq "|$false_field=" "$WORK/r_false_flags.tnlog"; then
     echo "FAIL: $false_field=false enabled or materialized the flag" >&2
     exit 1
@@ -2733,6 +2733,7 @@ for contract_negative in \
   n_setup_theme_key \
   n_wire_weight_key \
   n_mark_slot_key \
+  n_mark_tint_form \
   n_wire_restyle_transform \
   n_wire_restyle_nested \
   n_leg_restyle_transform \
@@ -2828,6 +2829,8 @@ do
     expected='[TKZ-LANG-UNKNOWN-KEY]'
   [ "$contract_negative" = n_mark_slot_key ] &&
     expected='[TKZ-LANG-UNKNOWN-KEY]'
+  [ "$contract_negative" = n_mark_tint_form ] &&
+    expected='[TKZ-LANG-TINT-FORM]'
   [ "$contract_negative" = n_wire_restyle_transform ] &&
     expected='[TKZ-WIRE-RESTYLE-TRANSFORM]'
   [ "$contract_negative" = n_wire_restyle_nested ] &&
