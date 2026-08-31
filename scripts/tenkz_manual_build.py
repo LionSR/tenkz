@@ -3,8 +3,9 @@
 
 `build` compiles `docs/tenkz/manual2.tex` in an isolated directory holding
 only the manual's own sources, under a `SOURCE_DATE_EPOCH` derived from the
-package's `\\ProvidesPackage` date, runs the two passes the contents need,
-audits the event stream, and prints the PDF's SHA-256.  `check` performs
+package's `\\ProvidesPackage` date, compiles until references and tables
+settle (between two and six passes), audits the event stream, and prints the
+PDF's SHA-256.  `check` performs
 two such builds in two directories and requires their PDFs to be identical
 byte for byte, so the archive can carry a manual whose bytes any machine
 with the same TeX installation reproduces.  The package's version and date

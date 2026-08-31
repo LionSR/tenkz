@@ -23,8 +23,9 @@ Usage::
     python3 scripts/tenkz_contracted_types.py --all --physical-only
     python3 scripts/tenkz_contracted_types.py --all --build-dir DIR
 
-``--build-dir`` reuses (and populates) a directory of compiled targets instead
-of a temporary one, which makes a repeated audit cheap.
+``--build-dir`` retains the compiled targets in a caller-owned directory for
+inspection instead of deleting a temporary tree.  Targets are always compiled
+afresh so a stale or partial event stream can never certify current sources.
 """
 
 from __future__ import annotations
@@ -144,20 +145,30 @@ def compile_target(target, work_root: Path, env: dict[str, str]) -> TargetReport
     wrapper = work / f"{target.id}-standalone.tex"
     wrapper.write_text(standalone_wrapper(target), encoding="utf-8")
     stream = wrapper.with_suffix(".tnlog")
+    stream.unlink(missing_ok=True)
+    try:
+        finished = subprocess.run(
+            ["xelatex", "-interaction=nonstopmode", "-halt-on-error", wrapper.name],
+            cwd=work,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        stream.unlink(missing_ok=True)
+        return TargetReport(id=target.id, error=str(exc))
+    if finished.returncode:
+        output = (finished.stdout or "") + (finished.stderr or "")
+        transcript = "\n".join(output.splitlines()[-20:])
+        stream.unlink(missing_ok=True)
+        detail = f"\n{transcript}" if transcript else ""
+        return TargetReport(
+            id=target.id,
+            error=f"xelatex exited {finished.returncode}{detail}",
+        )
     if not (stream.is_file() and stream.stat().st_size):
-        try:
-            subprocess.run(
-                ["xelatex", "-interaction=nonstopmode", "-halt-on-error", wrapper.name],
-                cwd=work,
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            return TargetReport(id=target.id, error=str(exc))
-        if not (stream.is_file() and stream.stat().st_size):
-            return TargetReport(id=target.id, error="produced no nonempty .tnlog")
+        return TargetReport(id=target.id, error="produced no nonempty .tnlog")
     languages, contractions = read_stream(stream.read_text(encoding="utf-8"))
     return TargetReport(id=target.id, languages=languages, contractions=contractions)
 
@@ -190,7 +201,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument(
         "--build-dir",
         type=Path,
-        help="reuse this directory of compiled targets instead of a temporary one",
+        help="retain compiled targets in this directory instead of a temporary one",
     )
     result.add_argument(
         "--physical-only",

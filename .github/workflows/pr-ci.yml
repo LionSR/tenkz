@@ -71,6 +71,7 @@ jobs:
           python3 scripts/test_tenkz_cubic.py
           python3 scripts/test_tenkz_label_overlap.py
           python3 scripts/test_tenkz_tree.py
+          python3 scripts/test_tenkz_contracted_types.py
           python3 scripts/test_tnlog.py
           python3 scripts/test_texcase.py
           python3 scripts/test_tenkz_kernel_audit.py
