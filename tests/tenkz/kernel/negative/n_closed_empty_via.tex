@@ -1,0 +1,9 @@
+% Negative: empty clist entries do not supply a closed wire with points.
+\documentclass{standalone}
+\usepackage{tenkz}
+\begin{document}
+\tenkzkernel
+\begin{tenkz}[rows={wire}, cols=1, bonds=none]
+  \tnwire[kind=string, closed, route=orth, via={,}, name=empty]
+\end{tenkz}
+\end{document}

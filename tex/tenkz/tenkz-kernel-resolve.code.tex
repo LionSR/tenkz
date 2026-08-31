@@ -4330,7 +4330,6 @@
 \tl_new:N \l__tenkz_kernel_ro_lane_tl
 \tl_new:N \l__tenkz_kernel_ro_scale_tl
 \tl_new:N \l__tenkz_kernel_ro_reach_tl
-\seq_new:N \l__tenkz_kernel_ro_seq
 \seq_new:N \l__tenkz_kernel_ro_leg_seq
 \seq_new:N \l__tenkz_kernel_ro_sort_seq
 \seq_new:N \l__tenkz_kernel_ro_face_seq
@@ -4483,13 +4482,8 @@
     \__tenkz_model_get:nnN {#1} {route} \l__tenkz_kernel_ro_tl
     \quark_if_no_value:NF \l__tenkz_kernel_ro_tl
       {
-        \exp_args:NnV \regex_extract_once:nnNT
-          { \A \s* (all|n|e|s|w) \s+ of \s+ (.+?) \s* \Z }
-          \l__tenkz_kernel_ro_tl \l__tenkz_kernel_ro_seq
-          {
-            \tl_set:Ne #2 { \seq_item:Nn \l__tenkz_kernel_ro_seq {2} }
-            \tl_set:Ne #3 { \seq_item:Nn \l__tenkz_kernel_ro_seq {3} }
-          }
+        \exp_args:NV \__tenkz_kernel_route_hull_parse:nNNT
+          \l__tenkz_kernel_ro_tl #2#3 { }
       }
   }
 

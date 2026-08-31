@@ -442,9 +442,11 @@ render evidence.  If a reviewed contract or drawing intentionally changes,
 state the affected fixtures and attach the reviewed replacement evidence
 instead of claiming parity.
 
-The demolition checker remains a temporary guard against restoring retired
-catalogue paths and expires at the 0.8 close, after branches predating the
-demolition have landed or died.
+The disposition guard validates the migration ledger and reconciles its
+inventories against the external Blueprint sources when available and the
+top-level `tests/tenkz/*.tex` fixtures.  It runs both
+`test_check_tenkz_dispositions.py` and `check_tenkz_dispositions.py` in the
+`tenkz-dispositions.yml` workflow.
 
 ## Audit and visual review
 

@@ -2696,6 +2696,10 @@ done
 
 for contract_negative in \
   n_one_end_wire \
+  n_closed_ends \
+  n_closed_empty_via \
+  n_closed_expand_empty_via \
+  n_closed_points \
   n_duplicate_port \
   n_port_open_cross_undeclared \
   n_port_type \
@@ -2745,9 +2749,12 @@ for contract_negative in \
   n_signature_carrier_port
 do
   source="$KERNEL/negative/$contract_negative.tex"
+  xelatex_args=(-interaction=nonstopmode -halt-on-error)
+  [ "$contract_negative" = n_closed_ends ] &&
+    xelatex_args=(-interaction=nonstopmode)
   if ( cd "$WORK" &&
        TEXINPUTS="$REPO/tex/tenkz//:" \
-         timeout 120 xelatex -interaction=nonstopmode -halt-on-error \
+         timeout 120 xelatex "${xelatex_args[@]}" \
          "$source" >"$WORK/$contract_negative.transcript" 2>&1 ); then
     echo "FAIL: $contract_negative was accepted" >&2
     exit 1
@@ -2755,6 +2762,14 @@ do
   expected='[TKZ-LANG-ADDRESS]'
   [ "$contract_negative" = n_one_end_wire ] &&
     expected='[TKZ-LANG-WIRE-ARITY]'
+  [ "$contract_negative" = n_closed_ends ] &&
+    expected='[TKZ-LANG-WIRE-ARITY]'
+  [ "$contract_negative" = n_closed_empty_via ] &&
+    expected='[TKZ-LANG-CLOSED-POINTS]'
+  [ "$contract_negative" = n_closed_expand_empty_via ] &&
+    expected='[TKZ-LANG-CLOSED-POINTS]'
+  [ "$contract_negative" = n_closed_points ] &&
+    expected='[TKZ-LANG-CLOSED-POINTS]'
   [ "$contract_negative" = n_duplicate_port ] &&
     expected='[TKZ-PORT-DUPLICATE]'
   [ "$contract_negative" = n_port_open_cross_undeclared ] &&
@@ -2845,6 +2860,12 @@ do
     echo "FAIL: $contract_negative lacked $expected" >&2
     exit 1
   }
+  if [ "$contract_negative" = n_closed_ends ] &&
+     grep -Fq '[TKZ-LANG-CLOSED-POINTS]' \
+       "$WORK/$contract_negative.transcript"; then
+    echo "FAIL: $contract_negative cascaded into closed-point validation" >&2
+    exit 1
+  fi
 done
 awk '
   { transcript = transcript " " $0 }

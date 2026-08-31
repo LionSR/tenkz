@@ -55,6 +55,9 @@
 \msg_new:nnn {tenkz}{kernel-wire-arity}
   { [TKZ-LANG-WIRE-ARITY]~a~closed~wire~takes~no~positional~ends;~
     every~other~wire~takes~exactly~two~(record~#1). }
+\msg_new:nnn {tenkz}{kernel-closed-points}
+  { [TKZ-LANG-CLOSED-POINTS]~a~closed~wire~needs~nonempty~via=,~wind=,~
+    or~route=\{<side>~of~<selector>\}~to~define~its~cycle~(record~#1). }
 \msg_new:nnn {tenkz}{kernel-wind-zero}
   { [TKZ-WIND-ZERO]~wind=\{0,0\}~is~contractible;~
     use~an~ordinary~closed~string~instead~(record~#1). }
@@ -825,10 +828,10 @@
 \clist_new:N \l__tenkz_kernel_frame_clist
 \tl_new:N \l__tenkz_kernel_frame_tl
 
-% Address-valued fields retain the author's spelling in their record, but
-% every member is parsed now.  Picture option parsing has already grouped
-% cell coordinates before these key handlers run.
-\cs_new_protected:Npn \__tenkz_kernel_validate_address_list:n #1
+% One normalization owns the semantic membership of every address list.
+% TeX clists discard empty entries, so callers asking whether a list carries
+% a point must inspect this result rather than its raw token spelling.
+\cs_new_protected:Npn \__tenkz_kernel_address_list_set:n #1
   {
     \tl_set:Nn \l__tenkz_kernel_list_tl {#1}
     \tl_trim_spaces:N \l__tenkz_kernel_list_tl
@@ -843,6 +846,14 @@
       \l__tenkz_kernel_list_tl
     \exp_args:NNV \clist_set:Nn
       \l__tenkz_kernel_address_clist \l__tenkz_kernel_list_tl
+  }
+
+% Address-valued fields retain the author's spelling in their record, but
+% every member is parsed now.  Picture option parsing has already grouped
+% cell coordinates before these key handlers run.
+\cs_new_protected:Npn \__tenkz_kernel_validate_address_list:n #1
+  {
+    \__tenkz_kernel_address_list_set:n {#1}
     \clist_map_inline:Nn \l__tenkz_kernel_address_clist
       {
         \__tenkz_kernel_addr_operand:nN
@@ -888,12 +899,27 @@
 % entering and leaving where that side's arc ends.  The side is a compass
 % word or `all'; `around' is not among them, because the whole picture is a
 % selection like any other and one idea keeps one spelling.
+\prg_new_protected_conditional:Npnn
+  \__tenkz_kernel_route_hull_parse:nNN #1#2#3 {T,TF}
+  {
+    \tl_clear:N #2
+    \tl_clear:N #3
+    \regex_extract_once:nnNTF
+      { \A \s* (all|n|e|s|w) \s+ of \s+ (.+?) \s* \Z }
+      {#1} \l__tenkz_kernel_match_seq
+      {
+        \tl_set:Ne #2 { \seq_item:Nn \l__tenkz_kernel_match_seq {2} }
+        \tl_set:Ne #3 { \seq_item:Nn \l__tenkz_kernel_match_seq {3} }
+        \prg_return_true:
+      }
+      { \prg_return_false: }
+  }
 \cs_new_protected:Npn \__tenkz_kernel_route:n #1
   {
     \tl_set:Nn \l__tenkz_kernel_list_item_tl {#1}
     \tl_trim_spaces:N \l__tenkz_kernel_list_item_tl
-    \regex_match:nVTF { \A (?: all | n | e | s | w ) \s+ of \s+ \S }
-      \l__tenkz_kernel_list_item_tl
+    \exp_args:NV \__tenkz_kernel_route_hull_parse:nNNTF
+      \l__tenkz_kernel_list_item_tl \l_tmpa_tl \l_tmpb_tl
       { \__tenkz_kernel_route_keep: }
       {
         \str_case:VnF \l__tenkz_kernel_list_item_tl
@@ -907,6 +933,42 @@
               {route} {#1} {straight|orth|arc|<side>~of~<selector>}
               { \tl_use:N \l__tenkz_model_last_tl }
           }
+      }
+  }
+
+\cs_new_protected:Npn \__tenkz_kernel_validate_closed_points:
+  {
+    \bool_set_false:N \l_tmpa_bool
+    % A wind derives its points after language validation; its own parser
+    % retains ownership of malformed and contractible wind values.
+    \prop_if_in:NnT \l__tenkz_kernel_stage_prop {wind}
+      { \bool_set_true:N \l_tmpa_bool }
+    \prop_get:NnN \l__tenkz_kernel_stage_prop {via}
+      \l__tenkz_kernel_scratch_tl
+    \quark_if_no_value:NF \l__tenkz_kernel_scratch_tl
+      {
+        % Commit expands semantic fields before address validation and route
+        % resolution.  Inspect that same value so an expandable empty item
+        % cannot masquerade as a waypoint here.
+        \tl_set:Ne \l__tenkz_kernel_scratch_tl
+          { \tl_use:N \l__tenkz_kernel_scratch_tl }
+        \exp_args:NV \__tenkz_kernel_address_list_set:n
+          \l__tenkz_kernel_scratch_tl
+        \clist_if_empty:NF \l__tenkz_kernel_address_clist
+          { \bool_set_true:N \l_tmpa_bool }
+      }
+    \prop_get:NnN \l__tenkz_kernel_stage_prop {route}
+      \l__tenkz_kernel_scratch_tl
+    \quark_if_no_value:NF \l__tenkz_kernel_scratch_tl
+      {
+        \exp_args:NV \__tenkz_kernel_route_hull_parse:nNNT
+          \l__tenkz_kernel_scratch_tl \l_tmpa_tl \l_tmpb_tl
+          { \bool_set_true:N \l_tmpa_bool }
+      }
+    \bool_if:NF \l_tmpa_bool
+      {
+        \msg_error:nne {tenkz}{kernel-closed-points}
+          { \tl_use:N \l__tenkz_model_last_tl }
       }
   }
 \cs_new_protected:Npn \__tenkz_kernel_route_keep:
@@ -2561,7 +2623,8 @@
     \__tenkz_kernel_keys:nn { tenkz-kernel-wire } {#1}
     \prop_if_in:NnTF \l__tenkz_kernel_stage_prop {closed}
       {
-        \int_compare:nNnF {#4} = {0}
+        \int_compare:nNnTF {#4} = {0}
+          { \__tenkz_kernel_validate_closed_points: }
           {
             \msg_error:nne {tenkz}{kernel-wire-arity}
               { \tl_use:N \l__tenkz_model_last_tl }
