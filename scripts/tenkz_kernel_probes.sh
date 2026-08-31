@@ -1542,6 +1542,14 @@ grep -Fq '|name=trace-1-2|origin=trace|' "$WORK/r_cell_policy.tnlog" || {
   echo "FAIL: trace= cell policy did not materialize a closure wire" >&2
   exit 1
 }
+grep -Fq '|name=trace-1-1|origin=trace|' "$WORK/r_cellset_ranges.tnlog" || {
+  echo "FAIL: an ascending cell-set range skipped its first cell" >&2
+  exit 1
+}
+grep -Fq '|name=trace-2-1|origin=trace|' "$WORK/r_cellset_ranges.tnlog" || {
+  echo "FAIL: an ascending cell-set range skipped its final cell" >&2
+  exit 1
+}
 if ! grep -Fq '|face=upper|' "$WORK/r_cell_policy.tnlog" ||
    ! grep -Fq '|origin=open|to-open=s' "$WORK/r_cell_policy.tnlog"; then
   echo "FAIL: open= cell policy did not materialize its upper open leg" >&2
@@ -2706,6 +2714,9 @@ for contract_negative in \
   n_closure_port_type \
   n_closure_implicit_port_type \
   n_cup_implicit_port_type \
+  n_cellset_descending_range \
+  n_cellset_empty_range \
+  n_cellset_multi_range \
   n_cell_trace_port_type \
   n_authored_port_type_implicit \
   n_authored_port_type_implicit_from \
@@ -2782,6 +2793,12 @@ do
     expected='[TKZ-PORT-TYPE]'
   [ "$contract_negative" = n_cup_implicit_port_type ] &&
     expected='[TKZ-PORT-TYPE]'
+  [ "$contract_negative" = n_cellset_descending_range ] &&
+    expected='[TKZ-LANG-CELLSET]'
+  [ "$contract_negative" = n_cellset_empty_range ] &&
+    expected='[TKZ-LANG-CELLSET]'
+  [ "$contract_negative" = n_cellset_multi_range ] &&
+    expected='[TKZ-LANG-CELLSET]'
   [ "$contract_negative" = n_cell_trace_port_type ] &&
     expected='[TKZ-PORT-TYPE]'
   [ "$contract_negative" = n_authored_port_type_implicit ] &&

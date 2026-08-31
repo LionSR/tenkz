@@ -263,7 +263,7 @@
     \tl_set:Ne \l__tenkz_kernel_cellset_tl
       { \tl_to_str:V \l__tenkz_kernel_cellset_tl }
   }
-\cs_new_protected:Npn \__tenkz_kernel_cellset:nN #1#2
+\cs_new_protected:Npn \__tenkz_kernel_cellset:n #1
   {
     \__tenkz_kernel_normalize_cellset:n {#1}
     \use:e
@@ -280,13 +280,21 @@
     \tenkz_cs_resolve:VN
       \l_tenkz_cs_scan_tl \l__tenkz_kernel_cellset_result_prop
     \bool_set_true:N \l_tenkz_cs_guard_bool
-    \prop_set_eq:NN #2 \l__tenkz_kernel_cellset_result_prop
   }
 \cs_new_protected:Npn \__tenkz_kernel_prepare_one_cellset:nnN #1#2#3
   {
     \__tenkz_kernel_normalize_cellset:n {#2}
     \tl_if_in:VnTF \l__tenkz_kernel_cellset_tl {(}
-      { \__tenkz_kernel_cellset:nN {#2} #3 }
+      {
+        \__tenkz_kernel_cellset:n {#2}
+        \bool_if:NTF \l_tenkz_cs_valid_bool
+          { \prop_set_eq:NN #3 \l__tenkz_kernel_cellset_result_prop }
+          {
+            \msg_error:nneee {tenkz}{kernel-cellset} {#1}
+              { \tl_to_str:n {#2} }
+              { picture }
+          }
+      }
       {
         \msg_error:nneee {tenkz}{kernel-cellset} {#1}
           { \tl_to_str:n {#2} }
