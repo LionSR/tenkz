@@ -40,7 +40,7 @@ The corpus, manual, and reference figures are built with XeTeX.
 ```sh
 # Language registry and shrink ratchet
 python3 scripts/tenkz_language.py check
-python3 scripts/tenkz_shrink.py gate
+python3 scripts/tenkz_shrink.py gate --base-ref origin/main
 
 # Regression corpus and golden event streams
 scripts/tenkz_corpus.sh
@@ -48,7 +48,7 @@ scripts/tenkz_golden.sh --check
 
 # Compact manual: examples doctested, then a reproducible build
 python3 scripts/tenkz_manual_doctest.py
-python3 scripts/tenkz_manual_build.py check
+python3 scripts/tenkz_manual_build.py check --require-engine
 ```
 
 Operational detail lives in [`docs/tenkz/HACKING.md`](docs/tenkz/HACKING.md).
