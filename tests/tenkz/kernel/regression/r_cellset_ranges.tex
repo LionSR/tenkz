@@ -1,0 +1,12 @@
+% Regression: a rising component range selects every addressed cell.
+\documentclass{standalone}
+\usepackage{tenkz}
+\makeatletter
+\ExplSyntaxOn
+\file_input:n { tenkz-kernel.code.tex }
+\ExplSyntaxOff
+\makeatother
+\begin{document}
+\tenkzkernel
+\begin{tenkz}[rows={ket,bra}, cols=2, trace={(1-2,1)}]\end{tenkz}
+\end{document}
