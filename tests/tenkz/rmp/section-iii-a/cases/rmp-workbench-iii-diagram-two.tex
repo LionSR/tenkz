@@ -1,23 +1,30 @@
 % Target: rmp-workbench-iii-diagram-two
 % Formula: Closing the virtual boundary of Y followed by A gives Y.
 % Ink: Kernel flat frame; the Y ring stands over the A atom and four glyphless
-%   corners carry the rectangular right-hand virtual return.
+%   paired corners carry the compact right-hand virtual return.
 % Boundary: The virtual word is traced; the two physical indices of A are open.
 % Source: author source ImagesReview Section III/ImagesReview Section III.tex
 %   lines 164-169; archival output Dia2.pdf
-% Capabilities: kernel, periodic-closure, boundary-insertion
+% Capabilities: kernel, periodic-closure, boundary-insertion, skin-pairings
+\tenkzkernel
+\tndeclare{species}{return}{hue=source:black}
+\tndeclare{skin}{return-se}{base=none, pairings={s@1 > e@1 : return}}
+\tndeclare{skin}{return-sw}{base=none, pairings={w@1 > s@1 : return}}
+\tndeclare{skin}{return-nw}{base=none, pairings={n@1 > w@1 : return}}
+\tndeclare{skin}{return-ne}{base=none, pairings={e@1 > n@1 : return}}
 \[
-  \tenkzkernel
-  \begin{tenkz}[rows={wire,wire,wire,wire}, cols=2, bonds=none]
-    \tn[at=(2,1), skin=ring, name=Y,
+  \begin{tenkz}[rows={wire}, cols=1, bonds=none]
+    \tn[at=(1,1), skin=ring, name=Y,
       ports={90:virtual, 270:virtual}]{Y}
-    \tn[at=(3,1), skin=mpo, name=A,
+    \tn[at=0.5 s of Y, skin=mpo, name=A,
       ports={0:physical, 90:virtual, 180:physical, 270:virtual}]{A}
-    \tn[at=(1,1), skin=none, name=NW, ports={0:virtual, 270:virtual}]{}
-    \tn[at=(1,2), skin=none, name=NE, ports={180:virtual, 270:virtual}]{}
-    \tn[at=(4,1), skin=none, name=SW, ports={0:virtual, 90:virtual}]{}
-    \tn[at=(4,2), skin=none, name=SE, ports={90:virtual, 180:virtual}]{}
-    \tnwire{NW.270}{Y.90} \tnwire{Y.270}{A.90} \tnwire{A.270}{SW.90}
-    \tnwire{SW.0}{SE.180} \tnwire{SE.90}{NE.270} \tnwire{NE.180}{NW.0}
+    \tnwire{Y.270}{A.90}
+    \tn[at=0.3 n of Y, skin=return-se, name=NW]{}
+    \tn[at=0.75 e of NW, skin=return-sw, name=NE]{}
+    \tn[at=0.5 s of A, skin=return-ne, name=SW]{}
+    \tn[at=0.75 e of SW, skin=return-nw, name=SE]{}
+    \tnwire{Y.90}{NW.270} \tnwire{NW.0}{NE.180}
+    \tnwire{NE.270}{SE.90} \tnwire{SE.180}{SW.0}
+    \tnwire{SW.90}{A.270}
   \end{tenkz} \;:\;Y
 \]

@@ -5095,3 +5095,30 @@ the K1 missing-ink defect is gone, while the roomier return is recorded
 honestly as K3 family geometry.
 
 Census-correction: #13
+
+### 2026-08-31 — compact the Diagram2 virtual return
+
+The explicit full-pitch rectangle restored Diagram2's missing closure but was
+substantially taller than the authoritative panel.  Four local glyphless
+pairing skins now own its corner geometry, so ordinary external virtual bonds
+form a compact rounded return around the unchanged Y--A bond.  The renderer
+uses round foreground caps over butt-ended paper halos for all skin pairings;
+this makes a pairing and its adjoining bond meet continuously without adding a
+case-specific overlap or routing escape.
+
+Fresh exact-hash review at 200 and 400 dpi confirms the source topology,
+rounded proportions, open east/west physical indices, clear annotation, and
+continuous joins.  The audit remains clean with six virtual contractions, no
+contracted physical index, and boundary signature `phys:e, phys:w`.  The
+content height is 43.47 pt against 43.32 pt in the archival panel.  The shared
+pairing fixture's event stream is unchanged; its reviewed 59-pixel cap-only
+delta is recorded in the exact-toolchain pixel baseline.
+
+No parser, model, generated-reference, or public-surface change is made.  M1,
+M2, M3, M5, and M6 are unchanged.  M4 moves from 26.53 to 26.58 because the
+four oriented pairing declarations make the corner ownership explicit and
+auditable.  The verdict census moves from
+113 faithful / 13 cosmetic-gap / 4 structural-gap to
+114 faithful / 12 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
