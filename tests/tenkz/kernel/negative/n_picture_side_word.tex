@@ -1,10 +1,10 @@
-% Negative regression: a picture-side policy takes one word of its closed
-% alphabet, and its refusal names the picture being parsed.
+% Negative regression: a labelled cup must begin with the exact cup= prefix;
+% a substring cannot escape the closed side-policy alphabet.
 \documentclass{standalone}
 \usepackage{tenkz}
 \begin{document}
 \tenkzkernel
-\begin{tenkz}[rows={wire}, cols=1, bonds=none, west=bogus]
+\begin{tenkz}[rows={wire}, cols=1, bonds=none, west={xcup=$X$}]
   \tn{A}
 \end{tenkz}
 \end{document}

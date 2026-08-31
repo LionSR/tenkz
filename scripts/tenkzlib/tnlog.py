@@ -308,6 +308,7 @@ FIELD_VALIDATORS: dict[str, dict[str, Callable[[str], bool]]] = {
 # equation checks are top-level records whose scope is their ownership key and
 # whose result determines whether the record can authorize a boundary check.
 REQUIRED_FIELDS: dict[str, frozenset[str]] = {
+    "picture": frozenset({"id", "lang"}),
     "check": frozenset({"scope", "result"}),
     # `clear` is deliberately absent: it was added to an existing kind, and
     # section 7 of TNLOG.md holds a reader to accepting a stream written

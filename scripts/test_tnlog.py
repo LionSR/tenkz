@@ -52,6 +52,8 @@ def main() -> int:
     malformed_parsed = parse_log(
         "\n".join(
             (
+                "picture|lang=kernel",
+                "picture|id=2",
                 "picture|id=1|lang=future",
                 "picture|id=1|lang=kernel",
                 "atom|picture=oops|cell=1-1|name=A|kind=tensor",
@@ -86,6 +88,14 @@ def main() -> int:
         for finding in malformed
     )
     assert any("duplicate field 'scope'" in finding[2] for finding in malformed)
+    assert any(
+        "picture event lacks required field(s): id" in finding[2]
+        for finding in malformed
+    )
+    assert any(
+        "picture event lacks required field(s): lang" in finding[2]
+        for finding in malformed
+    )
     assert any(
         "wire field port-type='sideways' fails validation" in finding[2]
         for finding in malformed
