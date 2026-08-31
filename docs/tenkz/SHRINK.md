@@ -5122,3 +5122,26 @@ auditable.  The verdict census moves from
 114 faithful / 12 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+### 2026-08-31 — rule the historical operator cycles orthogonally
+
+The workbench historical composite still sent each four-station closed
+operator cycle through the smooth string spline even though the source draws a
+rounded rectangle.  Both cycles now use the existing closed-string
+`route=orth` contract.  Their stations, lambda corner, pendant actions,
+sweeping strings, open ends, direction records, and equation advisory are
+unchanged; only the inter-station route changes from waves to ruled sides.
+
+Fresh exact-hash review at 200 and 400 dpi confirms both rectangular cycles
+and their direction marks against author lines 170-197.  The standing
+cardinal-bearing fixture already proves that all eight entering and leaving
+open-leg directions ink, so the row also drops its stale missing-east-mark
+claim.  The remaining K1 is the source's short inward station ticks, whose
+port stubs have no declared crossing order against the carrying string.
+
+No parser, model, renderer, fixture, generated-reference, census-baseline, or
+public-surface change is made.  The two added `route=orth` fields stay on
+existing case lines, so M1, M2, M3, M4, M5, and M6 are unchanged.  The verdict
+census remains 114 faithful / 12 cosmetic-gap / 4 structural-gap.
+
+Census-correction: #13
