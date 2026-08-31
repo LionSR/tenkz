@@ -58,10 +58,12 @@
         spath/use = {#2} ,
         draw = #1 ,
         line~width = \__tenkz_dim:n {wirewidth} ,
+        line~cap = round ,
         preaction =
           {
             draw = tenkzPaper ,
-            line~width = \__tenkz_dim:n {emphwidth}
+            line~width = \__tenkz_dim:n {emphwidth} ,
+            line~cap = butt
           }
       }
       { }
