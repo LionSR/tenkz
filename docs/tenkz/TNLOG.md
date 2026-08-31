@@ -233,15 +233,17 @@ Hard:
 - a field with no `=`;
 - a repeated key on one line;
 - a tabled field whose value fails its validator, on a tabled kind;
+- a `picture` without `id` or `lang`, with a malformed `id`, or with a
+  repeated `id`;
 - a `check` without `scope` or `result`, or without the fields its result
   requires;
+- a `closure-rail` or `wire-ink` without its declared required fields;
 - a `check` carrying `picture=`;
 - a tabled kind other than `picture` with no `picture=`, unless it is a kernel
   record inside an open kernel picture;
 - a `bbox` whose `station`/`provenance` fields break their coupled grammar:
   the pair rides only label boxes, `provenance=auto` requires a `station`,
   `provenance=explicit` forbids one, and a `station` never stands alone;
-- a `picture` with a malformed or repeated `id`;
 - a reference to an undeclared picture.
 
 Advisory:
@@ -262,7 +264,7 @@ of them is a change to the surface.
 | exactly one `kernel-boundary` per kernel picture (§4.5) | permits zero or several; `scripts/tenkz_audit.py` enforces it |
 | no value contains `|` | would shred such a line into extra fields |
 | picture ids are `k`-prefixed and monotonic | accepts bare integers as well |
-| every kind other than the four records carries its documented fields | requires a complete field set for `check` only |
+| every kind other than the four records carries its documented fields | requires declared mandatory fields for `picture`, `check`, `closure-rail`, and `wire-ink` only |
 | an untabled field never appears on a tabled kind | accepts any untabled field as opaque |
 
 The last row is the one to read twice. `picture`'s `metrics`, every `warning`

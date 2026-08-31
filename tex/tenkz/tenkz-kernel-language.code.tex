@@ -1094,20 +1094,22 @@
         {cup}   { \__tenkz_kernel_stage_put:nn {#1} {cup}   }
       }
       {
-        \tl_if_in:nnTF {#2} {cup=}
-          { \__tenkz_kernel_side_cup:nw {#1} #2 \q_stop }
+        \regex_extract_once:nVNTF
+          { \A cup=(.*) \Z }
+          \l__tenkz_kernel_list_item_tl \l__tenkz_kernel_match_seq
+          {
+            \__tenkz_kernel_stage_put:nn {#1} {cup}
+            \seq_get_right:NN \l__tenkz_kernel_match_seq
+              \l__tenkz_kernel_scratch_tl
+            \prop_put:NnV \l__tenkz_kernel_stage_prop {cup-#1}
+              \l__tenkz_kernel_scratch_tl
+          }
           {
             \msg_error:nneeee {tenkz}{kernel-choice} {#1} {#2}
               { open|none|trace|cup|cup={m} }
               { \__tenkz_kernel_diagnostic_context: }
           }
       }
-  }
-% split a `cup=$m$' value at its equals sign, keeping the matrix verbatim
-\cs_new_protected:Npn \__tenkz_kernel_side_cup:nw #1 cup=#2 \q_stop
-  {
-    \__tenkz_kernel_stage_put:nn {#1} {cup}
-    \__tenkz_kernel_stage_put:nn {cup-#1} {#2}
   }
 % One positive-integer parser serves every scope.  Its last three arguments
 % name the diagnostic, its \msg_error variant, and any trailing diagnostic
