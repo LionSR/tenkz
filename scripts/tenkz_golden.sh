@@ -48,6 +48,9 @@ done
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/tenkz-golden.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 cp -R "$CORPUS/." "$WORK/"
+# Streams copied from a local compile are not evidence that this invocation
+# emitted one.  PDFs are irrelevant here: this gate is intentionally event-only.
+rm -f "$WORK"/*.tnlog
 TEXINPUTS_CORPUS="$REPO/tex/tenkz//:$WORK//:${TEXINPUTS:-}"
 export WORK TEXINPUTS_CORPUS
 

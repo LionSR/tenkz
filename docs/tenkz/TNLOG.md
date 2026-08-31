@@ -154,7 +154,7 @@ first, the rest sorted, no `picture=`.
 | Kind | Fields, in emitted order | Meaning |
 |---|---|---|
 | `picture` | `id` (`k<n>`), `lang` (always `kernel`), `metrics` (when a metric profile is declared), `size` (when the resolved size class is not `m`, whether the author stated it or the surrounding mathematics did), `scope` (when inside `tenkzeq`) | opens a picture |
-| `kernel-boundary` | `signature` | closes the record block with the picture's exposed-index multiset, comma-space joined, possibly empty |
+| `kernel-boundary` | `signature` (required, possibly empty) | closes the record block with the picture's exposed-index multiset, comma-space joined |
 | `check` | `scope`, then `relation` or `product`, `result`, and result-specific fields | one equation-level verdict, emitted after every picture of its scope |
 | `warning` | `picture`, `code`, then code-specific fields | one non-fatal geometry or readability diagnostic |
 | `string` | `id`, `kind` (`open`, `closed`, `wind`; readers also accept the retired `around` from stored 1.2 streams), `class`, `pts` | one declared curve |
@@ -235,6 +235,7 @@ Hard:
 - a tabled field whose value fails its validator, on a tabled kind;
 - a `picture` without `id` or `lang`, with a malformed `id`, or with a
   repeated `id`;
+- a `kernel-boundary` without `signature`;
 - a `check` without `scope` or `result`, or without the fields its result
   requires;
 - a `closure-rail` or `wire-ink` without its declared required fields;
@@ -264,7 +265,7 @@ of them is a change to the surface.
 | exactly one `kernel-boundary` per kernel picture (§4.5) | permits zero or several; `scripts/tenkz_audit.py` enforces it |
 | no value contains `|` | would shred such a line into extra fields |
 | picture ids are `k`-prefixed and monotonic | accepts bare integers as well |
-| every kind other than the four records carries its documented fields | requires declared mandatory fields for `picture`, `check`, `closure-rail`, and `wire-ink` only |
+| every kind other than the four records carries its documented fields | requires declared mandatory fields for `picture`, `kernel-boundary`, `check`, `closure-rail`, and `wire-ink` only |
 | an untabled field never appears on a tabled kind | accepts any untabled field as opaque |
 
 The last row is the one to read twice. `picture`'s `metrics`, every `warning`

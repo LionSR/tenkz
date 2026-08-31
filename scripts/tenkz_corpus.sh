@@ -293,6 +293,10 @@ is_zero_event_probe() {
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/tenkz-corpus.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 cp -R "$CORPUS/." "$WORK/"
+# A local compile may have left generated artifacts beside the sources.  The
+# gate must prove that this invocation produced both outputs, not consume a
+# copied stream or page from an earlier run.
+rm -f "$WORK"/*.tnlog "$WORK"/*.pdf
 mkdir -p "$WORK/results"
 
 RESULTS="$WORK/results"
@@ -322,6 +326,12 @@ compile_one() {
 
   if [[ ! -f "$WORK/$stem.tnlog" ]]; then
     echo "FAIL: $name produced no $stem.tnlog" \
+      >"$RESULTS/$stem.fail"
+    return 1
+  fi
+
+  if [[ ! -s "$WORK/$stem.pdf" ]]; then
+    echo "FAIL: $name produced no nonempty $stem.pdf" \
       >"$RESULTS/$stem.fail"
     return 1
   fi
