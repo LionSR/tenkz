@@ -1297,11 +1297,11 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "site-glyph-source-review-2026-07-27"
 defects = []
-case_sha256 = "ea31e0d1b6eaba1cc27d331ae1ffb743831716ed4600729ea3a57dce3ae7a3fd"
-reviewed = "2026-08-05"
-renderer = "fable-w6-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration checked against author lines 170-197: both panels keep the four-station boundary loop as one closed operator string through the lambda corner, the directed pendant feeds and drains, the outward half-edges, and the top-left/bottom-right sweeping arcs. Residue: the closed-string spline waves between stations where the source rules a crisp rounded rectangle and the lambda sits a hair off the corner (K3); the source's short inward station ticks are dropped because a port stub crossing a string is a hard error with no declarable order (K1); the east half-edge records dir=to but the renderer drops the head on an east-bearing open stub where the south-bearing twin inks it (K1)."
+case_sha256 = "ab66abc6a228b71d2e6b2641e2d393ef4991ae670e1f341adb5623d96b2a332e"
+reviewed = "2026-08-31"
+renderer = "codex-historical-orth-cycle-2026-08-31-200dpi"
+second_viewer = "codex-independent-historical-orth-pass-2026-08-31-400dpi"
+note = "Exact-hash review against author lines 170-197 confirms that both panels keep the four-station boundary loop through the lambda corner, the directed pendant feeds and drains, the outward half-edges, and the top-left/bottom-right sweeping arcs. The existing closed-string route=orth contract now rules each red cycle as the source's rectangle instead of waving between its stations; square house turns replace the source's rounded corners. The east and south outward half-edges both ink their recorded dir=to marks under the cardinal-bearing regression. Residue: the source's short inward station ticks remain absent because a port stub crossing the carrying string has no declarable order (K1)."
 
 [[verdict]]
 id = "rmp-workbench-iii-diagram-four"
