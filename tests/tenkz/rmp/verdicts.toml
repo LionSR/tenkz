@@ -1269,15 +1269,15 @@ note = "kernel respell verified against Dia1.pdf: both panels close their virtua
 
 [[verdict]]
 id = "rmp-workbench-iii-diagram-two"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
-case_sha256 = "2706a368898b103526290b1f646ad6f8b5ba90cda3334b2e364e091c187ae15e"
+case_sha256 = "1e9c212dc70665b9e6688e7b82f20297834f91a20f80f6e0945798aba8c10260"
 reviewed = "2026-08-31"
-renderer = "codex-four-corner-return-2026-08-31-200dpi"
-second_viewer = "codex-independent-second-pass-2026-08-31-400dpi"
-note = "The explicit four-corner return resolves the K1 missing-ink defect: Y stands above A on the loop's left rail, the direct Y--A bond remains, and both horizontal physical indices of A stay open. Exact-hash review at 200 and 400 dpi confirms the complete rectangular return, clear glyphs and annotation, and no collision, clipping, or corner ink. The audit records six virtual contractions, no contracted physical index, and boundary signature phys:e, phys:w. Residue: the full-pitch return is substantially taller and wider than the source's compact rounded rectangle (K3 family geometry)."
+renderer = "codex-paired-corner-return-2026-08-31-200dpi"
+second_viewer = "codex-independent-paired-corner-pass-2026-08-31-400dpi"
+note = "Four glyphless pairing skins now carry the source's compact rounded return: Y stands above A on its left rail, the direct Y--A bond remains, and both horizontal physical indices of A stay open. Exact-hash review at 200 and 400 dpi confirms continuous corner joins, clear glyphs and annotation, and no collision or crop; the rendered content height is 43.47 pt against the archival panel's 43.32 pt. The audit records six virtual contractions, no contracted physical index, boundary signature phys:e, phys:w, and no advisory. House line and glyph weights are faithful K2 presentation."
 
 [[verdict]]
 id = "rmp-workbench-iii-diagram-three"
