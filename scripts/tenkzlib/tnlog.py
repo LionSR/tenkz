@@ -172,6 +172,7 @@ FIELD_VALIDATORS: dict[str, dict[str, Callable[[str], bool]]] = {
         "to-open": _enum(
             "n", "ne", "e", "se", "s", "sw", "w", "nw", "up", "down", "route"
         ),
+        "port-type": _enum("physical", "virtual"),
     },
     "mark": {
         "picture": _is_picture_id,

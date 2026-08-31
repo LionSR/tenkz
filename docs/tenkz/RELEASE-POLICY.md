@@ -122,11 +122,11 @@ at the exact release head:
 | corpus provenance, dimensions, render | `test_tenkz_corpus_provenance.py`, `test_tenkz_dimension_inventory.py`, `test_tenkz_corpus_render.py` | `pr-ci.yml`, `tenkz-corpus` |
 | manual doc-test | `python3 scripts/tenkz_manual_doctest.py` | `pr-ci.yml`, `tenkz-corpus` |
 | manual compile and event audit | `python3 scripts/tenkz_manual_build.py check --require-engine` (two isolated builds, each compiled until rerun warnings stop) | `pr-ci.yml` (`tenkz-corpus`), `tenkz-release-policy.yml` |
-| picture-source lint and shared parsers | `python3 scripts/tenkz_lint.py`; `test_tnlog.py`, `test_texcase.py`, `test_tenkz_kernel_audit.py` | `pr-ci.yml`, `blueprint` |
+| picture-source lint and shared parsers | `python3 scripts/tenkz_lint.py --census`; `test_tnlog.py`, `test_texcase.py`, `test_tenkz_kernel_audit.py` | `pr-ci.yml` (`tenkz-corpus`) |
 | evidence-ledger validity | `python3 scripts/check_tenkz_policy.py` (+ `test_check_tenkz_policy.py`, `test_tenkz_policy_evidence.py`) | `tenkz-policy.yml` |
 | release harness, inventory, and assertions | `python3 tests/tenkz/release-harness/selftest.py`; `supervisor.py check-inventory`, `run-all`, `check-readiness` | `tenkz-release-policy.yml` |
 | CTAN staging tree and archive | `python3 scripts/tenkz_ctan.py check` (+ `test_tenkz_ctan.py`) | `tenkz-release-policy.yml`; `pr-ci.yml`, `tenkz-corpus` runs it with `--require-smoke` |
-| migration guards | `python3 scripts/check_tenkz_dispositions.py`; `python3 scripts/check_tenkz_demolition.py` | `tenkz-demolition.yml`; both expire with the S4 migration (`HACKING.md` §Pull-request evidence) |
+| migration guard | `python3 scripts/test_check_tenkz_dispositions.py`; `python3 scripts/check_tenkz_dispositions.py` | `tenkz-dispositions.yml` (`scan`) |
 
 **(this page)** The render evidence standard is working agreement 5 on #4183,
 restated in #4709's standing rules, and it binds release work: a claim of

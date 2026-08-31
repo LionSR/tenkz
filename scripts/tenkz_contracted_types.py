@@ -49,6 +49,7 @@ from tenkz_rmp import (  # noqa: E402
     standalone_wrapper,
     tex_environment,
 )
+from tenkzlib.tnlog import parse_log  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -87,55 +88,60 @@ class TargetReport:
         return [item for item in self.contractions if item.type == "virtual"]
 
 
-def record_fields(line: str) -> tuple[str, dict[str, str]]:
-    parts = line.strip().split("|")
-    attrs: dict[str, str] = {}
-    for part in parts[1:]:
-        key, separator, value = part.partition("=")
-        if separator:
-            attrs[key] = value
-    return parts[0], attrs
-
-
-def read_stream(text: str) -> tuple[list[str], list[Contraction]]:
+def read_stream(
+    text: str, *, source_name: str = "<tnlog>"
+) -> tuple[list[str], list[Contraction]]:
     """Classify every contracted index in one event stream."""
+    findings: list[tuple[str, str, str]] = []
+    parsed = parse_log(
+        text,
+        source_name=source_name,
+        hard=lambda *finding: findings.append(finding),
+    )
+    if findings:
+        details = "\n".join(
+            f"{rule} at {where}: {message}"
+            for rule, where, message in findings[:20]
+        )
+        raise ValueError(f"malformed event stream:\n{details}")
+
     languages: list[str] = []
-    picture = "?"
-    lang = "unknown"
     contractions: list[Contraction] = []
-    for line in text.splitlines():
-        kind, attrs = record_fields(line)
-        if kind == "picture":
-            picture = attrs.get("id", "?")
-            lang = attrs.get("lang", "unknown").split("|")[0]
-            if lang not in languages:
-                languages.append(lang)
-            continue
-        if kind == "wire":
-            if "from" not in attrs or "to" not in attrs:
+    for picture in parsed.pictures:
+        lang = picture.lang
+        picture_id = str(picture.ident)
+        if lang not in languages:
+            languages.append(lang)
+        for event in picture.events:
+            kind = event.kind
+            attrs = event.attrs
+            if kind == "wire":
+                if "from" not in attrs or "to" not in attrs:
+                    continue
+                contractions.append(
+                    Contraction(
+                        picture=picture_id,
+                        lang=lang,
+                        kind="wire",
+                        origin=attrs.get("origin", "tnwire"),
+                        # The kernel stamps port-type only on a physical index;
+                        # an untyped contraction is virtual by default.
+                        type=attrs.get("port-type", "virtual"),
+                    )
+                )
                 continue
-            contractions.append(
-                Contraction(
-                    picture=picture,
-                    lang=lang,
-                    kind="wire",
-                    origin=attrs.get("origin", "tnwire"),
-                    # The kernel stamps port-type only on a physical index;
-                    # an untyped contraction is virtual by default.
-                    type=attrs.get("port-type", "virtual"),
+            if kind in DIALECT_PHYSICAL or kind in DIALECT_VIRTUAL:
+                contractions.append(
+                    Contraction(
+                        picture=picture_id,
+                        lang=lang,
+                        kind=kind,
+                        origin=kind,
+                        type=(
+                            "physical" if kind in DIALECT_PHYSICAL else "virtual"
+                        ),
+                    )
                 )
-            )
-            continue
-        if kind in DIALECT_PHYSICAL or kind in DIALECT_VIRTUAL:
-            contractions.append(
-                Contraction(
-                    picture=attrs.get("picture", picture),
-                    lang=lang,
-                    kind=kind,
-                    origin=kind,
-                    type="physical" if kind in DIALECT_PHYSICAL else "virtual",
-                )
-            )
     return languages, contractions
 
 
@@ -169,7 +175,12 @@ def compile_target(target, work_root: Path, env: dict[str, str]) -> TargetReport
         )
     if not (stream.is_file() and stream.stat().st_size):
         return TargetReport(id=target.id, error="produced no nonempty .tnlog")
-    languages, contractions = read_stream(stream.read_text(encoding="utf-8"))
+    try:
+        languages, contractions = read_stream(
+            stream.read_text(encoding="utf-8"), source_name=stream.name
+        )
+    except ValueError as exc:
+        return TargetReport(id=target.id, error=str(exc))
     return TargetReport(id=target.id, languages=languages, contractions=contractions)
 
 

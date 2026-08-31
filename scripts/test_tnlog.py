@@ -18,7 +18,8 @@ def main() -> int:
                 "frame|scope=picture|map=rotate(30)|"
                 "a=0.866025|b=-0.5|c=0.5|d=0.866025",
                 "atom|id=atom-1|cell=1-2|name=A|kind=tensor",
-                "wire|id=wire-1|kind=index|from=addr-1|to=addr-2",
+                "wire|id=wire-1|kind=index|from=addr-1|to=addr-2|"
+                "port-type=physical",
                 "kernel-boundary|signature=open:e,open:w",
                 "tree|picture=0|id=1|style=wire|leaves=2|vertices=1|"
                 "topology=(1,2)|role=none|species=plain",
@@ -63,6 +64,8 @@ def main() -> int:
                 "check|scope=1|relation=1|result=equal",
                 "check|scope=1|result=mismatch",
                 "check|scope=1|result=malformed|reason=relation-count",
+                "wire|picture=1|id=wire-2|kind=index|from=addr-1|to=addr-2|"
+                "port-type=sideways",
                 "mystery|picture=2|bare",
             )
         ),
@@ -83,6 +86,10 @@ def main() -> int:
         for finding in malformed
     )
     assert any("duplicate field 'scope'" in finding[2] for finding in malformed)
+    assert any(
+        "wire field port-type='sideways' fails validation" in finding[2]
+        for finding in malformed
+    )
     assert any(
         "check event forbids field(s): picture" in finding[2]
         for finding in malformed
