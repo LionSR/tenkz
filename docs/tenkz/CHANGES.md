@@ -280,3 +280,7 @@ do not constitute a new visual proof of every figure or mathematical identity.
 Authored routes and label stations can require adjustment; the manual build
 retains repeated-topology audit advisories. See `ctan/READINESS.md` for candidate
 validation and `RELEASE-POLICY.md` for publication steps.
+
+The projected `wind` renderer does not reliably depict torus basis cycles;
+see [#301](https://github.com/LionSR/tenkz/issues/301). The manual teaches the
+quotient construction with an explicitly labeled TikZ schematic.

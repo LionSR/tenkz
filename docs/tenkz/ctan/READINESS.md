@@ -6,7 +6,7 @@ with a breaking migration from the retired front ends, not a compatibility
 freeze. The semantic event contract stays at 1.3; no event behavior changes
 in this preparation.
 
-The upload includes `tenkz.pdf` and the 14 manual source files under `doc/`.
+The upload includes `tenkz.pdf` and the current manual sources under `doc/`.
 The CTAN check rebuilds the manual from the unpacked archive, verifies the
 runtime in a clean installation and compiles eight offline examples across
 six picture classes. The inactive release campaign has been removed.
@@ -25,6 +25,10 @@ these are per-case verdicts, not a fresh visual review of the entire corpus.
 The manual retains repeated-topology audit advisories. The cover labels
 and two tutorial annotations have been adjusted for legibility. No diagram capability is added
 solely to eliminate these acknowledged limitations.
+
+The `wind` projection does not reliably draw transverse torus basis cycles.
+The manual uses an explicitly labeled fundamental-square schematic; the
+renderer limitation is tracked in [#301](https://github.com/LionSR/tenkz/issues/301).
 
 ## Publication
 

@@ -15,13 +15,8 @@ transfer channel, the gauge identity, the PEPS sheet, and its double
 layer---calling each by its standard mathematical name (arXiv:2011.12127) as it
 arrives.
 
-Everything you will type here uses the unified kernel surface: the language
-\pkg{} binds the moment it loads into \TeX{}.  (If you have encountered an
-older-dialect document, two sentences will make you current:
-\tncmd{tenkzkernel} is now an inert word that simply rebinds what loading
-already established, while the old dialect front ends are gone for good,
-catalogued for posterity in Appendix~\ref{ch:compatibility}.  New documents
-need neither.)
+The package loads the diagram language automatically.  The examples use its
+current commands and keys throughout.
 
 Every example in this tutorial is complete: you can paste it directly into
 any document that loads \pkg{}, and it will compile exactly as shown.  Read
@@ -178,13 +173,9 @@ turns the row into an open matrix $(M_1M_2M_3)_{\alpha\beta}$, while
 \tnkey{east=}\tnval{trace}) loops the row back upon itself.  The atoms and
 internal bonds remain completely identical; only the boundary signature moves!
 
-\dbendpar In \pkg{}, default behavior is an affirmative design choice, not an
-oversight.  Retired front ends of the package drew west and east stubs
-unbidden and required the user to suppress them with \tnval{none}.  In the
-modern kernel, \pkg{} mints a leg only upon explicit declaration; \tnval{none}
-merely states what the engine already does.  If you find yourself trying to
-``seal'' dangling stubs from old habits, you may smile and let go: there are
-no stubs to seal!
+\dbendpar A boundary leg appears only when it is declared.  The setting
+\tnval{none} states the default; use \tnval{open} when the diagram should
+expose an index.
 
 \tnexercise{ex:tut-trace} Draw the coefficient of a periodic matrix product
 state---the scalar $\operatorname{tr}(M_1M_2M_3)$---and state what boundary

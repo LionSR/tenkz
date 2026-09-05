@@ -120,28 +120,38 @@ different: it closes the applicable pair of physical ports at each site.
 \end{tenkz}
 \end{tnexample}
 
-Identifying all four sides gives a torus.  A closed string on that frame is
-then classified by its two winding numbers.  The two fundamental cycles below
-cross once; the explicit crossing claim is recorded on the vertical cycle.
+Identifying opposite sides of a square gives a torus.  A horizontal segment
+and a vertical segment become closed cycles after this identification.  They
+represent winding classes $(1,0)$ and $(0,1)$ and meet transversely once.
 
-\begin{tnexample}[
-  formula={W_{(1,0)}W_{(0,1)}},
-  caption={the two fundamental cycles of a torus},
-  index={The horizontal and vertical strings are closed by the identified
-    sides.  Their winding pairs distinguish the two homotopy classes, and the
-    marked tensor stands at their declared crossing.},
-  signature={kernel-boundary|signature=}]
-% Ink: surface=torus identifies every opposite side; wind= selects
-%   a homotopy class, and cross= settles the named intersection.
-\tndeclare{species}{cycle}{hue=source:red}
-\begin{tenkz}[lattice={3x3}, surface=torus]
-  \tnwire[kind=string, species=cycle, name=cx, closed, wind={1,0}]
-  \tnwire[kind=string, species=cycle, name=cy, closed, wind={0,1},
-    cross={under at crossing of cy and cx}]
-  \tn[skin=box, role=marked, at=crossing of cx and cy,
-      label pos=e]{i}
-\end{tenkz}
-\end{tnexample}
+\begin{center}
+\begin{tikzpicture}[x=1.3cm,y=1.3cm,>=Stealth]
+  % Matching arrows identify opposite edges of this fundamental square.
+  \draw[gray,dashed] (0,0) rectangle (3,3);
+  \draw[gray,->] (0.35,0) -- (1.05,0);
+  \draw[gray,->] (0.35,3) -- (1.05,3);
+  \draw[gray,->] (0,0.35) -- (0,1.05);
+  \draw[gray,->] (3,0.35) -- (3,1.05);
+  \node[below] at (0.7,0) {$a$};
+  \node[above] at (0.7,3) {$a$};
+  \node[left] at (0,0.7) {$b$};
+  \node[right] at (3,0.7) {$b$};
+  \draw[red!75!black,thick,->] (0,1.5) -- (3,1.5);
+  \draw[blue!75!black,thick,->] (1.5,0) -- (1.5,3);
+  \node[above,red!75!black] at (2.3,1.5) {$c_x$};
+  \node[right,blue!75!black] at (1.5,2.3) {$c_y$};
+  \fill (1.5,1.5) circle[radius=1.4pt];
+\end{tikzpicture}
+
+\small
+A fundamental square: identify equally labeled edges in the arrow direction.
+The dot marks the intersection of $c_x$ and $c_y$, not a tensor insertion.
+\end{center}
+
+This topological schematic is drawn with TikZ.  The current \tnkey{wind=}
+renderer uses a projected curve that does not reliably display the two
+fundamental cycles; it should not be used as a verified drawing of this
+construction.
 
 The metric profile rescales every pitch-relative length together.  It does not
 introduce a second table of lengths: \tncmd{tnset} changes the single base
@@ -361,57 +371,53 @@ operator index; \tnval{pairing} is a declared skin's own internal route,
 and is never authored at a call site.
 
 The path a wire takes is \tnkey{route=}.  \tnval{straight} is the default
-and joins the two ends directly.  \tnval{arc} is the word for a return
-that joins two perpendicular faces, and it is what the corpus writes to
-close a chain below itself.
+and joins the two ends directly.  A rectangular periodic return uses
+straight segments and four corner junctions, as below.  Each junction pairs
+two virtual ports and carries no tensor.
 
 \begin{tnexample}[
   wide,
-  label={tnex:cat-arc},
+  label={tnex:cat-periodic},
   formula={\lvert\psi(X)\rangle=\sum_{s_1\ldots s_N}
     \operatorname{tr}\!\left(XA^{s_1}\cdots A^{s_N}\right)\lvert s\rangle},
-  caption={a traced word returning below the row},
-  index={The two corner junctions carry no tensor, and the elision cell
+  caption={a periodic word with a symmetric return},
+  index={The four corner junctions carry no tensor, and the elision cell
     passes its wires through.  Every virtual index closes through $X$;
     each drawn site keeps its physical leg.},
   signature={kernel-boundary|signature=phys:n, phys:n, phys:n}]
 % Formula: |psi(X)> = sum tr(X A^{s_1} ... A^{s_N}) |s>.
-% Ink: the word closes below the row through two skin=none
-%   corner junctions, with X inserted on the return.
-\begin{tenkz}[rows={wire,wire}, cols=7, bonds=none]
+% Ink: one virtual loop with four tensor-free corners.
+% X is centered below the uniformly spaced tensor row.
+\begin{tenkz}[rows={wire,wire}, cols=9, bonds=none]
   \tn[at=(1,2), skin=box, name=a1,
       ports={0:virtual, 180:virtual, 90:physical}]{A}
-  \tn[at=(1,3), skin=box, name=a2,
+  \tn[at=(1,4), skin=box, name=a2,
       ports={0:virtual, 180:virtual, 90:physical}]{A}
-  \tn[at=(1,5), skin=dots, name=d,
+  \tn[at=(1,6), skin=dots, name=d,
       ports={0:virtual, 180:virtual}]{}
-  \tn[at=(1,6), skin=box, name=a4,
+  \tn[at=(1,8), skin=box, name=a4,
       ports={0:virtual, 180:virtual, 90:physical}]{A}
-  \tn[at=(2,4), skin=box, name=x,
+  \tn[at=(2,5), skin=box, name=x,
       ports={0:virtual, 180:virtual}]{X}
-  \tn[at=(2,1), skin=none, name=jw,
-      ports={0:virtual, 90:virtual}]{}
-  \tn[at=(2,7), skin=none, name=je,
-      ports={90:virtual, 180:virtual}]{}
   \tnwire{a1.0}{a2.180} \tnwire{a2.0}{d.180}
   \tnwire{d.0}{a4.180}
-  \tnwire[route=arc]{a4.0}{je.90}
-  \tnwire{je.180}{x.0} \tnwire{x.180}{jw.0}
-  \tnwire[route=arc]{jw.90}{a1.180}
+  \tn[at=(1,1), skin=none, name=nw, ports={0:virtual,270:virtual}]{}
+  \tn[at=(2,1), skin=none, name=sw, ports={0:virtual,90:virtual}]{}
+  \tn[at=(1,9), skin=none, name=ne, ports={180:virtual,270:virtual}]{}
+  \tn[at=(2,9), skin=none, name=se, ports={180:virtual,90:virtual}]{}
+  \tnwire{a4.0}{ne.180} \tnwire{ne.270}{se.90}
+  \tnwire{se.180}{x.0} \tnwire{x.180}{sw.0}
+  \tnwire{sw.90}{nw.270} \tnwire{nw.0}{a1.180}
 \end{tenkz}
 \end{tnexample}
 
-Each return joins a pair of perpendicular faces, and the two pairs are
-not the same one: the first leaves an east face and enters a north face,
-the second leaves a north face and enters a west face.
+The corner junctions make the two sides of the return equal.  Every segment
+is a contraction, so all virtual indices close through $X$ and only the three
+physical indices remain open.
 
-\dbendpar The word bends the rail exactly where a face directs it.
-An arc leaves and enters along its ends' faces, so the two returns
-above round their corner junctions instead of cutting across them.  An
-end that names no face---a bare name, a coordinate---answers the chord,
-and an arc between two such ends is the straight bond it always was.
-\tnval{orth} remains the right-angled spelling, drawn from turns
-rather than tangents.
+Use \tnval{arc} for a curved connection: it leaves and enters along its
+ends' faces.  When neither end names a face, it follows the straight chord.
+The next example uses four arcs to close a plaquette.
 
 The same family draws a closed cycle of tensors laid out as a plaquette,
 and a matrix inserted on one of its edges is an ordinary ring atom
@@ -579,14 +585,6 @@ one clearance further out than the rank inside it.  A bracket drawn
 inside a region window is ranked the same way and clears it instead of
 sharing its support.
 
-\dbendpar The registry once carried an \tnkey{inset=} key for this,
-named as the nested-contour step.  It recorded a number in the event
-stream and moved no ink -- write one, write six, or leave the key out,
-and the two contours above fell in the same places -- so the word is
-retired: a document that writes it meets the unknown-key refusal, and
-the tombstone ledger names what the sources get instead, which is the
-ranking above and nothing to set.
-
 \tnkey{species=} tints the contour, as it tints every other record: the
 five region words -- \tnval{selected}, \tnval{secondary},
 \tnval{complement}, \tnval{collar}, \tnval{neutral} -- are prelude
@@ -597,29 +595,18 @@ ink over the paper inside a contour rather than only stroking it; the
 tutorial's blocked run shows the tinted form, and so does the band
 below.
 
-Four further words stood in the \tnkey{form=} list until the alphabet
-closed on the four above.  Each of them took a record and drew nothing,
-and each is now a retired spelling that names its successor.  A brace is
-a \tnval{bracket}, which speaks from the side its label sits on, so
-\tnval{brace-above} is that bracket named to the north and
-\tnval{brace-below} is the same bracket with no side named, the south
-being where a bracket speaks by default.  A \tnval{band} is an
-\tnval{enclosure} carrying \tnkey{tint}, the paper under the contour
-being the whole of what a band added to one.  A \tnval{cut} has no
-successor of its own: a cut in the sources is the contour of what it
-separates, which is an enclosure over that selection.  The two brace
-spellings and the band are drawn below in the words that replaced them.
+Use \tnval{bracket} to mark a span.  Its \tnkey{label pos=} names the side:
+\tnval{90} places it above and the default places it below.  Use
+\tnval{enclosure} with \tnkey{tint} for a shaded region around a selection.
 
 \begin{tnexample}[
-  caption={a brace above, a brace below, and a band},
+  caption={brackets above and below, and a tinted enclosure},
   index={One bracket named on two sides, and one tinted enclosure.  A
     bracket's arc follows its name, so \tnkey{label pos=}\tnval{90}
     carries both to the north and the default carries both to the south.
-    The enclosure's \tnkey{tint} is the paper a band laid under its
-    span.},
+    The enclosure's \tnkey{tint} shades the selected region.},
   signature={kernel-boundary|signature=}]
-% Ink: the two brace spellings are one bracket named on two
-%   sides; the band is an enclosure carrying tint.
+% Ink: brackets on two sides and one tinted enclosure.
 \begin{tenkz}[rows={wire}, cols=2]
   \tn[skin=box]{A} & \tn[skin=box]{A}
   \tnmark[form=bracket, label pos=90]{(1,1) .. (1,2)}{$N$}
@@ -635,33 +622,6 @@ spellings and the band are drawn below in the words that replaced them.
   \tnmark[form=enclosure, tint]{(1,1) .. (1,2)}{}
 \end{tenkz}
 \end{tnexample}
-
-A source that still writes one of the four is refused by the word it
-wrote, and the answer carries the migration rather than the alphabet:
-
-\begin{tnrefusal}[
-  caption={a retired form, refused with its successor},
-  index={The parser still knows a struck word, so that it can answer
-    for it.  Reporting the alphabet alone would list the words that
-    remain, which reads as a typo when the word was in fact removed.
-    Each of the four answers with its own migration, and \tnval{cut}'s
-    says it has no successor.},
-  diagnostic={[TKZ-LANG-TOMBSTONE] form=brace-above retired from the
-    alphabet: use form=bracket with label pos=90; a bracket speaks from
-    the side its label sits on (record mark-4).}]
-% Refused: brace-above is a retired spelling.  A brace above a
-% span is form=bracket with label pos=90.
-\begin{tenkz}[rows={wire}, cols=3, west=open, east=open]
-  \tn{A} & \tn{B} & \tn{C}
-  \tnmark[form=brace-above]{(1,1) .. (1,2)}{$P$}
-\end{tenkz}
-\end{tnrefusal}
-
-The migration is written once, as a tombstone row of the registry, and
-the parser answers in that row's words, so a reader of an older source
-meets the same sentence wherever it is read.  It is also why a retired
-word is refused rather than accepted and drawn as nothing: a picture
-either carries the mark its source asked for or does not compile.
 
 \tnval{prose} is the one form that is accepted without ink, and it is
 accepted because it asks for none.  \tncmd{tnprose} states, in the

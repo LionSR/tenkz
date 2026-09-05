@@ -35,3 +35,7 @@ can need adjustment. The manual has repeated-topology audit advisories.
 The final release record must attach the tested commit, archive SHA-256,
 validation results and visual-review evidence before publication. CTAN and
 GitHub release URLs are recorded after the corresponding publication succeeds.
+
+The projected `wind` renderer does not reliably depict torus basis cycles;
+see [#301](https://github.com/LionSR/tenkz/issues/301). The manual teaches the
+quotient construction with an explicitly labeled TikZ schematic.
