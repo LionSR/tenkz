@@ -84,8 +84,8 @@ DECLARATION = re.compile(r"^\\ProvidesPackage\{tenkz\}\[([^]]*)\]", re.MULTILINE
 # optional patch, each a nonempty run of digits, followed by a description.
 # A typo such as `v1..0` is a malformed declaration, not a version this tool
 # carries into an archive name. The pattern matches the whole payload, and
-# spells it as `tests/tenkz/release-harness/tex_api_package_version.py` does,
-# so the two gates cannot disagree about the same declaration.
+# is shared by the archive and ordinary compatibility checks through
+# read_release, so both use the same declaration parser.
 PAYLOAD = re.compile(
     r"(?P<date>[0-9]{4})/([0-9]{2})/([0-9]{2}) "
     r"v(?P<version>[0-9]+\.[0-9]+(?:\.[0-9]+)?) \S.*",

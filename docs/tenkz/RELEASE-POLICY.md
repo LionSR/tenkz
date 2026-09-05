@@ -1,117 +1,23 @@
 # Releasing tenkz
 
-One page: what 1.0 promises, what evidence a release must show, how versions
-and tags are spelled, and how a spelling dies. `DESIGN.md` is the normative
-compatibility and campaign contract and `SOAK-1.0.md` its evidence ledger;
-where this page and `DESIGN.md` disagree, `DESIGN.md` governs. Two
-requirements are stated here and nowhere else, marked **(this page)** below:
-the standing-gate list must be green at the release head, and the render
-evidence standard of #4183 applies to release work. Read this page before
-every release step; read `DESIGN.md` before arming one.
+`DESIGN.md` owns compatibility. This checklist owns release preparation and
+publication; `ctan/UPLOAD-CHECKLIST.md` contains CTAN-specific instructions.
+A first CTAN release may use a pre-1.0 version. CTAN availability and the 1.0
+compatibility promise are separate decisions.
 
-## 1. The compatibility promise
+## 1. Choose the release scope
 
-1.0 freezes three artifacts, each already in the tree:
+Review the diagrams used in real blueprint work. Resolve demonstrated defects
+in the supported scope and record remaining limitations. Benchmark verdicts
+remain honest: cosmetic or explicitly deferred structural gaps do not require
+new kernel capabilities just to reach zero. The full corpus must still compile
+and pass its automated audits. A no-change simplification review is valid.
 
-| Frozen artifact | Role | Authority |
-|---|---|---|
-| `docs/tenkz/manual2.tex` + `chapters2/` | the reader-facing contract (#4163: the manual is the contract) | `DESIGN.md` §TeX surface |
-| `tex/tenkz/tenkz-language-registry.tex` | the machine inventory of environments, commands, and keys; `chapters2/generated-language-reference.tex` is regenerated from it and must agree with the manual | `DESIGN.md` §TeX surface; `HACKING.md` §Fast build loop |
-| `tests/tenkz/golden-events.sha256`, `tests/tenkz/kernel/golden.sha256`, `tests/tenkz/kernel/golden-pixels.sha256` | behavioural pins for the `.tnlog` side contract; byte evidence, not a schema | `DESIGN.md` §Event surface |
+## 2. Validate the candidate
 
-Promised: topology, boundary meaning, labels, default semantic ink,
-successful compilation of documented valid input, and the `.tnlog` event
-surface under its own `major.minor` version (header spelling owned by
-#4162/#4703). Not promised: raster bytes across engines and font revisions,
-private control sequences, undocumented development probes (`DESIGN.md`
-§TeX surface).
-
-What each release class may change (`DESIGN.md` §Package versions):
-
-| Release | TeX surface | `.tnlog` surface |
-|---|---|---|
-| 1.0.x (patch) | defect fix only: documented input keeps compiling, defaults and meaning fixed | byte-stable for unchanged input |
-| 1.x (minor) | additive documented capability through the extension gate (`Extension-gate: #NNNN`, `LANGUAGE-1.0.md` §11); deprecation may begin | additive kind or optional field, with the event minor incremented and the reader accepting old and new |
-| 2.0 (major) | removal of deprecated input, change of a documented default or meaning | breaking change, with the event major incremented |
-
-Re-pin protocol for the pins (`HACKING.md` §Golden event streams and
-§Same-session pixel pairs): re-pin event streams only when fixture sources
-change or a reviewed contract change intentionally changes emitted events; a
-behavior-preserving change must pass `scripts/tenkz_golden.sh --check` and
-does not authorize a new baseline. An event change for unchanged input is
-never a patch — it is at least a minor with the event minor incremented
-(`DESIGN.md`, `[compatibility.*]`). Pixel pins re-pin only through
-`scripts/tenkz_kernel_probes.sh --check` then `--snapshot`, with every
-non-pixel probe passing first.
-
-## 2. Release evidence
-
-A `tenkz-v*` tag is created only by the campaign in `DESIGN.md` §The 1.0
-freeze and evidence gate: freeze, two qualifying real-work merges (one
-`formalization-or-blueprint`, one `rmp-benchmark`), friction resolution,
-release preparation, sign-off, publisher tag. Nobody pushes a `tenkz-v*` tag
-by hand. The campaign harness named by the policy —
-`tests/tenkz/release-harness/`, `tests/tenkz/release-support/`,
-`tests/tenkz/release-tests.toml`,
-`.github/workflows/tenkz-release-policy.yml` — landed with the activation slice
-of #5636 and runs per PR. It is not armed. `SOAK-1.0.md` still reads
-`enforcement = "pending"`, so no campaign entry is valid and no release command
-exists. Arming is a separate self-referential pull request whose complete diff
-is the seven scalars in `SOAK-1.0.md`, and it may open only after the blocker
-chain closes and the final-tag signing key lands
-(`tests/tenkz/release-support/README.md`).
-
-What the harness is: the closed inventory names one atomic compatibility
-assertion per entry, each with its own failure fingerprint, and the supervisor
-runs each one in a repository-shaped view holding only the pinned trees, the
-inventory, and that entry's declared subjects — a canonical artifact reaches a
-command only through one of its two declared roles, and the receipt records
-which artifacts were withheld. An
-assertion passes by exiting zero and fails by writing the closed receipt and
-exiting ten; the supervisor rejects every other outcome.
-
-The view is declarative isolation, not a sandbox, and the difference matters
-when reading a receipt. A command runs as the user that owns every path in its
-view, so it can restore write permission on a sealed file and change it; it can
-read an absolute path outside the view; it can open a socket. The mode bits and
-the exposure list stop an accident and make a receipt name everything the
-command could legitimately have seen. They do not stop an adversary. Closing
-that gap needs a mount namespace and an identity that does not own the view,
-which belong to the enforcement workflow — as does the denial of network access
-before repository code runs. Both arrive with the armed workflow, and
-`supervisor.py check-readiness` refuses an armed policy whose workflow lacks
-them.
-
-One consequence for sequencing. The enforcement workflow must supply the
-repository-evidence bundle to `check_tenkz_policy.py` before the campaign is
-armed, because the arming change may touch only the two normative documents and
-so cannot add that wiring itself. An armed ledger without it fails closed on
-every validation. That wiring is therefore a prerequisite change, not part of
-arming.
-
-**What `check_tenkz_policy.py` reports, and when that changes.** The checker
-prints `evidence not-started (0 entries)` and will keep printing it until a
-freeze entry lands. Read it as the campaign's state, not as a defect: while
-`enforcement = "pending"` the ledger is closed to entries by construction, so
-`not-started` is the only state a valid pending ledger can have. Three things
-must happen, in this order, before it reports anything else:
-
-1. the blocker chain closes — #4162, #4703, #4708, and #4163 remain open;
-2. the arming pull request flips both enforcement values and pins the four
-   digests, which moves the checker from a pending ledger to an armed one;
-3. the first `freeze` entry lands, which is what makes the state
-   `attempt-1-active`.
-
-Step 2 alone is not enough. On an armed ledger the validator requires a
-repository-evidence bundle, which the plain command-line entry point does not
-build; the armed states are reachable only through the enforcement workflow,
-which supplies the GitHub and Git evidence. So the bare command reporting a
-live chain is not a milestone this or any other implementation change reaches —
-it is the campaign having started. Until then the standing gates below, not the
-ledger, are the release evidence.
-
-**(this page)** The standing gates below already run per PR and must be green
-at the exact release head:
+Use a clean checkout of the exact candidate commit. The following standing
+checks must pass. Run relevant tests locally and use the applicable CI results
+at that commit; a later change requires revalidation of affected evidence.
 
 | Gate | Command | Where it runs |
 |---|---|---|
@@ -123,96 +29,36 @@ at the exact release head:
 | manual doc-test | `python3 scripts/tenkz_manual_doctest.py` | `pr-ci.yml`, `tenkz-corpus` |
 | manual compile and event audit | `python3 scripts/tenkz_manual_build.py check --require-engine` (two isolated builds, each compiled until rerun warnings stop) | `pr-ci.yml` (`tenkz-corpus`), `tenkz-release-policy.yml` |
 | picture-source lint and shared parsers | `python3 scripts/tenkz_lint.py --census`; `test_tnlog.py`, `test_texcase.py`, `test_tenkz_kernel_audit.py` | `pr-ci.yml` (`tenkz-corpus`) |
-| evidence-ledger validity | `python3 scripts/check_tenkz_policy.py` (+ `test_check_tenkz_policy.py`, `test_tenkz_policy_evidence.py`) | `tenkz-policy.yml` |
-| release harness, inventory, and assertions | `python3 tests/tenkz/release-harness/selftest.py`; `supervisor.py check-inventory`, `run-all`, `check-readiness` | `tenkz-release-policy.yml` |
 | CTAN staging tree and archive | `python3 scripts/tenkz_ctan.py check` (+ `test_tenkz_ctan.py`) | `tenkz-release-policy.yml`; `pr-ci.yml`, `tenkz-corpus` runs it with `--require-smoke` |
 | migration guard | `python3 scripts/test_check_tenkz_dispositions.py`; `python3 scripts/check_tenkz_dispositions.py` | `tenkz-dispositions.yml` (`scan`) |
+| version, reference, and event compatibility assertions | `python3 scripts/test_check_tenkz_policy.py`; `python3 scripts/check_tenkz_policy.py` | `tenkz-policy.yml` |
 
-**(this page)** The render evidence standard is working agreement 5 on #4183,
-restated in #4709's standing rules, and it binds release work: a claim of
-visual inspection names the rendered file, the DPI, and what was checked, and
-carries a second viewer's independent look. Exit status is not visual review
-(`HACKING.md` §Audit and visual review). This applies to the
-release-preparation pull request and to any qualifying work pull request that
-touches a figure.
+Review changed figures against their mathematical sources. Visual claims name
+the rendered file, DPI, and what was checked; ink-moving changes retain an
+independent second view. Automated audits establish their documented structural
+checks, not the truth of an asserted identity. A stale full-review fingerprint
+must be disclosed; per-case verdicts are not a new full visual review.
 
-Where evidence lives: golden and pixel evidence in the pull-request body
-(`HACKING.md` §Pull-request evidence); the pins under `tests/tenkz/`; RMP
-verdicts in `tests/tenkz/rmp/verdicts.toml` under the bar in
-`COSMETIC-GAP-BAR.md`; campaign records appended to `SOAK-1.0.md` with replay
-receipts under `docs/tenkz/soak-replay/`; each tag's manifest at
-`docs/tenkz/releases/<TAG>.toml` (`DESIGN.md`, `release_manifest_pattern`),
-first written at the 0.9 freeze.
+## 3. Prepare the release
 
-## 3. Versioning mechanics
+The version declaration in `tex/tenkz/tenkz.sty` owns the package version and
+date. A release-preparation change updates the manual, change record, README
+and citation metadata consistently. `TNLOG.md` states its own event version;
+only change that version when the event contract changes.
 
-The version string lives in one place:
-`\ProvidesPackage{tenkz}[YYYY/MM/DD vX.Y.Z ...]` in `tex/tenkz/tenkz.sty`
-(today `v0.7`). At a tag, the manual version, change record, and event-format
-declaration must agree with it (`DESIGN.md` §Release tags).
+Build the manual reproducibly, then run `python3 scripts/tenkz_ctan.py check --require-smoke` and `python3 scripts/tenkz_ctan.py sync`. The archive must
+include the manual PDF and the sources needed to rebuild it. Record the tested
+commit, archive SHA-256, checks and visual evidence, and known limitations in
+the release notes. A separate campaign manifest is unnecessary.
 
-The four canonical release artifacts (`DESIGN.md`, `release_*` values) are
-`tex/tenkz/tenkz.sty`, `docs/tenkz/manual2.tex`, `docs/tenkz/CHANGES.md`, and
-`docs/tenkz/TNLOG.md`. All four are in the tree; the release-preparation pull
-request sets their version lines together with the manifest. `CHANGES.md`
-follows the register of the 0.6 record at `docs/tenkz/history/CHANGES-0.6.md` —
-a table of changed spellings, one motivated paragraph per decision, and the
-mechanical migration per spelling. `TNLOG.md` is the event-format declaration:
-it states the line syntax, the event kinds, what the reader enforces, and which
-invariants only the writers hold. The in-band `major.minor` header it declares
-does not exist yet and remains owned by #4162/#4703, so until that lands the
-event surface is held by the golden digests rather than by version
-negotiation.
+## 4. Publish after maintainer approval
 
-The upload archive reads that same declaration and states nothing of its own.
-`python3 scripts/tenkz_ctan.py archive` walks the load graph from
-`tenkz.sty`, stages the runtime files it finds together with the
-reader-facing material pinned in `docs/tenkz/ctan/MANIFEST.toml`, and writes
-`tenkz-VERSION.zip` with every timestamp taken from the declared date, so the
-archive is a function of the tree and two builds of one tree agree byte for
-byte. `python3 scripts/tenkz_ctan.py check` proves that by building twice and
-comparing, and `sync` prints what each release artifact currently says about
-its version. The steps between a release head and an accepted upload are in
-`docs/tenkz/ctan/UPLOAD-CHECKLIST.md`.
+The maintainer explicitly approves the final commit and archive, creates its
+annotated `tenkz-vMAJOR.MINOR.PATCH` tag, and submits the archive through CTAN's
+upload form. Never move or reuse a release tag. Follow up on CTAN's response
+and check distribution inclusion separately. Local checks do not imply CTAN
+acceptance or immediate availability in TeX Live or MiKTeX.
 
-Tags are `tenkz-vMAJOR.MINOR.PATCH`, annotated, never moved or reused. Bare
-`vMAJOR.MINOR.PATCH` tags belong to the Lean toolchain
-(`.github/workflows/create-release.yml`) and are a distinct namespace. Freeze
-candidates are `tenkz-v0.9.PATCH` with a patch strictly above every existing
-`tenkz-v0.9.*` tag; `tenkz-v1.0.0` is created by the pinned publisher job
-after sign-off, never by hand (`DESIGN.md` §Release tags).
-
-## 4. How a spelling dies
-
-After 1.0, a documented spelling leaves the language in three recorded steps
-(`DESIGN.md` §Deprecations, tombstones, and frozen twins; `LANGUAGE-1.0.md`
-§10–11):
-
-1. **Registry sunset.** A minor release moves the row to
-   `alias(...; sunset=...)`, names the one replacement and the earliest major
-   allowed to remove it, and keeps tests proving the old behavior. The
-   warning never becomes an error inside the same major series.
-2. **Ledger verdict.** The shrink session flags the alias and
-   `docs/tenkz/SHRINK.md` records the machine-readable verdict row
-   (`HACKING.md` §Shrink sessions); meter M5 rejects alias growth outright.
-3. **Removal at the major.** One change migrates the remaining consumers and
-   deletes the parser rows and registry rows together; the dead spelling
-   becomes a `LANGUAGE-1.0.md` §10 tombstone, rejected by parser and linter
-   with its migration, and the name is never reused.
-
-The worked precedent is the S4 retirement (#4699): sunsets and verdicts
-recorded in `docs/tenkz/SHRINK.md` ("dies at S4 ... expiry 0.9"), coverage
-classified in `FIXTURE-RETIREMENT.md` and migration classes in
-`DISPOSITIONS.md` before any deletion, then batches that each migrated a
-family and deleted its keys, parser rows, and registry rows in the same
-change (#5621 retired the cd front end, #5626 the free front end), with the
-shrink gate ratcheting the census down and the demolition guard rejecting
-resurrection. S4 ran before 1.0 and therefore cut clean, with no deprecation
-period (`HACKING.md` §Pre-1.0 contract); after 1.0 the same mechanics run
-with the minor-release deprecation clock in front.
-
-When a successor cannot preserve the released surface at all, the escape
-hatch is the frozen twin: the old library entry point stays installable
-beside the new one in the same package, on the `quantikz`/`quantikz2` model —
-not a per-command alias, a compatibility switch, or a silent change
-(`DESIGN.md` §Deprecations, tombstones, and frozen twins).
+No fixed soak, work-record quota, activation PR, dedicated publisher, secret
+inventory, or cryptographic tag-object protocol is required. The former inactive
+campaign is retired; its history remains available through `SOAK-1.0.md`.
