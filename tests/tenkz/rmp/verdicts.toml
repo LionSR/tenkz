@@ -715,15 +715,15 @@ note = "Promoted to faithful 2026-08-29. The ring now strokes the source's red: 
 
 [[verdict]]
 id = "rmp-iii-a-torus-one"
-status = "faithful"
+status = "structural-gap"
 pairing = "verified"
 pairing_by = "codex-three-cycle-source-review-2026-07-26"
-defects = []
+defects = ["unfaithful-substitution"]
 case_sha256 = "397345d66617c90211bee4403133c9cdcc279a1ec7420d8c4c684ab6eb07387b"
-reviewed = "2026-08-05"
-renderer = "fable-w7-crossings-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w7-crossings-recheck-2026-08-05-400dpi"
-note = "Kernel migration to the contract's own torus spelling (LANGUAGE-1.0 s12.2): the identified-sides lattice carries both wound cycles as declared homotopy classes {1,0} and {0,1}, crossing once at the outlined blue i with the vertical cycle declared under, matching the source's paint order; the embedded donut view becomes the canonical traced-lattice projection, as already accepted for the eq59 torus panel."
+reviewed = "2026-09-05"
+renderer = "codex-torus-wind-review-2026-09-05"
+second_viewer = "maintainer-manual-review-2026-09-05"
+note = "Prior faithful verdict overturned after maintainer rejection and independent source/render review on 2026-09-05. The wind projection draws tangent circles instead of a transverse crossing of the two fundamental cycles on the identified frame. A passing crossing audit does not establish the promised seam geometry. Renderer correction is tracked in GitHub issue #301; the manual now uses an explicitly conceptual fundamental-square drawing."
 
 [[verdict]]
 id = "rmp-iii-a-torus-two"
@@ -850,11 +850,11 @@ status = "structural-gap"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = ["wrong-contraction"]
-case_sha256 = "c195a96cdd5fcabb2da8adb4f903eda726ec6eb431dbe8e47a40847821bb1510"
-second_viewer = "codex-parent-contact-sheet-countersign-2026-08-29-200dpi"
-reviewed = "2026-08-29"
-renderer = "codex-independent-rmp-extent-scan-2026-08-29-200dpi"
-note = "Reclassified from cosmetic-gap to structural-gap 2026-08-29 on maintainer review (p.73): the R_{j,a} attachment is physically and mathematically wrong, not the slant or glyph difference the prior note recorded. Held as a structural gap: exotic, and the maintainer directed no kernel work against it.  Prior note: The marked site names itself north-west, clear of the lattice dot its south-west station stood on. the plane frame now carries the patch the source draws, so the lattice slant matches and every inter-site index is virtual while the four site legs end in air; the source-red strings still wind through their six bead stations into R_{j,a} with j and i at their corners, and a's fourth bead now sits where it laps the lattice line running north out of i; the resolver contour stands further east than the source parallelogram, which the source shears with the plane and uses to hide the a-b meeting"
+case_sha256 = "2b01566fb2635c762f42d882b09f2f23e0a2caf00987e6bc12036f1c7bdadbb1"
+second_viewer = "codex-independent-source-render-review-2026-09-05"
+reviewed = "2026-09-05"
+renderer = "codex-source-backed-gap-repair-2026-09-05"
+note = "Partial source-backed repair on 2026-09-05 gives the resolver four explicit ports, connects the j strand to its west port, and splits b into incoming and outgoing strands attached to the resolver. Author lines 863-899 show these four arms; the prior case left j at a free coordinate and ran b behind the box. Isolated event audit has no hard errors or advisories. Structural-gap is retained: the complete projected routing, endpoint ink, and resolver placement have not been established faithful; the name remains outside the contour. No kernel changes were made."
 
 [[verdict]]
 id = "rmp-iii-b-braid-four"
@@ -1447,10 +1447,12 @@ id = "rmp-workbench-iii-mpo-on-peps-definition"
 status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
-case_sha256 = "447c6784df2f8422b68302ecde35cbb5551741acaf15cc92cb997d4ca94e309e"
-reviewed = "2026-08-04"
-renderer = "kimi-kernel-mpo-source-review-2026-08-04-200dpi"
-note = "Kernel stock MPO skin (#5362); the abstraction still drops the source's hatching, red hue, and centered star. The arc-route landing (#6201, re-checked 2026-08-22 on the before/after pair) draws the ring as the circle, so the straight-chord residue is gone."
+case_sha256 = "712eba7a54b2c6cd45d58a9ee9fad6b172f843a73d6db91eec3efe0af5a3cec0"
+reviewed = "2026-09-05"
+renderer = "codex-source-backed-gap-repair-2026-09-05"
+note = "Source-backed repair on 2026-09-05 restores the separate five-leg PEPS star, removes the invented central A from the MPO ring, restores all eight radial virtual openings, and strokes the ring red. Independently compared with freshly compiled author lines 521-537. Remaining cosmetic differences are the flat circle and square skins versus the projected ellipse and parallelograms, and panel proportions. The source equality is schematic: five left openings versus eight right openings, so the equation-sibling advisory is retained rather than suppressed."
+
+second_viewer = "codex-independent-source-render-review-2026-09-05"
 
 [[verdict]]
 id = "rmp-workbench-iii-eq60-now"

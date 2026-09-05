@@ -12,13 +12,12 @@ import tomllib
 from pathlib import Path
 
 from tenkz_ctan import read_release
+from tenkz_language import current_reference_entries, load_registry
 from tenkzlib import tnlog
-from tenkzlib.texcase import strip_comments
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = "docs/tenkz/chapters2/generated-language-reference.tex"
-COMMAND_ROW = re.compile(r"\\__tenkz_language_registry_command:nnnnn\s*\{([^}]+)\}")
 KIND_BLOCK = re.compile(
     r"^```toml[ \t]+tenkz-event-kinds-v1[ \t]*\n(.*?)^```[ \t]*$",
     re.MULTILINE | re.DOTALL,
@@ -29,7 +28,8 @@ def check(root: Path = ROOT) -> None:
     """Raise on missing, malformed, or inconsistent product evidence."""
     # Reuse the archive parser: cardinality, version syntax, and calendar date.
     read_release(root / "tex/tenkz/tenkz.sty")
-    commands = set(COMMAND_ROW.findall(strip_comments((root / REGISTRY).read_text())))
+    commands = {e.fields[0] for e in current_reference_entries(load_registry(root / REGISTRY))
+                if e.kind == "command"}
     if not commands:
         raise ValueError("registry contains no command declarations")
     reference = (root / REFERENCE).read_text()

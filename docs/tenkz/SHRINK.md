@@ -5145,3 +5145,15 @@ existing case lines, so M1, M2, M3, M4, M5, and M6 are unchanged.  The verdict
 census remains 114 faithful / 12 cosmetic-gap / 4 structural-gap.
 
 Census-correction: #13
+
+
+### Source-backed case repairs — 2026-09-05
+
+Census-correction: #300. The mean non-comment case length increases from
+26.58 to 26.68 after restoring the missing five-leg PEPS star and eight
+radial MPO openings in `rmp-workbench-iii-mpo-on-peps-definition`, and making
+all four resolver attachments explicit in `rmp-iii-b-braid-three`.
+The author-source sections were hash-verified and the corrected drawings
+independently inspected. The two verdicts remain gaps, with the remaining
+limitations recorded. No language, parser, metric, or renderer code changes;
+all other census values are unchanged.

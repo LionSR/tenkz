@@ -14,6 +14,7 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/tenkz_ctan.py"
@@ -1691,6 +1692,19 @@ def test_uploaded_manual_recorder_rejects_repository_fallback() -> None:
             work, "xelatex", manual_dir=manual, package_tree=package,
         )
         assert str(foreign) in findings, findings
+
+
+def test_uploaded_manual_must_match_the_shipped_pdf() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
+        with zipfile.ZipFile(archive) as bundle:
+            shipped = bundle.read("tenkz/tenkz.pdf")
+        with patch.object(tenkz_ctan.shutil, "which", return_value="xelatex"):
+            with patch.object(tenkz_ctan.manual_build, "build", return_value=(shipped, [])):
+                assert not tenkz_ctan.check_documentation(archive, required=True).failures
+            with patch.object(tenkz_ctan.manual_build, "build", return_value=(b"%PDF-stale", [])):
+                failures = tenkz_ctan.check_documentation(archive, required=True).failures
+                assert any("differs from shipped" in failure for failure in failures), failures
 
 
 def test_uploaded_manual_missing_its_entry_point_fails() -> None:

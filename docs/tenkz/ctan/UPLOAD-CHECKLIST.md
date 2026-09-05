@@ -77,7 +77,7 @@ material, so they are reviewed with it rather than typed fresh each time.
 | Bug tracker | https://github.com/LionSR/tenkz/issues |
 | Support | the same tracker |
 | Suggested directory | `graphics/pgf/contrib/tenkz` |
-| Announcement | `docs/tenkz/ANNOUNCEMENT-1.0-draft.md`, with every pending field filled |
+| Announcement | `docs/tenkz/ANNOUNCEMENT.md`, with every pending field filled |
 
 The package retains Apache-2.0; CTAN lists it at
 https://ctan.org/license/apache2. A license change is not an upload prerequisite.

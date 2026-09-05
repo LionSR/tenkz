@@ -21,20 +21,25 @@
     \tn[at=(2,1), name=q]{}
     \tn[at=(2,2), name=j, role=extra, label pos=sw]{j}
     % the resolver box stands east of the patch where the a-j crossing was
-    \tn[at=0.9 e of midway i and j, skin=box, name=R]{\noexpand\mathcal R_{j,a}}
+    \tn[at=0.9 e of midway i and j, skin=box, name=R,
+        ports={45:virtual,135:virtual,180:virtual,225:virtual}]
+      {\noexpand\mathcal R_{j,a}}
     % string a winds through the patch into the resolver, lapping over the
     % lattice line that runs north out of i; every lattice crossing carries
     % its dot
     \tnwire[kind=string, species=operator, name=a, route=arc,
             via={0.3 w of q, midway p and q, midway p and i,
                  0.3 nw of i, 0.3 ne of i, 0.4 e of i},
-            cross={over at crossing of a and open-north-col-2}]{open s}{R}
-    % string b leaves anyon i, dives behind the resolver, and exits below
+            cross={over at crossing of a and open-north-col-2}]{open s}{R.45}
+    % The resolver consumes four strands: a and j, plus the incoming and
+    % outgoing parts of b.  A line hidden by its box is not a contraction.
     \tnwire[kind=string, species=operator, name=b, route=arc,
-            via={0.3 se of i, 0.7 e of midway i and j, 0.4 e of j}]{i}{open s}
-    % anyon j hands its strand to the resolver, ending under its west edge
+            via={0.3 se of i}]{i}{R.135}
+    \tnwire[kind=string, species=operator, name=b-out, route=arc,
+            via={0.4 e of j}]{R.225}{open s}
+    % anyon j contracts with the resolver at its west port
     \tnwire[kind=string, species=operator, name=ja,
-            route=arc]{j}{0.55 e of midway i and j}
+            route=straight]{j}{R.180}
     % marker beads where the strings pierce lattice lines
     \tn[at=0.3 w of q]{}      \tn[at=midway p and q]{}
     \tn[at=midway p and i]{}

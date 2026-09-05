@@ -1,7 +1,9 @@
 % One-page environment chooser.
-\section{Which environment?}\label{ch:chooser}
+\section{The Choice of Layout}\label{ch:chooser}
 
-Choose from topology, not appearance.
+When you sit down to typeset a tensor network, your very first design
+decision is to select the right environment.  A simple yet profound principle
+will guide you: \textbf{choose from topology, not appearance.}
 
 \medskip
 {\small
@@ -13,25 +15,35 @@ Choose from topology, not appearance.
 \toprule
 Layout & Use it when & Recognition test \\
 \midrule
-\tnenv{tenkz} & The picture is a regular one-dimensional contraction. &
-Rows are layers, columns are sites, and neighbouring cells contract. \\
+\tnenv{tenkz} & The picture is a tensor network with regular contractions. &
+Rows are layers, columns are lattice sites, and neighbouring nodes contract. \\
 \bottomrule
 \end{tabularx}
 }
 \medskip
 
-A spatial lattice, sheet, window, or
-measured region is not a second layout: it is a \tnenv{tenkz} picture with
-a frame -- \tnkey{lattice=} or \tnkey{planes} sugar, or a declared basis.
+In \pkg{}, the overwhelming majority of diagrams in quantum many-body physics
+begin with \tnenv{tenkz}.  A one-dimensional Matrix Product State (MPS), a
+Matrix Product Operator (MPO), a two-dimensional Projected Entangled Pair State
+(PEPS), or a double-layer norm network is not a separate, ad-hoc layout: each
+is simply a \tnenv{tenkz} picture equipped with an appropriate frame---such as
+the default 1D chain, the convenient \tnkey{lattice=} and \tnkey{planes} options
+for 2D quantum lattices, or a declared geometric basis for oblique projections.
 
-\paragraph{Do not change layouts for style.}
-The layout shares the metric, atom skins, semantic roles, labels, and
-connection policy across every picture.  A chain does not become a
-coordinate drawing because it is vertical.  Choose the layout once, then
-declare policy through its public keys.
+\paragraph{Resist changing layouts for style.}
+It is often tempting to switch environments whenever a diagram looks slightly
+different, but remember that the layout establishes the shared metric, node
+skins, semantic roles, labels, and contraction policies across every figure in
+your paper.  An MPS chain does not cease to be an MPS merely because
+it runs vertically on the page!  Choose the layout that reflects the underlying
+physical contraction geometry, and then declare your stylistic preferences
+through its public keys.
 
 \paragraph{When none fits.}
-State the missing mathematical class before adding syntax.  A new key needs
-three manifested RMP consumers.  A new command needs a new grammatical class.
-Until that gate passes, the result is a capability request, not raw
-TikZ hidden inside a canonical source.
+What should you do if you encounter a diagram that seems to defy the standard
+grammar?  Before reaching for raw TikZ drawing commands or inventing ad-hoc
+syntax, pause to identify the missing mathematical class.  In the \pkg{} design
+philosophy, a new key requires at least three independent, manifested consumers
+in the literature, while a new command requires a genuinely new grammatical
+class.  Until an extension clears that gate, treat the need as a capability
+request, rather than burying uncanonical drawing hacks inside your document.

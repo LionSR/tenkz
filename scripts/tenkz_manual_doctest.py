@@ -14,6 +14,7 @@ from functools import cache
 from pathlib import Path
 
 from tenkz_audit import Audit
+from tenkz_language import current_reference_entries, load_registry
 from tenkzlib.texcase import match_group, strip_comments
 
 
@@ -966,7 +967,12 @@ def reference_examples() -> list[Example]:
         r"Example:\s*\\texttt\{\\detokenize\{([^{}]+)\}\}",
         REFERENCE.read_text(encoding="utf-8"),
     )
-    registry_paths = [mapping_by_command[command] for command in commands]
+    # Keep compiling every runtime API example, including compatibility probes,
+    # while the reader-facing reference includes only active vocabulary.
+    published = {e.fields[0] for e in current_reference_entries(load_registry(REGISTRY))
+                 if e.kind == "command"}
+    registry_paths = [mapping_by_command[command] for command in commands
+                      if command in published]
     if len(set(registry_paths)) != len(registry_paths):
         raise ValueError(f"{REGISTRY}: command example paths must be distinct")
     if generated_paths != registry_paths:
