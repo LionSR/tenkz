@@ -1,31 +1,42 @@
 % Task-oriented recipes.
-\section{Recipes}\label{ch:recipes}
+\section{Practical Techniques}\label{ch:recipes}
 
 The tutorial introduced the foundational grammar of \pkg{}; this chapter gathers
-a collection of practical recipes for the everyday situations you will encounter
-in research papers.  Each recipe focuses on a single semantic task.  When
+a collection of practical techniques for the everyday situations you will encounter
+in research papers.  Each section focuses on a single semantic task.  When
 designing a diagram of your own, start from the tutorial example that most
 closely matches your mathematical structure, and add only the specific policies
 your physics requires.
 
-\subsection{Keep a map open; close a scalar}
+\subsection{Open operators versus closed scalars}
 
-In \pkg{}, a perimeter side exposes indices only when you explicitly ask it to.
-A diagram that states no boundary policy draws no dangling legs and carries an
-empty boundary signature on those faces.  Consequently, an operator map keeps
-its outer indices by stating \tnkey{boundary=open}---or \tnkey{west=open} for a
-single side---while \tnkey{boundary=none} is simply the explicit spelling of the
-default behavior.  The layout grid places the tensor atoms; it does not assume
-that every perimeter cell owns a dangling index.  That is why a circuit pyramid
-or a single four-legged junction never sprouts unwanted legs you did not ask for.
+In tensor-network notation, an open perimeter denotes an operator map with free
+physical or virtual indices, whereas a closed perimeter represents a scalar
+amplitude (such as a wavefunction overlap $\langle\phi|\psi\rangle$ or a
+partition function $Z$).  In \pkg{}, a perimeter side exposes indices only when
+explicitly instructed: an unstated side draws no dangling legs and carries an
+empty boundary signature.  Consequently, an operator map keeps its boundary
+indices by stating \tnkey{boundary=open}---or \tnkey{west=open} for a single
+side---while \tnkey{boundary=none} explicitly declares the default closed
+behaviour.  The layout grid places the tensor nodes; it does not assume that
+every perimeter site carries a dangling index.  That is why a quantum circuit
+pyramid or a single four-legged junction never sprouts unwanted legs.
 
 The rest of the boundary alphabet is equally intuitive: use
-\tnkey{boundary=periodic} to trace a row back into itself, and use
-\tnkey{west=cup} or \tnkey{east=cup} to connect adjacent layers.  Notice that
-two closures may happen to have the same number of open ends and yet represent
-entirely different mathematical operations!
+\tnkey{boundary=periodic} to trace a row back into itself (periodic boundary
+conditions), and use \tnkey{west=cup} or \tnkey{east=cup} to connect adjacent
+layers (such as contracting a ket with a bra).  Notice that two closures may
+happen to have the same number of open ends and yet represent entirely
+different mathematical operations!
 
-\subsection{Stack ket, operator, and bra}
+\subsection{Sandwiching operators: ket, mid, and bra}
+
+When calculating local expectation values $\langle\psi|O_1O_2|\psi\rangle$ or
+sandwiching an MPO between ket and bra states, setting
+\tnkey{rows=}\tnval{\{ket,op,bra\}} automatically establishes the three-tier
+layer geometry: vertical connections contract the physical indices between ket
+and operator, and between operator and bra, while open horizontal bonds expose
+the virtual boundary indices of the transfer operator:
 
 \begin{tnexample}[
   formula={\sum_{s,s'}A^s\otimes O^{ss'}\otimes\bar A^{s'}},
@@ -43,26 +54,29 @@ entirely different mathematical operations!
 \end{tenkz}
 \end{tnexample}
 
-\subsection{Block a run without changing topology}
+\subsection{Grouping tensors without altering topology}
 
-When coarse-graining, a bracket mark over a cell range (\tncmd{tnmark} with
-\tnkey{form=bracket}) declares a brace or measured grouping over existing
-atoms, while \tnval{skin=dots} declares an ellipsis cell whose wires pass
-straight through.  Neither construct alters the underlying contractions!  A wide
-single atom is appropriate only after your formula has already replaced the run
-by a single blocked tensor.
+In coarse-graining schemes (such as block-spin renormalization, DMRG
+site-blocking, or MERA layers), a bracket mark over a cell range (\tncmd{tnmark}
+with \tnkey{form=bracket}) declares a brace or measured grouping over existing
+tensors, while \tnval{skin=dots} declares an ellipsis cell for infinite chains
+in the thermodynamic limit.  Neither construct alters the underlying
+contractions!  A wide single tensor node is appropriate only after your formula
+has already replaced the run by a single blocked tensor.
 
-\subsection{Distinguish a role from a species}
+\subsection{Semantic roles versus persistent species}
 
 A good diagram distinguishes between structural roles and persistent species.
-Use \tnkey{role=} for an atom's fixed semantic role, such as \tnval{operator} or
-\tnval{marked}.  By contrast, declare \tnkey{species=} at setup scope when your
-paper features a recurring family of tensors whose members should maintain a
-consistent hue across multiple figures.  Always remember: labels distinguish
-objects of the same kind; color should never be the sole carrier of identity.
-A role may modify visual style, but never network topology.
+Use \tnkey{role=} for a tensor's fixed semantic role in an algorithm, such as
+\tnval{operator} or an active site being optimized.  By contrast, declare
+\tnkey{species=} at setup scope when your paper features a recurring family of
+tensors (such as isometries $W$, unitary disentanglers $U$, or projectors $P$)
+whose members should maintain a consistent hue across multiple figures.  Always
+remember: labels distinguish objects of the same kind; color should never be the
+sole carrier of identity.  A role may modify visual style, but never network
+topology.
 
-\subsection{Stand a label on an open leg}
+\subsection{Labels on external legs}
 
 An open leg is a wire like any other, and it carries an accessible name.  The
 boundary policy names its legs after the side and the row or column they
@@ -88,15 +102,16 @@ leg-n-1-1 0} lies on the north face of the site in row~1, column~1, while
 \tnkey{physical=} is therefore especially convenient: the very same name
 serves both for line crossings and for label placement.
 
-\subsection{Say which bond is the one under discussion}
+\subsection{Highlighting specific bonds}
 
 A lattice draws its bonds automatically from its row and column policies, and
 every one of them is typeset as a standard black contraction.  When a figure
-needs to highlight one specific edge---the bond being cut, or the link being
-entangled---you can restate that bond directly in the body.  An index wire
-declared between two adjacent cells becomes that pair's bond: \pkg{} creates no
-duplicate wire beneath it, and the wire's species, stroke, and route become the
-bond's own:
+needs to highlight one specific edge---an entanglement cut across a bipartition
+$A:B$, an SVD Schmidt spectrum cut, or a Hamiltonian interaction term $h_{i,j}$
+on a particular link---you can restate that bond directly in the body.  An
+index wire declared between two adjacent cells becomes that pair's bond: \pkg{}
+creates no duplicate wire beneath it, and the wire's species, stroke, and route
+become the bond's own:
 
 \begin{Verbatim}[fontsize=\small,frame=leftline]
 \tndeclare{species}{blocked-edge}{hue=source:red!65!black}
@@ -116,12 +131,14 @@ needlessly tedious and completely unnecessary!)  A travelling string is not a
 restatement: it carries an operator index, so it is drawn cleanly over the
 lattice without retiring the underlying bonds.
 
-\subsection{Send a physical index sideways}
+\subsection{Directing physical indices}
 
-In \pkg{}, an index type belongs to the port that carries it.  The \tnkey{ports=}
-key types each perimeter face individually, so \tnval{0:physical} directs a
-physical index eastward just as naturally as \tnval{0:virtual} directs a
-virtual one.  A single-atom linear map types its opposing faces accordingly:
+In tensor-network theory, each port carries a defined index type: virtual
+(mediating quantum entanglement between neighboring tensors) or physical
+(spanning the local Hilbert space of a site).  The \tnkey{ports=} key types
+each perimeter face individually, so \tnval{0:physical} directs a physical
+index eastward just as naturally as \tnval{0:virtual} directs a virtual one.  A
+single-tensor linear map types its opposing faces accordingly:
 
 \begin{Verbatim}[fontsize=\small,frame=leftline]
 \begin{tenkz}[rows={wire}, cols=1, bonds=none]
@@ -144,11 +161,13 @@ physical index, it is far cleaner to declare the port on that individual atom:
 \end{tenkz}
 \end{Verbatim}
 
-\subsection{Keep a physical index out of a projected sheet}
+\subsection{Physical indices in projected sheets}
 
-A PEPS tensor has five index directions, but only four lie in the plane of the
-lattice sheet.  The four numeric ports below follow the projected planar axes,
-while the picture policy supplies the upward transverse direction:
+A PEPS tensor has five index directions: four virtual bonds mediating
+entanglement within the 2D lattice plane, and one physical index projecting out
+of the plane into the local Hilbert space.  The four numeric ports below follow
+the projected planar axes, while the picture policy supplies the upward
+transverse direction:
 
 \begin{Verbatim}[fontsize=\small,frame=leftline]
 \begin{tenkz}[rows={wire,wire,wire}, cols=3,
@@ -168,18 +187,22 @@ geometric annotation, not a lattice site; hence, picture policies never sprout
 physical legs from marks.  If an annotation represents an additional tensor with
 its own physical index, simply declare that port explicitly via \tnkey{ports=}.
 
-\subsection{Draw fusion trees; leave commutative diagrams to tikz-cd}
+\subsection{Fusion trees}
 
-Use \tncmd{tntree} when you need to draw parenthesized fusion words and tree
-contractions.  Commutative diagrams, by contrast, compose morphisms between
-mathematical objects rather than contracting tensor indices; they belong to the
-excellent \textsf{tikz-cd} package, outside the scope of \pkg{}.  A
-\tncmd{tntree} atom is a self-contained box that embeds gracefully inside any
-\textsf{tikz-cd} cell whenever the two worlds meet.
+When working with symmetric tensor networks (such as $SU(2)$ spin-rotation
+symmetry or abelian $U(1)$ particle conservation), tensors decompose via the
+Wigner-Eckart theorem into structural Clebsch-Gordan coefficients (represented
+by fusion trees) and reduced matrix elements.  Use \tncmd{tntree} when you need
+to draw parenthesized fusion words and tree contractions.  Commutative diagrams,
+by contrast, compose morphisms between mathematical objects rather than
+contracting tensor indices; they belong to the excellent \textsf{tikz-cd}
+package, outside the scope of \pkg{}.  A \tncmd{tntree} atom is a
+self-contained box that embeds gracefully inside any \textsf{tikz-cd} cell
+whenever the two worlds meet.
 
-\subsection{Put a picture in a sentence}
+\subsection{Inline diagrams}
 
-A \pkg{} picture enters surrounding \TeX{} as a displayed mathematical term.
-There is no special ``inline'' key: inline mathematical alignment belongs to the
-ambient equation or text scope, not to an internal property of individual
-diagram records.
+A \pkg{} tensor network enters surrounding \TeX{} as a displayed mathematical
+term.  There is no special ``inline'' key: inline mathematical alignment
+belongs to the ambient equation or text scope, not to an internal property of
+individual diagram records.

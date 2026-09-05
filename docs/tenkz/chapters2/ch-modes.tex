@@ -1,5 +1,5 @@
 % One-page environment chooser.
-\section{Which environment?}\label{ch:chooser}
+\section{The Choice of Layout}\label{ch:chooser}
 
 When you sit down to typeset a tensor network, your very first design
 decision is to select the right environment.  A simple yet profound principle
@@ -15,28 +15,29 @@ will guide you: \textbf{choose from topology, not appearance.}
 \toprule
 Layout & Use it when & Recognition test \\
 \midrule
-\tnenv{tenkz} & The picture is a regular one-dimensional contraction. &
-Rows are layers, columns are sites, and neighbouring cells contract. \\
+\tnenv{tenkz} & The picture is a tensor network with regular contractions. &
+Rows are layers, columns are lattice sites, and neighbouring nodes contract. \\
 \bottomrule
 \end{tabularx}
 }
 \medskip
 
-In \pkg{}, the overwhelming majority of regular diagrams you will ever draw
-begin with \tnenv{tenkz}.  A spatial lattice, a projected PEPS sheet, a circuit
-window, or a measured region is not a separate, ad-hoc layout: it is simply a
-\tnenv{tenkz} picture equipped with an appropriate frame---such as the
-convenient \tnkey{lattice=} or \tnkey{planes} sugar keys, or a declared
-geometric basis.
+In \pkg{}, the overwhelming majority of diagrams in quantum many-body physics
+begin with \tnenv{tenkz}.  A one-dimensional Matrix Product State (MPS), a
+Matrix Product Operator (MPO), a two-dimensional Projected Entangled Pair State
+(PEPS), or a double-layer norm network is not a separate, ad-hoc layout: each
+is simply a \tnenv{tenkz} picture equipped with an appropriate frame---such as
+the default 1D chain, the convenient \tnkey{lattice=} and \tnkey{planes} options
+for 2D quantum lattices, or a declared geometric basis for oblique projections.
 
 \paragraph{Resist changing layouts for style.}
 It is often tempting to switch environments whenever a diagram looks slightly
-different, but remember that the layout establishes the shared metric, atom
-skins, semantic roles, labels, and connection policies across every picture in
-your paper.  A one-dimensional chain does not cease to be a chain merely because
-it runs vertically on the page!  Choose the layout that reflects the topological
-structure of the network, and then declare your stylistic and geometric
-preferences through its public keys.
+different, but remember that the layout establishes the shared metric, node
+skins, semantic roles, labels, and contraction policies across every figure in
+your paper.  An MPS chain does not cease to be an MPS merely because
+it runs vertically on the page!  Choose the layout that reflects the underlying
+physical contraction geometry, and then declare your stylistic preferences
+through its public keys.
 
 \paragraph{When none fits.}
 What should you do if you encounter a diagram that seems to defy the standard

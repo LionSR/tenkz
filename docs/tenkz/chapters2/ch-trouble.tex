@@ -1,7 +1,7 @@
 % Troubleshooting and maintainer architecture.
-\section{Troubleshooting and maintenance}\label{ch:trouble}
+\section{Recovery from Errors}\label{ch:trouble}
 
-\subsection{Read meaning before ink}
+\subsection{Interpreting compiler diagnostics}
 
 When you encounter an unexpected rendering or a compiler refusal, do not
 despair!  \TeX{} tools are designed to assist you, and in \pkg{}, the golden rule
@@ -9,10 +9,13 @@ of debugging is simple: \textbf{read meaning before ink.}
 
 Begin by opening the job's companion \tnfile{.tnlog} file and locating the
 picture's coded diagnostic or boundary event.  Ask yourself: What mathematical
-object should this diagram represent?  A matrix requires two open virtual
-indices; a doubled-space transfer map requires four; and a scalar requires none
-at all.  When inspecting an equation, compare the boundary signatures of each
-side term by term, rather than merely counting total legs on the page.
+object should this tensor network represent?  A quantum state $|\psi\rangle$
+carries open physical legs and closed virtual boundaries; a transfer operator
+or MPO carries open virtual indices at both ends; and an expectation value or
+partition function is a fully contracted scalar with an empty boundary
+signature.  When inspecting an equation, compare the boundary signatures of each
+side term by term, ensuring that all physical and virtual indices balance
+across the equality.
 
 {\small
 \noindent
@@ -22,9 +25,9 @@ side term by term, rather than merely counting total legs on the page.
 \toprule
 Symptom & First correction \\
 \midrule
-A map rendered as a scalar & State \tnkey{boundary=open}, or type the open
+An operator rendered as a scalar & State \tnkey{boundary=open}, or type the open
 ports; an unstated side draws no leg. \\
-A trace looks like a layer cup & Use \tnkey{boundary=periodic} for same-row closure;
+A periodic trace looks like a cup & Use \tnkey{boundary=periodic} for same-row closure;
 use side \tnval{cup} only between adjacent layers. \\
 A label touches ink & Restore a documented metric or label band; do not hide
 the problem with an undocumented coordinate offset. \\
@@ -42,7 +45,7 @@ atom flag.  When creating a hole in a lattice, distinguish between
 \tnkey{void=open} (where incident indices survive around the missing site) and
 \tnkey{void=sealed} (which removes the site and its incident bonds entirely).
 
-\subsection{Maintainer stages}
+\subsection{The internal pipeline}
 
 Behind the scenes, \pkg{} translates your declarations into vector ink through
 seven strictly sequenced stages:

@@ -1,5 +1,5 @@
 % Installation and the public mental model.
-\section{Install and read the language}\label{ch:install}
+\section{First Principles}\label{ch:install}
 
 Welcome to \pkg{}!  The goal of this system is to make the creation of
 tensor-network diagrams in \TeX{} as pleasant, natural, and mathematically
@@ -14,6 +14,11 @@ To begin, you need only load the package and declare your first network:
 \usepackage{tenkz}
 \begin{tenkz}[physical=up] \tn{A} & \tn{B} \end{tenkz}
 \end{Verbatim}
+which immediately produces the elementary two-site chain:
+\begin{center}
+  \begin{tenkz}[physical=up] \tn{A} & \tn{B} \end{tenkz}
+\end{center}
+
 
 For a working repository checkout, simply add \tnfile{tex/tenkz/} to
 your \texttt{TEXINPUTS} search path; for an archived article, ship

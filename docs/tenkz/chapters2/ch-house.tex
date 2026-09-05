@@ -1,19 +1,21 @@
 % Typed atom extension and document house style.
-\section{Atom extension and house style}\label{ch:house}
+\section{Custom Atoms and Typographic Style}\label{ch:house}
 
 Good typography depends upon a disciplined visual vocabulary.  In \pkg{}, the
-standard atom skins are shared consistently across all layout frames: a
+standard tensor nodes are shared consistently across all layout frames: a
 \tnval{dot} represents an unnamed tensor site; a \tnval{box} or \tnval{pill}
-encloses an inscribed label; an \tnval{mpo} provides facing physical input and
-output ports; and a \tnval{ring} denotes a matrix seated upon an existing wire.
-Always remember that an atom's semantic kind, its typed ports, and its visual
-skin are three independent concepts.
+encloses an inscribed tensor label; an \tnval{mpo} provides facing physical input
+and output ports for local operators or MPO nodes; and a \tnval{ring} denotes a
+single-site operator or gauge matrix seated upon an existing wire.  Always
+remember that a tensor's semantic kind, its typed ports (physical vs. virtual),
+and its visual skin are three independent concepts.
 
-\subsection{Declare one typed atom}
+\subsection{Declaring a custom atom}
 
-When should you extend the atom vocabulary?  The command \tncmd{tndeclare}
-exists for those occasions when the built-in skins cannot express a recurring
-mathematical entity:
+When should you extend the node vocabulary?  The command \tncmd{tndeclare}
+exists for those occasions when the built-in skins cannot express a specialized
+quantum many-body entity (such as a multi-legged projector $P$, an isometry
+$W$, or a disentangler $U$):
 
 \cmdsig{\textbackslash tndeclare\{atom\}\{\meta{command}\}\\
 \{skin=\meta{dot|box|pill|mpo},\\
@@ -43,7 +45,7 @@ To abbreviate repeated structures in a paper, use ordinary \TeX{} definitions
 whose expansions produce the public \pkg{} syntax.  Keep benchmark examples
 expanded so that each source states the topology it draws.
 
-\subsection{The extension gate}
+\subsection{Criteria for language extensions}
 
 To protect the language from creeping bloat, \pkg{} enforces a strict gate for
 new features.  A proposed key must demonstrate at least three distinct,
