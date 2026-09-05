@@ -9,11 +9,10 @@ of debugging is simple: \textbf{read meaning before ink.}
 
 Begin by opening the job's companion \tnfile{.tnlog} file and locating the
 picture's coded diagnostic or boundary event.  Ask yourself: What mathematical
-object should this tensor network represent?  A quantum state $|\psi\rangle$
-carries open physical legs and closed virtual boundaries; a transfer operator
-or MPO carries open virtual indices at both ends; and an expectation value or
-partition function is a fully contracted scalar with an empty boundary
-signature.  When inspecting an equation, compare the boundary signatures of each
+object should this tensor network represent?  A state $|\psi\rangle$ has open
+physical indices; a matrix window has two open virtual indices; and a doubled
+transfer window has four.  A fully contracted expectation value or partition
+function has an empty boundary signature.  When inspecting an equation, compare the boundary signatures of each
 side term by term, ensuring that all physical and virtual indices balance
 across the equality.
 

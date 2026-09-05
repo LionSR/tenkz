@@ -715,15 +715,15 @@ note = "Promoted to faithful 2026-08-29. The ring now strokes the source's red: 
 
 [[verdict]]
 id = "rmp-iii-a-torus-one"
-status = "faithful"
+status = "structural-gap"
 pairing = "verified"
 pairing_by = "codex-three-cycle-source-review-2026-07-26"
-defects = []
+defects = ["unfaithful-substitution"]
 case_sha256 = "397345d66617c90211bee4403133c9cdcc279a1ec7420d8c4c684ab6eb07387b"
-reviewed = "2026-08-05"
-renderer = "fable-w7-crossings-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w7-crossings-recheck-2026-08-05-400dpi"
-note = "Kernel migration to the contract's own torus spelling (LANGUAGE-1.0 s12.2): the identified-sides lattice carries both wound cycles as declared homotopy classes {1,0} and {0,1}, crossing once at the outlined blue i with the vertical cycle declared under, matching the source's paint order; the embedded donut view becomes the canonical traced-lattice projection, as already accepted for the eq59 torus panel."
+reviewed = "2026-09-05"
+renderer = "codex-torus-wind-review-2026-09-05"
+second_viewer = "maintainer-manual-review-2026-09-05"
+note = "Prior faithful verdict overturned after maintainer rejection and independent source/render review on 2026-09-05. The wind projection draws tangent circles instead of a transverse crossing of the two fundamental cycles on the identified frame. A passing crossing audit does not establish the promised seam geometry. Renderer correction is tracked in https://github.com/LionSR/tenkz/issues/301; the manual now uses an explicitly conceptual fundamental-square drawing."
 
 [[verdict]]
 id = "rmp-iii-a-torus-two"

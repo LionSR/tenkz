@@ -59,8 +59,7 @@ the virtual boundary indices of the transfer operator:
 In coarse-graining schemes (such as block-spin renormalization, DMRG
 site-blocking, or MERA layers), a bracket mark over a cell range (\tncmd{tnmark}
 with \tnkey{form=bracket}) declares a brace or measured grouping over existing
-tensors, while \tnval{skin=dots} declares an ellipsis cell for infinite chains
-in the thermodynamic limit.  Neither construct alters the underlying
+tensors, while \tnval{skin=dots} declares a pass-through ellipsis cell for omitted sites.  Neither construct alters the underlying
 contractions!  A wide single tensor node is appropriate only after your formula
 has already replaced the run by a single blocked tensor.
 

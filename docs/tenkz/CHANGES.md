@@ -273,8 +273,8 @@ The manual sources now ship beside the PDF under `doc/` and are rebuilt from
 the unpacked upload during the CTAN check. The inactive release campaign has
 been removed in favor of ordinary tests, review and maintainer approval.
 
-The 130-target benchmark ledger records 114 faithful cases, 12 cosmetic gaps
-and four deferred structural gaps. This is a record of individual reviews;
+The 130-target benchmark ledger records 113 faithful cases, 12 cosmetic gaps
+and five deferred structural gaps. This is a record of individual reviews;
 the older full-review fingerprint is stale. Automated compile and audit passes
 do not constitute a new visual proof of every figure or mathematical identity.
 Authored routes and label stations can require adjustment; the manual build
