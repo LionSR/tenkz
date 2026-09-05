@@ -22,8 +22,8 @@ Review the rendered manual before approving publication.
 The inherited benchmark ledger has 114 faithful cases, 12 cosmetic gaps and
 four deferred structural gaps. The old full-review fingerprint is stale;
 these are per-case verdicts, not a fresh visual review of the entire corpus.
-The manual retains six audit advisories: two cover label/wire proximity
-findings and four repeated-topology findings. No diagram capability is added
+The manual retains repeated-topology audit advisories. The cover labels
+and two tutorial annotations have been adjusted for legibility. No diagram capability is added
 solely to eliminate these acknowledged limitations.
 
 ## Publication

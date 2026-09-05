@@ -30,7 +30,7 @@ The 1.0 compatibility freeze is not claimed. The semantic event format remains
 1.3 and does not provide in-band version negotiation. The benchmark ledger
 records 114 faithful cases, 12 cosmetic gaps and four deferred structural gaps;
 the prior full-review fingerprint is stale. Authored routes and label stations
-can need adjustment. The manual has six known audit advisories.
+can need adjustment. The manual has repeated-topology audit advisories.
 
 The final release record must attach the tested commit, archive SHA-256,
 validation results and visual-review evidence before publication. CTAN and

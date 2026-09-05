@@ -200,15 +200,15 @@ speaks over the grouping.
 \begin{tnexample}[
   formula={A^{[3]}=A^{i_1}A^{i_2}A^{i_3}},
   caption={blocking three sites},
-  index={The bracket speaks from the south, past the site names and their
-    ink.  The signature is Example \ref{tnex:tut-word}'s, unchanged: a
+  index={The bracket speaks from the south.  Box silhouettes keep the site
+    names inside their measured ink.  The signature is Example \ref{tnex:tut-word}'s, unchanged: a
     mark owns no topology.},
   signature={kernel-boundary|signature=open:e, open:w, phys:n, phys:n, phys:n}]
 % Formula: the blocked word A^{[3]}; the mark adds no index.
 \begin{tenkz}[cols=3]
-  \tn[ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
-  \tn[ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
-  \tn[ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
+  \tn[skin=box, ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
   \tnmark[form=bracket]{(1,1) .. (1,3)}{$A^{[3]}$}
 \end{tenkz}
 \end{tnexample}
@@ -524,9 +524,9 @@ free loop, and specify two endpoints when you want a standard bond.
   signature={kernel-boundary|signature=open:e, open:w, phys:n, phys:n, phys:n}]
 % Formula: the blocked word inside one tinted contour.
 \begin{tenkz}[cols=3]
-  \tn[ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
-  \tn[ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
-  \tn[ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
+  \tn[skin=box, ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
   \tnmark[form=enclosure, tint,
           label pos=270]{(1,1) .. (1,3)}{$A^{[3]}$}
 \end{tenkz}

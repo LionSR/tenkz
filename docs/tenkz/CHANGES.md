@@ -278,5 +278,5 @@ and four deferred structural gaps. This is a record of individual reviews;
 the older full-review fingerprint is stale. Automated compile and audit passes
 do not constitute a new visual proof of every figure or mathematical identity.
 Authored routes and label stations can require adjustment; the manual build
-retains six known audit advisories. See `ctan/READINESS.md` for candidate
+retains repeated-topology audit advisories. See `ctan/READINESS.md` for candidate
 validation and `RELEASE-POLICY.md` for publication steps.
