@@ -8,7 +8,7 @@ writer emits, what the reader accepts, and — where those two differ — which 
 is the contract.
 
 `DESIGN.md` governs where this page and it disagree. The compatibility rules in
-§7 are restatements of the `[event_format]` block there.
+§7 follow its event-surface compatibility rules.
 
 ## 1. Format version
 
@@ -23,14 +23,11 @@ No stream carries that number in band. There is no header line, no magic
 string, no producer record, and no trailer: the first byte of a `.tnlog` is the
 first event, in practice always a `picture` line.
 
-`DESIGN.md` requires an explicit machine-readable version on every stream
-before the 0.9 freeze, and assigns the header spelling and the ignorable-kind
-marking to #4162 and #4703. Until that change lands, a reader cannot negotiate
-and the surface is held by whole-file digest instead: `tests/tenkz/`
-`golden-events.sha256` (9 corpus streams), `tests/tenkz/kernel/golden.sha256`
-(14 kernel probes), and `tests/tenkz/strings/golden.sha256` (28 string probes)
-pin exact bytes. Those digests make field order and spacing part of the pinned
-surface even though no schema states them, which is why §4 is normative here.
+The package currently documents this version out of band. The first CTAN
+release may retain that limitation; an in-band header and version negotiation
+are not release prerequisites. Golden event ledgers pin current emitted bytes.
+Any future header or negotiation change must preserve the documented compatibility
+rules and test affected consumers.
 
 ## 2. Line syntax
 
@@ -73,8 +70,7 @@ Nineteen kinds are emitted and nineteen appear in the reader's table. The two
 sets are not equal: `geomprobe` is emitted and untabled, `wire-geometry` is
 tabled and unemitted. §8 records both.
 
-The following block is the machine-readable declaration. `tests/tenkz/`
-`release-harness/` reads it and the reader's table together, so the two cannot
+The following block is the machine-readable declaration. `scripts/check_tenkz_policy.py` reads it and the reader's table together, so the two cannot
 drift apart unnoticed.
 
 ```toml tenkz-event-kinds-v1
@@ -293,34 +289,20 @@ would take the standoff rule out of its own reading.
 
 ## 7. Compatibility
 
-From `DESIGN.md`'s `[event_format]` block:
+`DESIGN.md` owns the compatibility rules: a package patch keeps event bytes
+stable for unchanged input; an additive compatible change increments the
+documented event minor and requires at least a package minor; a breaking
+change increments both majors. Test affected readers against both stream forms.
 
-- A reader accepts every minor revision of its own event major and rejects a
-  different major with a direct diagnostic.
-- A reader ignores an unknown optional field.
-- A reader ignores an unknown event kind only when the schema marks that kind
-  explicitly ignorable and skipping it preserves the validity and meaning of
-  every recognized record.
-- Any addition that cannot meet those conditions increments the event major.
-
-Against the release classes in `RELEASE-POLICY.md` §1: a patch keeps the stream
-byte-stable for unchanged input; a minor may add a kind or an optional field,
-increments the event minor, and requires the reader to accept both spellings; a
-major may break the format and increments the event major.
-
-Two of those four rules are declarations rather than implemented behaviour.
-The reader has no version concept at all, so "same major, any minor" is
-unimplemented; and it treats **every** unknown kind as ignorable with an
-advisory, rather than only explicitly marked ones. The unknown-optional-field
-rule is implemented, as §6's last row describes, though by permissiveness
-rather than by a declared optional-field set. Closing the gap is #4162 and
-#4703's work, and no release may claim the event surface is version-negotiable
-before it lands.
+The reader accepts unknown optional fields. It currently treats unknown kinds
+as ignorable with an advisory and has no in-band version negotiation. These
+are documented limits, not implemented guarantees of safe skipping or major
+version rejection. A release must not claim otherwise. A future negotiation
+protocol needs its own demonstrated consumer and compatible migration plan.
 
 ## 8. Known defects
 
-Recorded here so a reader of a stream is not surprised, and so the freeze can
-decide each one.
+Recorded so users and release reviewers can assess the current limitations.
 
 - **`geomprobe` is untabled.** The reader gives it an advisory and, because it
   carries no `picture=`, drops it before picture attachment. It survives only

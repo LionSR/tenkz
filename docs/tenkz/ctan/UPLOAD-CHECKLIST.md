@@ -7,7 +7,7 @@ named by `RELEASE-POLICY.md` §3 may change it.
 
 ## 1. Before building the archive
 
-- [ ] The release head is the exact commit the campaign signed off. The
+- [ ] The release head is the exact commit the maintainer approved. The
       archive is a function of the tree, so any later commit is a different
       archive.
 - [ ] The archive includes `tenkz.pdf` and the rebuildable sources under
@@ -79,19 +79,15 @@ material, so they are reviewed with it rather than typed fresh each time.
 | Suggested directory | `graphics/pgf/contrib/tenkz` |
 | Announcement | `docs/tenkz/ANNOUNCEMENT-1.0-draft.md`, with every pending field filled |
 
-A note on the license, for whoever fills the form. The repository is under
-the Apache License 2.0 and the package inherits it; CTAN accepts that
-license and classifies it as free. LaTeX packages more often carry the LaTeX
-Project Public License, and some distribution tooling assumes it. Choosing
-to add LPPL 1.3c as an alternative is a maintainer decision, and it must be
-made before the upload rather than after, because a license stated on CTAN
-is hard to correct later.
+The package retains Apache-2.0; CTAN lists it at
+https://ctan.org/license/apache2. A license change is not an upload prerequisite.
 
 ## 4. After the upload
 
-- [ ] The announcement's CTAN URL, release URL, archive hash, and freeze
+- [ ] The announcement's CTAN URL, release URL, archive hash, and release
       commit are filled in.
-- [ ] The package appears in TeX Live's next update, and the `hobby` and
+- [ ] Check TeX Live and MiKTeX inclusion after CTAN acceptance; neither is
+      guaranteed by the upload. Verify that the `hobby` and
       `spath3` dependencies are recorded so a distribution build does not
       drop them. They are the two libraries that come from packages of their
       own rather than from pgf; `docs/tenkz/ctan/DEPENDENCIES.md` traces every
@@ -129,6 +125,5 @@ short. The commands that write stop on those same findings, read from the
 same checks, because a command that writes has nowhere to put one.
 
 It does not judge the manual, the prose, or the mathematics, and it does not
-know whether the release campaign permits a tag. Those are read by the
-gates in `RELEASE-POLICY.md` §2 and by the campaign harness in
-`tests/tenkz/release-harness/`.
+authorize publication. Those decisions belong to the source review and
+maintainer approval in `RELEASE-POLICY.md`.

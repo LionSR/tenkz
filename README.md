@@ -5,8 +5,8 @@ Tensor-network diagrams from a description of the network.
 tenkz is a LaTeX package that draws matrix product states, tensor trains,
 PEPS sheets, string diagrams, and channel sandwiches from a statement of
 what the network is. An author writes down the tensors, their indices, and
-how the indices meet; the drawing measures where the ink goes. No
-coordinates and no lengths appear in a picture source.
+how the indices meet; the drawing measures where the ink goes. Common networks need no physical coordinates or lengths; irregular
+figures may use relative placements and authored routes.
 
 This repository is the package, its manual, regression corpus, and release
 tools. It was extracted from [TNLean](https://github.com/LionSR/TNLean),
@@ -70,8 +70,8 @@ edits blueprint sources, not this package:
 [LionSR/TNLean#5693](https://github.com/LionSR/TNLean/issues/5693).
 
 The library tracker is [#10](https://github.com/LionSR/tenkz/issues/10).
-Issue numbers cited in `DESIGN.md` / `SOAK-1.0.md` are the original TNLean
-numbers and still resolve through those redirects.
+The release checklist is [`RELEASE-POLICY.md`](docs/tenkz/RELEASE-POLICY.md).
+Optional benchmark and layout work does not extend the stabilization scope.
 
 ## License
 
