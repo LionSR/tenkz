@@ -108,8 +108,9 @@ different: it closes the applicable pair of physical ports at each site.
   signature={kernel-boundary|signature=open:e, open:w}]
 % Ink: trace=physical closes the site's two physical ports.
 % north=open and south=open expose the frame boundary.
-\begin{tenkz}[rows={wire}, cols=1, bonds=none, west=open, east=open,
-              physical=updown, trace=physical]
+\begin{tenkz}[rows={wire}, cols=1, bonds=none,
+              west=open, east=open, physical=updown,
+              trace=physical]
   \tn[skin=box]{A}
 \end{tenkz}
 \qquad
@@ -376,7 +377,6 @@ straight segments and four corner junctions, as below.  Each junction pairs
 two virtual ports and carries no tensor.
 
 \begin{tnexample}[
-  wide,
   label={tnex:cat-periodic},
   formula={\lvert\psi(X)\rangle=\sum_{s_1\ldots s_N}
     \operatorname{tr}\!\left(XA^{s_1}\cdots A^{s_N}\right)\lvert s\rangle},
