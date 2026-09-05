@@ -46,7 +46,7 @@ def main() -> int:
         )),
         (build.manual_dateline, next(
             row for row in source.splitlines()
-            if "The TNLean project" in row and build.manual_dateline() in row
+            if build.manual_dateline() in row and "\\par" in row
         )),
     ):
         seeded = source.replace(line, "% " + line.lstrip(), 1)
@@ -93,7 +93,7 @@ def main() -> int:
     title_version = next(row for row in source.splitlines() if f"version {manual}" in row)
     title_date = next(
         row for row in source.splitlines()
-        if "quad---" in row and "TNLean project" in row
+        if build.manual_dateline() in row and "\\par" in row
     )
     for reader, line in (
         (build.manual_version, title_version),
