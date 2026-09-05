@@ -87,6 +87,9 @@ ink = [
 # and that is a release decision rather than a staging one.
 unconsumed = ["fit"]
 
+# Documentation sources are staged under doc/ from MANUAL_SOURCES in
+# scripts/tenkz_manual_build.py, the same inventory the isolated build uses.
+# They are not repeated here; check rebuilds the manual from the upload.
 [material]
 # Staged name = the file it is copied from, unmodified. The version and date
 # these carry are checked against the `\ProvidesPackage` line; none of them

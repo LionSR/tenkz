@@ -335,7 +335,7 @@ def test_a_manifest_that_would_write_the_wrong_file_is_refused() -> None:
 
     closure = tenkz_ctan.walk_closure()
     for material, fragment in (
-        ({"tenkz.sty": "LICENSE"}, "runtime name"),
+        ({"tenkz.sty": "LICENSE"}, "runtime or documentation name"),
         ({"../outside.md": "LICENSE"}, "will not be written"),
         ({"README.md": "LICENSE", "readme.md": "LICENSE"}, "differ only in case"),
     ):
@@ -1637,6 +1637,74 @@ def test_an_ownership_class_of_the_wrong_shape_is_named() -> None:
     misshapen["runtime"]["requires"]["ownership"]["placement"] = "calc"
     shape = tenkz_ctan.check_dependencies(closure, misshapen)
     assert any("not a list" in reason for reason in shape.failures), shape.failures
+
+
+def test_documentation_uses_the_manual_build_inventory() -> None:
+    sources = tenkz_ctan.documentation_sources()
+    assert "doc/manual2.tex" in sources
+    assert "doc/tenkzmanual2.sty" in sources
+    assert "doc/chapters2/ch-tutorial.tex" in sources
+    with tempfile.TemporaryDirectory() as directory:
+        archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
+        with zipfile.ZipFile(archive) as bundle:
+            for name, source in sources.items():
+                assert bundle.read(f"tenkz/{name}") == source.read_bytes()
+        room = Path(directory) / "flat"
+        room.mkdir()
+        staged = tenkz_ctan.offline_room(archive, room)
+        assert "doc" not in staged and not (room / "doc").exists()
+        assert (room / "tenkz.sty").is_file()
+
+
+def test_documentation_paths_do_not_allow_traversal_or_file_parents() -> None:
+    good = tenkz_ctan.check_names({"doc/chapters2/ch-tutorial.tex": Path("unused")})
+    assert not good.failures, good.failures
+    for name in ("doc/../outside.tex", "doc/./chapter.tex", "doc/CON.tex",
+                 "doc/dir./chapter.tex", "elsewhere/chapter.tex"):
+        assert tenkz_ctan.check_names({name: Path("unused")}).failures, name
+    conflict = tenkz_ctan.check_names({
+        "doc": Path("unused"), "doc/manual2.tex": Path("unused"),
+    })
+    assert any("parent staged as a file" in error for error in conflict.failures)
+
+
+def test_material_cannot_replace_a_documentation_source() -> None:
+    manifest = {"material": {"doc/manual2.tex": "LICENSE"}}
+    closure = tenkz_ctan.Closure(files=["tenkz.sty"])
+    content = tenkz_ctan.staged_content(manifest, closure)
+    report = tenkz_ctan.check_names(content, manifest, closure)
+    assert report.failures, report
+
+
+def test_uploaded_manual_recorder_rejects_repository_fallback() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        room = Path(directory)
+        package = room / "upload"
+        manual = package / "doc"
+        manual.mkdir(parents=True)
+        (manual / "manual2.tex").write_text("% source\n")
+        work = room / "build"
+        work.mkdir()
+        foreign = tenkz_ctan.ROOT / "tex/tenkz/tenkz.sty"
+        (work / "manual2.fls").write_text(f"INPUT {foreign}\n")
+        findings = tenkz_ctan.manual_build.foreign_inputs(
+            work, "xelatex", manual_dir=manual, package_tree=package,
+        )
+        assert str(foreign) in findings, findings
+
+
+def test_uploaded_manual_missing_its_entry_point_fails() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        original, _, _ = tenkz_ctan.build(Path(directory) / "out")
+        broken = Path(directory) / "broken.zip"
+        with zipfile.ZipFile(original) as source, zipfile.ZipFile(broken, "w") as target:
+            for entry in source.infolist():
+                if entry.filename != "tenkz/doc/manual2.tex":
+                    target.writestr(entry, source.read(entry))
+        report = tenkz_ctan.check_documentation(broken, required=True)
+        assert report.failures, report
+        if tenkz_ctan.shutil.which("xelatex"):
+            assert any("manual sources" in finding for finding in report.failures)
 
 
 def test_check_passes_now() -> None:

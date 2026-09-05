@@ -61,10 +61,21 @@ environments and the body commands exist as soon as the package is loaded.
 
 ## Documentation
 
-The manual states the language: every environment, command, and key, with a
-picture for each and the failure each rejects. It is the contract the version
-policy freezes. Manual and sources:
-<https://github.com/LionSR/tenkz/tree/main/docs/tenkz>.
+The manual is `tenkz.pdf`. Its sources are included under `doc/`, with the
+chapters and style used by the repository build. To rebuild it, enter `doc/`
+and run:
+
+```sh
+TEXINPUTS=../: xelatex -interaction=nonstopmode -halt-on-error manual2.tex
+```
+
+Repeat until LaTeX no longer requests another run and the references settle.
+The manual needs the standard LaTeX packages loaded by `tenkzmanual2.sty`
+(geometry, AMS mathematics, booktabs, array, tabularx, longtable, multicol,
+fancyvrb, needspace, fancyhdr, marginnote, manfnt) and hyperref, in addition to the
+runtime dependencies above. No repository checkout or generated figure files
+are needed. For an arXiv submission, copy the top-level runtime `.sty` and
+`.tex` files beside the manuscript; the `doc/` directory is not needed.
 
 ## Author and maintainer
 

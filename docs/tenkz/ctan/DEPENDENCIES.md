@@ -108,7 +108,8 @@ the archive carries reads it.
 ## 6. The offline flat
 
 `python3 scripts/tenkz_ctan.py offline` builds the archive, unpacks it into one
-directory with no subdirectory, writes representative corpus cases beside it,
+directory with no subdirectory, omitting the upload's `doc/` sources,
+writes representative corpus cases beside it,
 and compiles each one there. It is the arXiv reading of the same files: a
 source submission is unpacked beside a manuscript rather than installed, so a
 runtime that only resolves through a directory would fail, and so would one

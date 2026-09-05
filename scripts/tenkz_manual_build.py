@@ -136,11 +136,12 @@ def tex_installation_roots(engine: str | None = None) -> tuple[Path, ...]:
     return tuple(roots)
 
 
-def requested_inputs() -> set[str]:
+def requested_inputs(manual_dir: Path | None = None) -> set[str]:
     """Every file name the manual's own sources `\\input`, with `.tex` added."""
+    manual_dir = MANUAL_DIR if manual_dir is None else manual_dir
     requested: set[str] = set()
     for name in MANUAL_SOURCES:
-        root = MANUAL_DIR / name
+        root = manual_dir / name
         paths = root.rglob("*.tex") if root.is_dir() else [root]
         for path in paths:
             if not path.is_file():
@@ -322,7 +323,8 @@ def audit_direct_pictures(work: Path, epoch: int, engine: str) -> int:
     return len(pictures)
 
 
-def foreign_inputs(work: Path, engine: str) -> list[str]:
+def foreign_inputs(work: Path, engine: str, *, manual_dir: Path | None = None,
+                   package_tree: Path | None = None) -> list[str]:
     """Document sources the engine opened from outside this tree.
 
     Read from the recorder rather than the exit status: the search path ends
@@ -330,7 +332,8 @@ def foreign_inputs(work: Path, engine: str) -> list[str]:
     needed for tikz, hobby, and spath3, and equally able to answer a file this
     checkout no longer carries, identically in both builds.
     """
-    package_tree = (ROOT / "tex" / "tenkz").resolve()
+    manual_dir = MANUAL_DIR if manual_dir is None else manual_dir
+    package_tree = (ROOT / "tex" / "tenkz" if package_tree is None else package_tree).resolve()
     record = work / "manual2.fls"
     if not record.is_file():
         raise RuntimeError("the engine wrote no input record; cannot prove the runtime")
@@ -348,16 +351,16 @@ def foreign_inputs(work: Path, engine: str) -> list[str]:
         path.name
         for name in MANUAL_SOURCES
         for path in (
-            (MANUAL_DIR / name).rglob("*")
-            if (MANUAL_DIR / name).is_dir()
-            else [MANUAL_DIR / name]
+            (manual_dir / name).rglob("*")
+            if (manual_dir / name).is_dir()
+            else [manual_dir / name]
         )
         if path.is_file()
     }
     # The names the manual asks for, whether or not the copy has them: an
     # `\input` committed without its file is exactly the case where the
     # basename is absent from `own`, and an installation tree would answer it.
-    own |= requested_inputs()
+    own |= requested_inputs(manual_dir)
     # Anything read from the build directory is the copy, and anything from
     # the package tree is the tree under review.  The read-only distribution
     # is the third legitimate home: the manual needs tikz, hobby, and spath3.
@@ -390,11 +393,15 @@ def foreign_inputs(work: Path, engine: str) -> list[str]:
     return foreign
 
 
-def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[str]]:
+def build(work: Path, epoch: int, engine: str = "xelatex", *,
+          manual_dir: Path | None = None,
+          package_tree: Path | None = None) -> tuple[bytes, list[str]]:
     """Compile the manual in `work`; return the PDF bytes and audit lines."""
+    manual_dir = MANUAL_DIR if manual_dir is None else manual_dir
+    package_tree = ROOT / "tex" / "tenkz" if package_tree is None else package_tree
     work.mkdir(parents=True, exist_ok=True)
     for name in MANUAL_SOURCES:
-        source = MANUAL_DIR / name
+        source = manual_dir / name
         if not source.exists():
             raise FileNotFoundError(f"manual source {source} is missing")
         if source.is_dir():
@@ -412,13 +419,14 @@ def build(work: Path, epoch: int, engine: str = "xelatex") -> tuple[bytes, list[
     # answer a tenkz file this tree forgot, from whatever version the machine
     # has installed.  The engine's input record, not the exit status, says
     # where the runtime came from.
-    env["TEXINPUTS"] = f"{ROOT / 'tex' / 'tenkz'}//:"
+    env["TEXINPUTS"] = f"{package_tree}//:"
     engine_log = work / "manual2.log"
     # Each invocation rewrites the job's recorder, so a file opened only on an
     # earlier pass leaves no trace in the last one.  Every pass is read before
     # the next begins.
     def audit_record(number: int) -> None:
-        foreign = foreign_inputs(work, engine)
+        foreign = foreign_inputs(work, engine, manual_dir=manual_dir,
+                                 package_tree=package_tree)
         if foreign:
             raise RuntimeError(
                 f"pass {number} loaded document sources from outside this "
