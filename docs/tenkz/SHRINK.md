@@ -5147,7 +5147,7 @@ census remains 114 faithful / 12 cosmetic-gap / 4 structural-gap.
 Census-correction: #13
 
 
-## Source-backed case repairs — 2026-09-05
+### Source-backed case repairs — 2026-09-05
 
 Census-correction: #300. The mean non-comment case length increases from
 26.58 to 26.68 after restoring the missing five-leg PEPS star and eight
