@@ -1,55 +1,43 @@
-# CTAN readiness assessment — 2026-09-05
+# CTAN candidate 0.8.0 — 2026-09-05
 
-The runtime archive builds and installs successfully. It is not yet ready to
-submit: the archive omits the documentation sources, and release metadata still
-needs a deliberate preparation change. No new diagram capability is required
-by the CTAN upload requirements checked here.
+The candidate uses package version 0.8.0 and date 2026-09-05 throughout the
+manual, READMEs, citation metadata and change record. It is a pre-1.0 release
+with a breaking migration from the retired front ends, not a compatibility
+freeze. The semantic event contract stays at 1.3; no event behavior changes
+in this preparation.
 
-## Verified locally
+The upload includes `tenkz.pdf` and the 14 manual source files under `doc/`.
+The CTAN check rebuilds the manual from the unpacked archive, verifies the
+runtime in a clean installation and compiles eight offline examples across
+six picture classes. The inactive release campaign has been removed.
 
-- The full 130-target RMP compile, lint, and audit passed at `fcbea38`; this
-  stabilization change does not modify runtime TeX or benchmark cases.
-- The manual built twice to identical bytes (276,525 bytes), with no hard
-  audit errors and six advisories. Two advisories concern author-selected
-  label stations on the cover channel; four concern repeated topology.
-  The cover was inspected, but this is not a complete fresh visual review.
-- All 60 CTAN staging regression tests passed.
-- `python3 scripts/tenkz_ctan.py check --require-smoke` passed: 17 runtime
-  files resolved from the unpacked archive; the clean-install example and
-  eight offline cases over six picture classes compiled and audited.
-- The inspection archive is `build/ctan-assessment/tenkz-0.7.zip`, SHA-256
-  `363ae779d253f68fc3facead255a4f4daeba2803c7dfd0c41300a062c097ed02`.
-  It contains 23 files plus its directory entry; `tenkz.pdf` is present,
-  but the manual TeX sources are absent. This is an assessment artifact,
-  not an approved release.
-- The CTAN package JSON lookup for `tenkz` returned HTTP 404 on this date.
-  That is not a name reservation or acceptance decision.
+## Final validation
 
-## Remaining work
+Build from the clean candidate commit using `RELEASE-POLICY.md` section 2.
+Record the commit and archive SHA-256 with the results outside the archive
+(the archive cannot contain its own digest). The ordinary CI checks, isolated
+reproducible manual build and `tenkz_ctan.py check --require-smoke` must pass.
+Review the rendered manual before approving publication.
 
-1. **Include rebuildable documentation sources.** Add the manual entry point,
-   style, chapters, and all source dependencies to the upload layout; verify
-   that the manual rebuilds from the unpacked upload without the repository.
-   Keep the runtime usable as a flat arXiv submission. The existing staging
-   check does not test documentation-source completeness.
-2. **Prepare one coherent release.** Choose the package version and date and
-   synchronize the manual, READMEs, citations, changelog, and announcement.
-   Currently the package/manual say 0.7 while the changelog describes 1.0.
-   Review the manual advisories and disclose benchmark limitations. A pre-1.0
-   CTAN release is an option; there is no need to promise 1.0 to upload.
-3. **Review and submit the final artifact.** Rebuild and validate the chosen
-   commit, obtain maintainer approval, tag it, and submit the complete archive
-   through CTAN's form. Respond to CTAN review and verify distribution inclusion
-   separately; neither timing nor acceptance is established by our checks.
+The inherited benchmark ledger has 114 faithful cases, 12 cosmetic gaps and
+four deferred structural gaps. The old full-review fingerprint is stale;
+these are per-case verdicts, not a fresh visual review of the entire corpus.
+The manual retains six audit advisories: two cover label/wire proximity
+findings and four repeated-topology findings. No diagram capability is added
+solely to eliminate these acknowledged limitations.
 
-## External requirements checked
+## Publication
 
-CTAN asks for an archive, README and license information, a meaningful version,
-and PDF documentation with its source. Its preferred layout is browsable and
-usually flat; a TDS zip is optional. Our unactivated signing and evidence campaign
-was a repository policy, not a CTAN prerequisite.
+The complete announcement is in `../ANNOUNCEMENT.md`; the upload form values
+are in `UPLOAD-CHECKLIST.md`. After final maintainer approval, create the
+annotated `tenkz-v0.8.0` tag and submit the checked archive. Record the actual
+CTAN response and verify TeX Live/MiKTeX inclusion separately. A valid local
+archive does not establish CTAN acceptance or distribution availability.
+
+CTAN requires PDF documentation with sources, README/license information and
+a meaningful version. A TDS zip is optional. Name availability was checked on
+2026-09-05; a missing catalogue entry is not a reservation.
 
 - [Upload preparation](https://ctan.org/help/upload-pkg)
 - [Upload addendum](https://ctan.org/file/help/ctan/CTAN-upload-addendum)
-- [Upload form and metadata](https://ctan.org/upload/)
-- [CTAN Apache-2.0 entry](https://ctan.org/license/apache2)
+- [Upload form](https://ctan.org/upload/)

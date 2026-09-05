@@ -1,44 +1,61 @@
 % Installation and the public mental model.
 \section{Install and read the language}\label{ch:install}
 
-The complete installation is two lines:
+Welcome to \pkg{}!  The goal of this system is to make the creation of
+tensor-network diagrams in \TeX{} as pleasant, natural, and mathematically
+rigorous as typesetting ordinary formulas.  If you have ever tried to draw a
+matrix product state or a tensor contraction by placing low-level coordinates
+by hand, you know how quickly manual geometry obscures the algebraic meaning
+of the network.  In \pkg{}, we declare the mathematics, and let \TeX{} draw the ink.
+
+To begin, you need only load the package and declare your first network:
 
 \begin{Verbatim}[fontsize=\small,frame=leftline]
 \usepackage{tenkz}
 \begin{tenkz}[physical=up] \tn{A} & \tn{B} \end{tenkz}
 \end{Verbatim}
 
-For a repository checkout, put \tnfile{tex/tenkz/} on
-\texttt{TEXINPUTS}; for an archived article, ship \tnfile{tenkz.sty} and
-its package files beside the source.  XeLaTeX is the reference engine for
-print and for the XDV-to-SVG web route.
+For a working repository checkout, simply add \tnfile{tex/tenkz/} to
+your \texttt{TEXINPUTS} search path; for an archived article, ship
+\tnfile{tenkz.sty} and its companion files beside the document source.
+XeLaTeX is our reference engine, both for high-quality print output and for the
+reproducible XDV-to-SVG web pipeline.
 
-The language contract is one sentence:
+The golden rule of \pkg{} can be stated in a single sentence:
 
 \begin{quote}\large
 A picture chooses one layout; its options declare topology and policy; its
 body declares atoms, connections, regions, and annotations.
 \end{quote}
 
-Read a source in that order.  The environment chooses the placement grammar.
-Its optional argument states facts shared by the picture.  Body commands
-declare records; they do not perform an imperative drawing procedure.
+Whenever you encounter a \pkg{} picture---or sit down to write one of your
+own---proceed in this natural order.  First, the environment establishes the
+placement grammar.  Second, its optional arguments declare global facts and
+policies shared by the entire picture.  Third, the commands within the body
+declare the mathematical entities themselves; they describe the \emph{structure}
+of the network, rather than giving imperative painting instructions.
 
-Five classes cover the public vocabulary: \emph{atoms}; \emph{connections
-and closures}; \emph{regions and annotations}; \emph{composition}; and
-\emph{setup and extension}.  A command declares an object in one of those
-classes.  A key modifies the record being declared.  This distinction keeps
-the grammar small enough to read from source.
+Five grammatical classes span the entire public vocabulary: \emph{atoms};
+\emph{connections and closures}; \emph{regions and annotations};
+\emph{composition}; and \emph{setup and extension}.  A command introduces an
+object belonging to one of these classes, while a key modifies the record being
+declared.  This clean separation keeps the grammar delightfully compact and easy
+to read directly from source.
 
-Scope is explicit.  \tncmd{tnset} is document scope; an environment option is
-picture scope; an atom option is object scope; and a join or side-policy
-option is connection scope.  A shared key name has one value type and one
-meaning in every environment that exposes it.
+Scoping in \pkg{} is completely explicit.  A declaration made via \tncmd{tnset}
+applies to the whole document; an option on an environment applies to that
+picture; an option on an atom applies to that single object; and a join or
+side-policy option governs that particular connection.  Furthermore, a shared
+key name retains exactly one value type and one meaning across every
+environment where it appears.
 
-Open ink is mathematical data.  A matrix keeps its two virtual indices; a
-map keeps input and output indices; a scalar has none.  Closing a picture for
-neatness changes the object.  The versioned \tnfile{.tnlog} records the
-resolved model and boundary signature used for rendering.  It also records
-every port's type, which the page does not: a contracted index carries its
-type in the record and not in its line, so a physical contraction and a
-virtual one stroke alike.
+Notice that open ink is genuine mathematical data: a matrix keeps its two
+virtual indices, an operator channel keeps its input and output indices, and a
+scalar keeps none at all.  Closing an uncontracted bond merely for aesthetic
+``neatness'' would change the mathematical object itself!  To ensure that your
+diagrams always say what they mean, \pkg{} writes a companion \tnfile{.tnlog}
+audit stream during compilation, recording the resolved model and boundary
+signature used for rendering.  The log also records the type of every port: a
+contracted index carries its type in the record even though it strokes
+identically on the page, so that physical contractions and virtual bonds stroke
+alike without confusing the underlying physics.

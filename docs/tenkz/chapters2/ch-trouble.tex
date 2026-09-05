@@ -3,10 +3,16 @@
 
 \subsection{Read meaning before ink}
 
-Open the job's \tnfile{.tnlog} and find the picture's coded diagnostic and
-boundary event.  A matrix needs two open virtual indices, a doubled-space map
-needs four, and a scalar needs none.  Compare an equation side by side, not
-merely by total count.
+When you encounter an unexpected rendering or a compiler refusal, do not
+despair!  \TeX{} tools are designed to assist you, and in \pkg{}, the golden rule
+of debugging is simple: \textbf{read meaning before ink.}
+
+Begin by opening the job's companion \tnfile{.tnlog} file and locating the
+picture's coded diagnostic or boundary event.  Ask yourself: What mathematical
+object should this diagram represent?  A matrix requires two open virtual
+indices; a doubled-space transfer map requires four; and a scalar requires none
+at all.  When inspecting an equation, compare the boundary signatures of each
+side term by term, rather than merely counting total legs on the page.
 
 {\small
 \noindent
@@ -28,33 +34,40 @@ ink must be a hard coded error, never a warning followed by omission. \\
 \end{tabularx}
 }
 
-Brace any key value containing a comma or a second equals sign.  A conjugate
-is label mathematics and a wire direction, not an atom flag.  A genuine hole
-is \tnkey{void=open}, because its incident indices survive; \tnkey{void=sealed}
-removes the site and its bonds.
+A few simple habits will save you from the most common syntactic pitfalls:
+Always enclose in curly braces any key value containing a comma or an equals sign
+(for instance, \tnkey{east=}\tnval{\{cup=\$X\$\}}).  Remember that complex
+conjugation is mathematical label notation and wire direction, not an internal
+atom flag.  When creating a hole in a lattice, distinguish between
+\tnkey{void=open} (where incident indices survive around the missing site) and
+\tnkey{void=sealed} (which removes the site and its incident bonds entirely).
 
 \subsection{Maintainer stages}
 
-The stages are
+Behind the scenes, \pkg{} translates your declarations into vector ink through
+seven strictly sequenced stages:
 
 \begin{center}
 \texttt{language -> model -> style/atoms -> geometry -> kernel layout ->
 rendering -> events}.
 \end{center}
 
-Language owns declarations and diagnostics.  Model owns normalized records.
-Style owns metrics, atom descriptors, label policy, ports, and silhouettes.
-Geometry owns frames, measurement, daylight, routing, and crossings.  Dialect
-layout owns only genre-specific placement.  Rendering emits ink without
-parsing syntax or changing topology.  Events serialize the resolved model
-used by rendering.
+Each stage owns a distinct responsibility: Language parses public declarations
+and emits coded diagnostics.  Model normalizes those declarations into canonical
+records.  Style manages metrics, atom descriptors, label bands, and
+silhouettes.  Geometry computes frames, daylight separation, wire routing, and
+crossings.  Layout handles genre-specific grid placement.  Rendering draws ink
+faithfully without parsing syntax or altering topology.  Finally, Events
+serializes the resolved model for auditing.
 
-\tnfile{tenkz.sty} is a logic-free load map.  Each internal file begins with a
-five-line contract naming its input, output, owned state, invariants, and next
-stage.  Private control sequences follow one owner-prefixed convention; the
-symbol census rejects accidental exports.
+The top-level file \tnfile{tenkz.sty} is a logic-free load map.  Every internal
+source file opens with a five-line contract declaring its consumed inputs,
+promised outputs, owned private state, invariants, and downstream consumer.
+Private control sequences follow a strict owner-prefixed convention, guarded by
+an automated symbol census.
 
-Build and debugging commands live in \tnfile{HACKING.md}; the full ownership
-contract lives in \tnfile{ARCHITECTURE.md}.  After every meaningful change,
-compile, lint, audit the versioned event stream, render, and inspect the
-affected pages.  Exit codes do not inspect diagrams.
+Full build and debugging workflows live in \tnfile{HACKING.md}, while the
+underlying ownership contracts are detailed in \tnfile{ARCHITECTURE.md}.  Always
+keep the maintainer's motto in mind: after every meaningful change, compile,
+lint, audit the versioned event stream, and inspect the rendered pages.  Exit
+codes verify compilation, but only your eyes can inspect the beauty of a diagram!

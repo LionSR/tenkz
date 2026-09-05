@@ -11,8 +11,6 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-import subprocess
-import sys
 from pathlib import Path
 
 import tenkz_manual_build as build
@@ -29,7 +27,7 @@ def main() -> int:
     if not seeded or "synchronize" not in seeded[0]:
         raise SystemExit(f"a stale title page was not refused: {seeded}")
     # A version bump inside the same month must not pass a date-only check.
-    bumped = build.metadata_errors(date, build.manual_dateline(), "0.8", manual)
+    bumped = build.metadata_errors(date, build.manual_dateline(), "9.9", manual)
     if not any("names version" in error for error in bumped):
         raise SystemExit(f"a stale manual version was not refused: {bumped}")
     try:

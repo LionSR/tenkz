@@ -97,7 +97,7 @@ text in the manual.
 **F7. No citation or version statement.** quantikz §X tells the reader what
 to cite. The tenkz manual states no version, no release policy pointer, and
 no citation form. One sentence each; the 1.0 announcement draft
-(`ANNOUNCEMENT-1.0-draft.md`) already contains the material.
+(`ANNOUNCEMENT.md`) already contains the material.
 
 **F8. No index — in either manual.** quantikz offers only its contents
 page. For a compact manual that parity is acceptable; for the full-length

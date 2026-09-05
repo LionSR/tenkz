@@ -94,5 +94,5 @@ its header.
 
 ## Version
 
-Version 0.7, released 2026-07-22. The change record is in `CHANGES.md`, and
+Version 0.8.0, released 2026-09-05. The change record is in `CHANGES.md`, and
 `CITATION.cff` and `tenkz.bib` carry the citation metadata.

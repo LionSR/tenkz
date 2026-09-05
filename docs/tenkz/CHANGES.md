@@ -1,16 +1,16 @@
-# tenkz 1.0 — the kernel is the surface
+# tenkz 0.8.0 — 2026-09-05
 
 ## Repository split (2026-08-25)
 
 The package, corpus, manual, and tooling now live in
 [LionSR/tenkz](https://github.com/LionSR/tenkz), extracted with history from
-TNLean `85a12e6b5`. The TeX package version remains 0.7. Historical tenkz
+TNLean `85a12e6b5`. At the split, the TeX package version remained 0.7. Historical tenkz
 issues stay on TNLean; new work opens here.
 
 
 0.7 drew pictures through four front ends. Five environments, seven picture
 commands, and four separate key ledgers each said the same few things in a
-private dialect: a cell, a wire, a mark, a frame. 1.0 has one environment and
+private dialect: a cell, a wire, a mark, a frame. 0.8.0 has one environment and
 one ledger. Every picture is a kernel picture, the package binds the kernel at
 load, and the front ends are gone — 3,154 lines of commutative-diagram stage,
 4,393 of free stage, 10,500 of lattice stage, 17,340 of grid stage, retired in
@@ -19,8 +19,8 @@ fell from 201 public rows to 86 and the parser-path count from 228 to 75; the
 escape ledger, which prices every occurrence of a spelling the core grammar
 cannot say, reached zero.
 
-The spellings below are removed outright, with one stated exception. 1.0 is a
-major release and keeps no alias, compatibility reader, or dual writer for any
+The spellings below are removed outright, with one stated exception. 0.8.0 is a
+breaking pre-1.0 release and keeps no alias, compatibility reader, or dual writer for any
 of them: an old spelling stops the run with an unknown-key or unknown-command
 error naming the vocabulary, and nothing is silently reinterpreted. Every
 documented replacement was applied to the blueprint corpus and the 130-case
@@ -29,10 +29,10 @@ fixtures whose language died — the regression corpus went from 264 sources
 to 9.
 
 The exception is `\tenkzkernel`. It is not removed: it is inert for the whole
-1.0 series and carries a registry sunset, because the kernel it used to switch
+0.8 series and carries a registry sunset, because the kernel it used to switch
 on is now bound at package load, so a document that still writes it asks for
 what it already has. Delete it at leisure. Every other row below is an error
-from 1.0.0 onward.
+from 0.8.0 onward.
 
 ## Retired environments
 
@@ -153,7 +153,7 @@ Spellings inside the kernel tier itself:
 - **An address, not a cursor.** `\tnput` placed a tensor where the last one
   left off; `\tnsite` placed one at a lattice coordinate; `\tnpic` placed one
   wherever the body's row and column separators had got to. Three ways to say
-  where. In 1.0 a picture declares a frame, the frame mints addresses, and
+  where. In 0.8.0 a picture declares a frame, the frame mints addresses, and
   every record names its addresses. `\tnghost` existed only to advance a cursor
   past an empty cell, so it has nothing to do.
 
@@ -222,7 +222,7 @@ read better by hand:
   wire.
 - `\tenkzkernel` may be deleted from a document body: the meanings it bound are
   the package's meanings from the moment it loads. The command is inert rather
-  than an error in the 1.0 series, and carries a registry sunset.
+  than an error in the 0.8 series, and carries a registry sunset.
 
 ## Unchanged
 
@@ -234,7 +234,7 @@ terms, ranges, and `+`/`-` unions, `periodic` as the shorthand for a traced
 pair of sides, and the `.tnlog` event surface, whose format version and
 compatibility rules are declared in `TNLOG.md`.
 
-## Also in 1.0
+## Also in 0.8.0
 
 - `\tenkzkernel` binds at package load. A document that never wrote the command
   gets the kernel surface; a document that wrote it gets the same surface
@@ -261,10 +261,22 @@ compatibility rules are declared in `TNLOG.md`.
   string engine, so an orth route states its `string` record like any other
   declared curve; it previously drew without speaking.
 
-## The version string
+## Release scope and limitations
 
-`tex/tenkz/tenkz.sty` still declares `v0.7`. The version, its date, this
-record's version line, and the event-format declaration in `TNLOG.md` are set
-together by the release-preparation change described in `RELEASE-POLICY.md`
-§3, and must agree with the tag. Writing them earlier would claim a release
-that has not passed its evidence gate.
+This is the first CTAN candidate, with a breaking migration from the retired
+0.7 front ends. It does not claim the future 1.0 compatibility freeze.
+The package, manual, README and citations name 0.8.0, dated 2026-09-05.
+The event contract remains format 1.3: this release preparation changes no
+runtime behavior or event bytes, and adds no in-band version negotiation.
+
+The manual sources now ship beside the PDF under `doc/` and are rebuilt from
+the unpacked upload during the CTAN check. The inactive release campaign has
+been removed in favor of ordinary tests, review and maintainer approval.
+
+The 130-target benchmark ledger records 114 faithful cases, 12 cosmetic gaps
+and four deferred structural gaps. This is a record of individual reviews;
+the older full-review fingerprint is stale. Automated compile and audit passes
+do not constitute a new visual proof of every figure or mathematical identity.
+Authored routes and label stations can require adjustment; the manual build
+retains six known audit advisories. See `ctan/READINESS.md` for candidate
+validation and `RELEASE-POLICY.md` for publication steps.

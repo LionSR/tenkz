@@ -79,5 +79,5 @@ Apache License, Version 2.0. See [`LICENSE`](LICENSE).
 
 ## Version
 
-Version 0.7, released 2026-07-22. The change record is
+Version 0.8.0, released 2026-09-05. The change record is
 [`docs/tenkz/CHANGES.md`](docs/tenkz/CHANGES.md).
