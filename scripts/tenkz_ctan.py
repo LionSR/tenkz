@@ -61,6 +61,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tenkzlib.texcase import strip_comments  # noqa: E402
+import tenkz_manual_build as manual_build  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tex/tenkz"
@@ -854,12 +855,26 @@ def inside_repository(name: str, source: Path) -> Path:
     """
 
     resolved = source.resolve()
-    if not resolved.is_relative_to(ROOT):
+    if not resolved.is_relative_to(ROOT.resolve()):
         raise SystemExit(
             f"{name} is staged from {resolved}, outside the repository; the "
             "archive is built from the tree and from nothing else"
         )
     return resolved
+
+
+def documentation_sources() -> dict[str, Path]:
+    """Ship the same sources the isolated manual build consumes."""
+    directory = ROOT / "docs/tenkz"
+    content: dict[str, Path] = {}
+    for name in manual_build.MANUAL_SOURCES:
+        source = directory / name
+        paths = sorted(source.rglob("*")) if source.is_dir() else [source]
+        for path in paths:
+            if not path.is_dir():
+                relative = path.relative_to(directory).as_posix()
+                content[f"doc/{relative}"] = inside_repository(relative, path)
+    return content
 
 
 def staged_content(manifest: dict, closure: Closure) -> dict[str, Path]:
@@ -886,6 +901,7 @@ def staged_content(manifest: dict, closure: Closure) -> dict[str, Path]:
         content[name] = inside_repository(name, SOURCE / name)
     for name, relative in manifest["material"].items():
         content[name] = inside_repository(name, ROOT / relative)
+    content.update(documentation_sources())
     return content
 
 
@@ -987,11 +1003,13 @@ def stage(
     tree.mkdir(parents=True)
     for name, source in content.items():
         target = tree / name
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(source.read_bytes())
         target.chmod(0o644)
         os.utime(target, (epoch, epoch))
-    tree.chmod(0o755)
-    os.utime(tree, (epoch, epoch))
+    for directory in [tree, *sorted(p for p in tree.rglob("*") if p.is_dir())]:
+        directory.chmod(0o755)
+        os.utime(directory, (epoch, epoch))
     return tree
 
 
@@ -1285,6 +1303,8 @@ def check_material(manifest: dict) -> Report:
             f"{MANIFEST_LABEL} stages no {name}, which every upload "
             "must carry",
         )
+    for name, path in documentation_sources().items():
+        report.require(path.is_file(), f"documentation source {name} is missing")
     for name, relative in declared.items():
         source = ROOT / relative
         report.require(source.is_file(), f"{relative} is declared and missing")
@@ -1364,25 +1384,37 @@ def check_names(content: dict[str, Path], manifest: dict | None = None,
 
     report = Report("names")
     if manifest is not None and closure is not None:
-        collisions = sorted(set(manifest["material"]) & set(closure.files))
+        collisions = sorted(set(manifest["material"]) &
+                            (set(closure.files) | set(documentation_sources())))
         report.require(
             not collisions,
-            f"{MANIFEST_LABEL} stages material under the runtime "
+            f"{MANIFEST_LABEL} stages material under a runtime or documentation "
             f"name(s) {collisions}; the archive would carry a file the closure "
             "and header checks never read",
         )
+    if closure is not None:
+        report.require(all("/" not in name for name in closure.files),
+                       "runtime files must remain at the archive root")
+    names = {name.lower() for name in content}
+    for name in content:
+        parents = [parent.as_posix().lower() for parent in Path(name).parents
+                   if parent != Path(".")]
+        report.require(not any(parent in names for parent in parents),
+                       f"{name!r} has a parent staged as a file")
     seen: dict[str, str] = {}
     for name in content:
         report.require(
-            SAFE_NAME.fullmatch(name) is not None,
+            all(SAFE_NAME.fullmatch(part) is not None for part in name.split("/"))
+            and ("/" not in name or name.startswith("doc/")),
             f"{name!r} is not spelled in the invariant ASCII subset",
         )
         report.require(
-            not name.endswith("."),
+            all(not part.endswith(".") for part in name.split("/")),
             f"{name!r} ends in a dot, which Windows drops when it unpacks",
         )
         report.require(
-            name.split(".")[0].upper() not in RESERVED_NAMES,
+            all(part.split(".")[0].upper() not in RESERVED_NAMES
+                for part in name.split("/")),
             f"{name!r} is a reserved device name on Windows, whatever its suffix",
         )
         collision = seen.get(name.lower())
@@ -1670,8 +1702,8 @@ def check_smoke(archive: Path, required: bool) -> Report:
 def check_arxiv(tree: Path, closure: Closure) -> Report:
     """The staged tree read as an arXiv source submission.
 
-    An upload to CTAN and a source submission to arXiv are the same files under
-    two sets of rules, and the second set is the stricter one: arXiv unpacks a
+    The CTAN upload includes a doc/ source directory; an arXiv submission
+    takes only its flat top-level files. For that runtime view: arXiv unpacks a
     submission beside the manuscript rather than installing it, runs no
     docstrip and no font builder, and compiles without shell escape. So the
     tree has to be flat, has to be the runtime itself rather than the sources a
@@ -1690,6 +1722,8 @@ def check_arxiv(tree: Path, closure: Closure) -> Report:
     report = Report("arxiv")
     loaded = set(closure.files)
     for path in sorted(tree.rglob("*")):
+        if path.relative_to(tree).parts[0] == "doc":
+            continue
         report.require(
             not path.is_dir(),
             f"{path.name} is a directory, and a submission unpacks beside a "
@@ -1717,7 +1751,7 @@ def check_arxiv(tree: Path, closure: Closure) -> Report:
         )
     if not report.failures:
         report.notes.append(
-            f"{len(list(tree.iterdir()))} files, one directory deep; "
+            f"{sum(path.is_file() for path in tree.iterdir())} top-level files; "
             f"{len(loaded)} loaded sources read, no generated source and no shell call"
         )
     return report
@@ -1756,12 +1790,14 @@ def offline_room(archive: Path, room: Path) -> list[str]:
                 f"{archive.name} unpacks {PACKAGE}/ beside {siblings}; an upload "
                 "unpacks into one directory and nothing else"
             )
-        staged = sorted(path.name for path in unpacked.iterdir())
+        staged = sorted(path.name for path in unpacked.iterdir() if path.name != "doc")
         for path in sorted(unpacked.iterdir()):
+            if path.name == "doc" and path.is_dir():
+                continue
             if not path.is_file():
                 raise SystemExit(
                     f"{archive.name} holds {PACKAGE}/{path.name}, which is not a "
-                    "file; an upload unpacks one directory deep"
+                    "file; only the documentation may occupy a subdirectory"
                 )
             shutil.copy2(path, room / path.name)
     return staged
@@ -2107,6 +2143,42 @@ def command_offline(require_engine: bool) -> int:
     return 1 if report.failures else 0
 
 
+def check_documentation(archive: Path, required: bool) -> Report:
+    """Rebuild the manual from the upload, using the existing convergence audit."""
+    report = Report("documentation")
+    engine = shutil.which("xelatex")
+    if engine is None:
+        if required:
+            report.failures.append("xelatex is required to rebuild the uploaded manual")
+        else:
+            report.skipped = "xelatex is unavailable"
+        return report
+    try:
+        with tempfile.TemporaryDirectory(prefix="tenkz-upload-manual-") as room:
+            root = Path(room)
+            with zipfile.ZipFile(archive) as bundle:
+                missing = sorted(f"{PACKAGE}/{name}" for name in documentation_sources()
+                                 if f"{PACKAGE}/{name}" not in bundle.namelist())
+                if missing:
+                    raise ValueError(f"upload omits manual sources: {missing}")
+                bundle.extractall(root / "unpacked")
+            package = root / "unpacked" / PACKAGE
+            release = read_release(package / "tenkz.sty")
+            pdf, findings = manual_build.build(
+                root / "build", chosen_epoch(release), engine,
+                manual_dir=package / "doc", package_tree=package,
+            )
+            report.require(bool(pdf), "the uploaded manual produced no PDF")
+            report.notes.append(
+                f"manual rebuilt from unpacked sources; {len(pdf)} PDF bytes, "
+                f"{len(findings)} audit advisories"
+            )
+    except (OSError, ValueError, RuntimeError, SystemExit, zipfile.BadZipFile,
+            subprocess.TimeoutExpired) as error:
+        report.failures.append(str(error))
+    return report
+
+
 def command_sync() -> int:
     for artifact, state in release_sync(read_release()):
         print(f"  {artifact:28s} {state}")
@@ -2139,7 +2211,7 @@ def command_check(require_smoke: bool, keep: Path | None) -> int:
     blocked = material.failures + encoding.failures + names.failures
     digest = ""
     if blocked:
-        for name in ("permissions", "debris", "arxiv", "determinism", "clean-install", "offline"):
+        for name in ("permissions", "debris", "arxiv", "determinism", "clean-install", "offline", "documentation"):
             skipped = Report(name)
             skipped.skipped = f"the staged material is not complete ({len(blocked)} finding(s))"
             reports.append(skipped)
@@ -2153,6 +2225,7 @@ def command_check(require_smoke: bool, keep: Path | None) -> int:
             reports.append(check_determinism(release))
             reports.append(check_smoke(archive, require_smoke))
             reports.append(check_offline(archive, require_smoke))
+            reports.append(check_documentation(archive, require_smoke))
     for report in reports:
         print(f"  {report.status:4s} {report.name}")
         for note in report.notes:

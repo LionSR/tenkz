@@ -10,6 +10,9 @@ named by `RELEASE-POLICY.md` §3 may change it.
 - [ ] The release head is the exact commit the campaign signed off. The
       archive is a function of the tree, so any later commit is a different
       archive.
+- [ ] The archive includes `tenkz.pdf` and the rebuildable sources under
+      `doc/`. `check --require-smoke` rebuilds the manual from the unpacked
+      upload and rejects missing sources or external tenkz inputs.
 - [ ] The standing gates listed in `RELEASE-POLICY.md` §2 are green at that
       head.
 - [ ] `python3 scripts/tenkz_ctan.py check` passes at that head, with a TeX
