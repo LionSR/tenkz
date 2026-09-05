@@ -1,23 +1,14 @@
 # tenkz 1.0 announcement — DRAFT
 
-<!-- Native sub-issue #5357 of #4164. This draft may land before the soak;
-     it does NOT authorize a version bump. Every `[[PENDING-RELEASE: ...]]`
-     token below is a placeholder the serial release owner replaces when
-     #4164 completes after the 28-day soak. Publication is blocked while any
-     PENDING-RELEASE token remains; check mechanically with:
-
-         grep -n 'PENDING-RELEASE' docs/tenkz/ANNOUNCEMENT-1.0-draft.md
-
-     Acceptance (#5357): no unsupported faithfulness claim, no stale
-     transitional syntax (no tenkzfree, no millimetre placement, no
-     out=/in=, no deleted scripts), one representative figure in the current
-     documented surface. -->
+<!-- Draft only. Fill the pending fields after the release commit and archive
+     are approved under RELEASE-POLICY.md. There is no fixed soak period.
+     This file does not authorize a version bump or publication. -->
 
 Pending release fields:
 
 - version number: `[[PENDING-RELEASE: version]]`
 - publication date: `[[PENDING-RELEASE: date]]`
-- freeze SHA: `[[PENDING-RELEASE: freeze-sha]]`
+- release commit: `[[PENDING-RELEASE: release-sha]]`
 - archive hash: `[[PENDING-RELEASE: archive-hash]]`
 - CTAN URL: `[[PENDING-RELEASE: ctan-url]]`
 - release URL: `[[PENDING-RELEASE: release-url]]`
@@ -88,7 +79,7 @@ events as its canonical replacement.
   TNLean repository
 - Release notes and archive: `[[PENDING-RELEASE: release-url]]`
   (archive hash `[[PENDING-RELEASE: archive-hash]]`, frozen at
-  `[[PENDING-RELEASE: freeze-sha]]`)
+  `[[PENDING-RELEASE: release-sha]]`)
 - Project: <https://github.com/LionSR/tenkz>
 
 ### Known limitations

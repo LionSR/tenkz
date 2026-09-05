@@ -3,8 +3,8 @@
 tenkz draws matrix product states, tensor trains, PEPS sheets, string
 diagrams, and channel sandwiches from a statement of what the network is.
 An author writes down the tensors, their indices, and how the indices meet;
-the drawing measures where the ink goes. No coordinates and no lengths
-appear in a picture source.
+the drawing measures where the ink goes. Common networks need no physical coordinates or lengths;
+irregular figures may use relative placements and authored routes.
 
 A picture is a set of typed records — atoms, wires, and marks — placed at
 addresses inside a declared frame. The frame, which may be a flat grid, a

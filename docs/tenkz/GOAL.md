@@ -43,8 +43,8 @@ lives beside it and always in the `%` comments.
    and look, against the cited paper's own figure when one exists.
 5. **Periodic simplification is scheduled work.** The gate (issue #4158)
    runs before every milestone closes: what grew ad hoc, which two
-   things are one thing, what would a redesign delete. Finding nothing
-   fails the gate.
+   things are one thing, what would a redesign delete. A review may conclude that no
+   change is warranted; do not manufacture deletions or refactors to pass it.
 6. **No whole-figure motif macros in chapters.** Chapters write inline
    tenkz bodies; the grammar is the interface.
 7. **Prose is confident** (Strunk & White). Hedges, caveats, and
@@ -55,8 +55,8 @@ lives beside it and always in the `%` comments.
 
 - `docs/tenkz/LANGUAGE.md` — the public mental model and semantic rules.
 - `docs/tenkz/DESIGN.md` — compatibility, version, release-tag, and evidence
-  policy; `SOAK-1.0.md` is its inactive release ledger until enforcement pins
-  the exact policy hash and immutable ledger prefix.
+  policy; `RELEASE-POLICY.md` is the bounded release checklist. The former
+  campaign in `SOAK-1.0.md` is retired.
 - `tex/tenkz/tenkz-language-registry.tex` — the executable vocabulary.
 - `docs/tenkz/manual2.tex` + `chapters2/` — the compact citable manual and
   generated canonical reference.
