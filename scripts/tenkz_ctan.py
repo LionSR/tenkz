@@ -2169,6 +2169,11 @@ def check_documentation(archive: Path, required: bool) -> Report:
                 manual_dir=package / "doc", package_tree=package,
             )
             report.require(bool(pdf), "the uploaded manual produced no PDF")
+            report.require(
+                pdf == (package / "tenkz.pdf").read_bytes(),
+                "rebuilt documentation differs from shipped tenkz.pdf; "
+                "rebuild the release manual before staging",
+            )
             report.notes.append(
                 f"manual rebuilt from unpacked sources; {len(pdf)} PDF bytes, "
                 f"{len(findings)} audit advisories"
