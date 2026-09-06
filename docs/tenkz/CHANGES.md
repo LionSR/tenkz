@@ -16,7 +16,12 @@ Fresh source comparison also restores braid-four's two inter-resolver branches
 and upper return arch. Flat physical traces use the existing trace clearance
 for their height and bound their rounded caps by the available width.
 
-## Repository split (2026-08-25)
+## Unreleased development history
+
+The version numbers and removed spellings below describe internal development,
+not earlier public releases. The manual documents the current language.
+
+### Repository split (2026-08-25)
 
 The package, corpus, manual, and tooling now live in
 [LionSR/tenkz](https://github.com/LionSR/tenkz), extracted with history from
@@ -36,7 +41,7 @@ escape ledger, which prices every occurrence of a spelling the core grammar
 cannot say, reached zero.
 
 The spellings below are removed outright, with one stated exception. 0.8.0 is a
-breaking pre-1.0 release and keeps no alias, compatibility reader, or dual writer for any
+first release candidate and keeps no alias, compatibility reader, or dual writer for any
 of them: an old spelling stops the run with an unknown-key or unknown-command
 error naming the vocabulary, and nothing is silently reinterpreted. Every
 documented replacement was applied to the blueprint corpus and the 130-case
@@ -279,8 +284,8 @@ compatibility rules are declared in `TNLOG.md`.
 
 ## Release scope and limitations
 
-This is the first CTAN candidate, with a breaking migration from the retired
-0.7 front ends. It does not claim the future 1.0 compatibility freeze.
+This is the first release candidate; tenkz has not been publicly released.
+It does not claim the future 1.0 compatibility freeze.
 The package, manual, README and citations name 0.8.0, dated 2026-09-05.
 The event schema remains format 1.3, with no in-band version negotiation.
 The rendering corrections change runtime geometry and the corresponding

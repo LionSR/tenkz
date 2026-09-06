@@ -11,9 +11,8 @@ sheets, string diagrams and channel diagrams through a common TikZ-based
 language. Common networks use declared frames and addresses; irregular figures
 may require relative placement and authored routes.
 
-Version 0.8.0 brings the unified kernel language to the first CTAN candidate.
-It replaces the older front ends with one vocabulary for atoms, wires and
-marks. This is a breaking pre-1.0 release; migration instructions are included.
+Version 0.8.0 is the first release candidate. It provides one vocabulary for
+atoms, wires and marks. The manual describes the current language.
 The equation audit checks compatible boundary signatures, while mathematical
 identities remain the author's responsibility.
 

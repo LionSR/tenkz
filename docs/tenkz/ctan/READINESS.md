@@ -1,10 +1,10 @@
-# CTAN candidate 0.8.0 — 2026-09-05
+# CTAN candidate 0.8.0 — 2026-09-06
 
 The candidate uses package version 0.8.0 and date 2026-09-05 throughout the
-manual, READMEs, citation metadata and change record. It is a pre-1.0 release
-with a breaking migration from the retired front ends, not a compatibility
-freeze. The event schema stays at 1.3; the rendering corrections also update
-the geometry recorded in wire-ink events.
+manual, READMEs, citation metadata and change record. The package has not been
+publicly released. This is the first release candidate; the documentation describes the current language. The future 1.0
+compatibility freeze is not claimed. The event schema stays at 1.3; the
+rendering corrections also update the geometry recorded in wire-ink events.
 
 The upload includes `tenkz.pdf` and the current manual sources under `doc/`.
 The CTAN check rebuilds the manual from the unpacked archive, verifies the
