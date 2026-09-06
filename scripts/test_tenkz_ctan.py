@@ -784,6 +784,26 @@ def test_a_commented_version_does_not_answer_for_the_record() -> None:
     assert any(f"year {year}" in reason for reason in failures), failures
 
 
+def test_a_stale_tenkz_bibtex_entry_fails_when_other_entries_share_the_year() -> None:
+    """The version check isolates the package's own BibTeX record, so other cited
+    works from the same release year cannot mask a stale package entry."""
+
+    manifest = tenkz_ctan.read_manifest()
+    release = tenkz_ctan.read_release()
+    bibliography = ROOT / manifest["material"]["tenkz.bib"]
+    original = bibliography.read_text(encoding="utf-8")
+    year = release.date.split("-")[0]
+    # Replace ONLY the package's own entry year (the first occurrence), leaving
+    # other 2026 entries intact in the same bibliography.
+    stale = original.replace(f"year         = {{{year}}}", "year         = {1999}", 1)
+    try:
+        bibliography.write_text(stale, encoding="utf-8")
+        failures = tenkz_ctan.check_version(release, manifest).failures
+    finally:
+        bibliography.write_text(original, encoding="utf-8")
+    assert any(f"year {year}" in reason for reason in failures), failures
+
+
 def test_a_material_name_pointed_at_the_wrong_file_is_reported() -> None:
     manifest = tenkz_ctan.read_manifest()
     swapped = {
