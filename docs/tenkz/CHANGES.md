@@ -282,8 +282,9 @@ compatibility rules are declared in `TNLOG.md`.
 This is the first CTAN candidate, with a breaking migration from the retired
 0.7 front ends. It does not claim the future 1.0 compatibility freeze.
 The package, manual, README and citations name 0.8.0, dated 2026-09-05.
-The event contract remains format 1.3: this release preparation changes no
-runtime behavior or event bytes, and adds no in-band version negotiation.
+The event schema remains format 1.3, with no in-band version negotiation.
+The rendering corrections change runtime geometry and the corresponding
+wire-ink event coordinates and curve segments.
 
 The manual sources now ship beside the PDF under `doc/` and are rebuilt from
 the unpacked upload during the CTAN check. The inactive release campaign has
