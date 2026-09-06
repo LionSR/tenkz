@@ -5888,12 +5888,17 @@
               { \__tenkz_dim:n {phtracereach} }
             \__tenkz_kernel_r_trace_stroke:nn {#1}
               {
+                % Cap radius fits both the loop width and its clearance.
+                [ rounded~corners =
+                    \dim_min:nn { \__tenkz_dim:n {phtracereach} }
+                      { ( \l__tenkz_kernel_r_east_x_dim
+                          - \l__tenkz_kernel_r_north_x_dim ) / 2 } ]
                 ( \l__tenkz_kernel_r_north_x_dim ,
                   \l__tenkz_kernel_r_north_y_dim )
-                -- ++( 0 , \__tenkz_dim:n {physleg} )
+                -- ++( 0 , \__tenkz_dim:n {phtracereach} )
                 -| ( \l__tenkz_kernel_r_east_x_dim ,
                      \l__tenkz_kernel_r_south_y_dim
-                       - \__tenkz_dim:n {physleg} )
+                       - \__tenkz_dim:n {phtracereach} )
                 -| ( \l__tenkz_kernel_r_north_x_dim ,
                      \l__tenkz_kernel_r_south_y_dim )
               }

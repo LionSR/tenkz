@@ -1,6 +1,7 @@
 % Target: rmp-iii-b-braid-four
 % Formula: The final braid places R_{i,b} above R_{j,a} to resolve two crossings.
-% Ink: Canonical public kernel plane with stacked resolver boxes and braid strands.
+% Ink: Kernel plane; two labelled four-port resolver boxes, two parallel
+%   inter-resolver strings, an upper return arch, and the lower-rail bead.
 % Boundary: Two horizontal rails and the diagonal transversal are open; red
 %   continuations exit at the middle left and below the lower rail.
 % Source: paper TN-Review-main.tex line 1680; author source ImagesReview Section
@@ -10,33 +11,42 @@
   \tenkzkernel
   \tndeclare{species}{operator}{hue=source:red}
   \begin{tenkz}[
-      rows={wire,wire,wire,wire}, cols=4,
+      rows={wire,wire,wire,wire,wire,wire}, cols=6,
       frame=plane, bonds=none]
     % Anyons i and j sit where the diagonal transversal meets the two rails.
     \tn[at=(1,2), name=i, role=marked, label pos=nw]{i}
-    \tn[at=(4,2), name=j, role=extra, label pos=sw]{j}
+    \tn[at=(6,2), name=j, role=extra, label pos=sw]{j}
     % the stacked resolver boxes; drawn over the strings, they conceal the
     % resolved order exactly as the author's white boxes do
-    \tn[at=(2,3), skin=box, name=Rib, label pos=n]{R_{i,b}}
-    \tn[at=(3,3), skin=box, name=Rja, label pos=e]{R_{j,a}}
+    \tn[at=(2,3), skin=box,
+        name=Rib, wide=2, wires=2,
+        ports={90@1:virtual, 90@2:virtual, 270@1:virtual, 270@2:virtual}]{R_{i,b}}
+    \tn[at=(4,3), skin=box,
+        name=Rja, wide=2, wires=2,
+        ports={90@1:virtual, 90@2:virtual, 270@1:virtual, 270@2:virtual}]{R_{j,a}}
     % two rails and the transversal line through both anyons
     \tnwire{open w}{i.w} \tnwire{i.e}{open e}
     \tnwire{open w}{j.w} \tnwire{j.e}{open e}
     \tnwire{open n}{i.n} \tnwire{i.s}{j.n} \tnwire{j.s}{open s}
-    % The i strand threads both resolvers and leaves west at the middle site.
-    \tnwire[kind=string, species=operator, name=si,
-            via={0.2 w of Rib, 0.2 w of midway Rib and Rja, 0.2 w of Rja,
-                 midway j and Rja,
-                 0.4 se of midway i and j,
-                 midway i and j}]{i.315}{1 w of midway i and j}
-    % The a strand leaves the lower resolver below the lower-rail bead.
-    \tnwire[kind=string, species=operator, name=sa]
-           {0.2 e of Rja}{0.5 s of 0.2 e of (4,3)}
-    % The j strand enters the lower resolver from the lower intersection.
-    \tnwire[kind=string, species=operator, name=sj,
-            via={0.35 s of Rja}]{j.20}{0.12 e of Rja}
+    % Resolver attachments use declared ports. The two branches
+    % between resolvers stay separate, as in the author's final braid.
+    \tnwire[kind=string, species=operator, name=si]
+            {i.315}{Rib.90@2}
+    \tnwire[kind=string, species=operator, name=right]
+            {Rib.270@2}{Rja.90@2}
+    \tnwire[kind=string, species=operator, name=tail, via={xa}]
+            {Rja.270@2}{open s}
+    \tnwire[kind=string, species=operator, name=sj, route=arc]
+            {j.20}{Rja.270@1}
+    \tnwire[kind=string, species=operator, name=left]
+            {Rja.90@1}{Rib.270@1}
+    \tnwire[kind=string, species=operator, name=return,
+            via={0.1 n of Rib.90@1, 0.2 ne of xj}]
+            {Rib.90@1}{xj.45}
+    \tnwire[kind=string, species=operator, name=west]
+            {xj.180}{open w}
     % marker beads where strings pierce lattice lines
-    \tn[at=0.2 e of (4,3), role=marked, name=xa]{}
+    \tn[at=0.2 e of (6,4), role=marked, name=xa]{}
     \tn[at=midway i and j, role=extra, name=xj]{}
   \end{tenkz}
 \]

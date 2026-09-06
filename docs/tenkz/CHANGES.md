@@ -9,9 +9,12 @@ corrections add no public options.
 
 Source-backed benchmark redraws correct the normal-form and gauge routes,
 project the MPO ring into its plane, and restore the renormalization
-plaquette's plain crossings and eight virtual openings. Three improved
-drawings still carry explicit cosmetic gaps: MPDO loop proportions,
-condensation projection, and braid-four label layout.
+plaquette's plain crossings and eight virtual openings. Compact MPDO trace
+capsules, the condensation diagram's layer and crossing order, and braid-four's
+labelled four-port resolvers now close the remaining three cosmetic gaps.
+Fresh source comparison also restores braid-four's two inter-resolver branches
+and upper return arch. Flat physical traces use the existing trace clearance
+for their height and bound their rounded caps by the available width.
 
 ## Repository split (2026-08-25)
 
@@ -286,7 +289,7 @@ The manual sources now ship beside the PDF under `doc/` and are rebuilt from
 the unpacked upload during the CTAN check. The inactive release campaign has
 been removed in favor of ordinary tests, review and maintainer approval.
 
-The 130-target benchmark ledger records 122 faithful cases, 3 cosmetic gaps
+The 130-target benchmark ledger records 125 faithful cases, no cosmetic gaps
 and five deferred structural gaps. This is a record of individual reviews;
 the older full-review fingerprint is stale. Automated compile and audit passes
 do not constitute a new visual proof of every figure or mathematical identity.

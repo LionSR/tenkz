@@ -28,7 +28,7 @@ Bug reports: https://github.com/LionSR/tenkz/issues
 
 The 1.0 compatibility freeze is not claimed. The semantic event format remains
 1.3 and does not provide in-band version negotiation. The benchmark ledger
-records 122 faithful cases, 3 cosmetic gaps and five deferred structural gaps;
+records 125 faithful cases, no cosmetic gaps and five deferred structural gaps;
 the prior full-review fingerprint is stale. Authored routes and label stations
 can need adjustment. The manual has repeated-topology audit advisories.
 

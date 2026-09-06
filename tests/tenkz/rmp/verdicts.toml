@@ -372,14 +372,16 @@ note = "Issue #5503: U.270 and A.90 retyped virtual to physical -- the bond carr
 
 [[verdict]]
 id = "rmp-ii-zcl-mpdo"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
-case_sha256 = "3471204bc9a27217733fce8e97511171c296dcac26eb8007899a2224b2e044f4"
-reviewed = "2026-08-04"
-renderer = "kimi-kernel-mpo-source-review-2026-08-04-200dpi"
-note = "Kernel stock MPO skin (#5362): the trace now closes as a capsule around each box as in the source, and the open virtual stubs are explicit wires; the capsule sits wider of the box than the author's compact caps."
+case_sha256 = "be529fd5fdd7694681b4b36fea008da4111ef2454f764d83c678419dca8fe587"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-final-gap-repair-2026-09-06"
+note = "Source review on 2026-09-06 confirms three legible M boxes and compact north-south physical trace capsules. Flat per-site traces use the existing trace clearance above and below the glyph, with cap radii bounded by loop width and clearance. The two virtual openings and trace crossings are preserved. Independently compared with the author rendering; a saved-curve height regression fails before the correction and passes afterward."
+second_viewer = "codex-independent-source-render-review-2026-09-06"
+
 
 [[verdict]]
 id = "rmp-ii-channels-ts"
@@ -862,27 +864,27 @@ note = "Partial source-backed repair on 2026-09-05 gives the resolver four expli
 
 [[verdict]]
 id = "rmp-iii-b-braid-four"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-source-and-annotation-review-2026-08-01"
 defects = []
-case_sha256 = "6c5e56d6b8e54e656c736b5f6049a9e6005f871f943b4f83efc4a6bceb9af819"
+case_sha256 = "85d7c743e675dfd7932d48d5df63e597bdccf7a0d71fababf048166528dcc218"
 reviewed = "2026-09-06"
-renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
-note = "The 2026-09-06 label-placement correction moves the lower resolver name east to clear the string while preserving both resolver and anyon orders, the lower-rail bead and outgoing tail. Cosmetic residue remains: both resolver names are outside their white boxes rather than inscribed as in the source."
-second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+renderer = "codex-source-backed-final-gap-repair-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 places both resolver labels inside plane boxes with four declared ports each. Fresh author comparison also corrects the two parallel inter-resolver branches, upper return arch, straight west continuation and lower bead attachment. All eight openings and source strand incidences are preserved; compilation and linked audit pass without advisories. Independently reviewed against the freshly compiled author panel."
+second_viewer = "codex-independent-source-render-review-2026-09-06"
 
 [[verdict]]
 id = "rmp-iii-b-condensation"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-source-topology-review-2026-08-02"
 defects = []
-case_sha256 = "7e7344e3af26bf145437b112a7758792f53c32f57482768c9ebe34479d885688"
+case_sha256 = "81b892418d77d3a84edb72d2e1ef6d3df73961ec26da7d985b6d826d1a8c819e"
 reviewed = "2026-09-06"
-renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
-note = "Source-backed adjustment on 2026-09-06 adds collinear midpoint constraints to reduce the bowing between the three markers on each sheet. Both 6x4 sheets, all 40 perimeter openings and all 24 physical inter-sheet pairs remain intact. Cosmetic residue remains: the middle curves are not exactly taut and the shared bilayer basis joins sheets diagonally rather than by the source vertical drop."
-second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+renderer = "codex-source-backed-final-gap-repair-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 restores the marked row positions and a compact bilayer with near-vertical joins. Explicit crossing claims reproduce author drawing order: upper string behind the lattice, lower string in front. All 24 physical pairs and 40 perimeter openings remain; no string-string crossing is introduced. Independent source/render review accepts the small 4.8-degree join tilt as house projection."
+second_viewer = "codex-independent-source-render-review-2026-09-06"
 
 [[verdict]]
 id = "rmp-iv-ground-space-1d"
