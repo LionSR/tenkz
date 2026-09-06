@@ -365,7 +365,7 @@ def test_a_stated_version_other_than_the_declared_one_fails() -> None:
     assert not tenkz_ctan.check_version(tenkz_ctan.read_release(), manifest).failures
     invented = tenkz_ctan.Release(version="9.9", date="1999-02-01")
     failures = tenkz_ctan.check_version(invented, manifest).failures
-    assert len(failures) == 6, failures
+    assert len(failures) == 5, failures
     assert any("year 1999" in reason for reason in failures), failures
     assert any("month 2" in reason for reason in failures), failures
 
@@ -379,7 +379,7 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
         }
     }
     report = tenkz_ctan.check_version(tenkz_ctan.read_release(), manifest)
-    assert len(report.failures) == 6, report.failures
+    assert len(report.failures) == 5, report.failures
 
     material = tenkz_ctan.check_material(manifest)
     assert any("LICENSE" in reason for reason in material.failures), material.failures
@@ -742,6 +742,20 @@ def test_a_manifest_without_its_tables_is_named_rather_than_raised() -> None:
             completed.stdout,
             completed.stderr,
         )
+
+
+def test_candidate_citation_rejects_premature_release_date() -> None:
+    manifest = tenkz_ctan.read_manifest()
+    release = tenkz_ctan.read_release()
+    citation = ROOT / manifest["material"]["CITATION.cff"]
+    original = citation.read_text(encoding="utf-8")
+    try:
+        for value in ('"2026-09-05"', '1999-01-01'):
+            citation.write_text(original + f"date-released: {value}\n", encoding="utf-8")
+            failures = tenkz_ctan.check_version(release, manifest).failures
+            assert any("must omit date-released" in reason for reason in failures), failures
+    finally:
+        citation.write_text(original, encoding="utf-8")
 
 
 def test_a_record_stating_its_version_twice_fails() -> None:

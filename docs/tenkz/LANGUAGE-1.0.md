@@ -149,7 +149,7 @@ turns with it and a label on a station of a circle frame stands radially out
 of it. One rule, one alphabet, and the four compass words are one sugar
 spelling of the four right angles serving faces and placements alike.
 
-`auto` places an atom's label on the first face carrying no ink in the fixed
+`auto` places an atom's label on the first unreserved face in the fixed
 order s, n, e, w, read from the frozen wire records: any wire endpoint or
 policy leg standing on a face reserves it, and an atom threaded on a wire
 reserves the two faces its carrier runs through. An atom spanning an even
@@ -160,7 +160,11 @@ that station before the dot's automatic label chooses. A west-to-east traced
 row may move the atom label beyond that ordinary band; the mark reserves only
 when the renderer's shared clearance rule leaves the two stations identical.
 When every face carries ink the station falls back to south, so the station is
-deterministic and an explicit `label pos=` always wins.
+deterministic and an explicit `label pos=` always wins. The choice uses
+supported incident geometry; it does not guarantee separation from every
+wire or other label. Circular frames and unsupported span-internal geometry
+receive fallback placement without a verified clearance claim. Use explicit
+`label pos=` when the automatic station leaves a collision.
 
 A typed-port list is a braced comma-separated list of ports, each written
 
@@ -201,8 +205,8 @@ straight segments rather than bent into one smooth curve through them. It
 says the same thing about a `closed` string, whose stations then close into
 a squared cycle rather than a smooth one -- the shape an author reaches for
 when the figure is a ring drawn as a square. A `wind=` string is the one
-exception: its curve is the string engine's torus projection of a homotopy
-class rather than a route through stations, so there are no turns to square
+exception: its curve is a parametric projection of the declared winding
+pair rather than a route through stations, so there are no turns to square
 and `route=orth` does not reach it. `route=arc` bows a waypointless
 string along its ends' faces; a string with waypoints already states its
 curve through them.
@@ -659,7 +663,14 @@ by commas, when one pairing has several declared crossings.
      rmp-iii-b-r-tensor-left/-right. -->
 
 **Winding.** `wind={p,q}` records the homotopy class of a closed string on a
-frame with traced sides; the rendered path realizes that class or errors.
+frame with traced sides. The pair is recorded as winding metadata;
+the renderer uses a projected parametric curve, not seam-continuous routing
+on the quotient frame. It does not certify realization of the declared
+homotopy class or transverse intersections between winding strings. In
+particular, the primitive torus basis pair can render as tangent circles.
+Use an explicitly authored fundamental-square schematic when the argument
+depends on identified seams or the intersection number; see
+[#301](https://github.com/LionSR/tenkz/issues/301).
 The contractible `{0,0}` class is rejected in favor of an ordinary `closed`
 string. `via=` belongs to waypoint-routed closed strings and is mutually
 exclusive with `wind=`.
@@ -1222,11 +1233,11 @@ selection.
 \end{tenkz}\]
 ```
 
-The wound string takes no route either: its class is its
-path. The rendered curve realizes `{1,0}` or the picture is refused (§5), and
-waypoint routing is mutually exclusive with winding. A route may perfectly well name the whole picture,
-which is a record like any other and answers to `picture` (§3, §12.7); what
-no route can do is stand in for a class the string states itself.
+The string records the winding pair `{1,0}` and draws a projected parametric
+curve. This does not certify a path on the quotient frame (§5). Winding and
+waypoint routing are mutually exclusive. For an argument that depends on
+identified seams or intersection numbers, use an explicitly authored
+fundamental-square schematic, as in the manual's torus example.
 
 ### 12.3 Pulling-through (`rmp-iii-a-pulling-through`)
 

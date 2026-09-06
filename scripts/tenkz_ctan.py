@@ -1512,7 +1512,7 @@ def check_version(release: Release, manifest: dict) -> Report:
 
     report = Report("version")
     readme = _material_text(manifest, "README.md")
-    stated = f"Version {release.version}, released {release.date}."
+    stated = f"Release candidate {release.version}, package date {release.date}."
     report.require(
         stated in readme,
         f"the CTAN README must state {stated!r}, the version declared by "
@@ -1525,7 +1525,6 @@ def check_version(release: Release, manifest: dict) -> Report:
     # release edit left behind — is a finding and not a second chance.
     for field_name, value in (
         ("version", release.version),
-        ("date-released", release.date),
     ):
         stated = re.findall(rf'^{field_name}: "([^"]*)"\s*$', citation, re.M)
         report.require(
@@ -1533,6 +1532,10 @@ def check_version(release: Release, manifest: dict) -> Report:
             f"the citation record must state {field_name} {value} as its own "
             f"field, once; it states {stated}",
         )
+    report.require(
+        re.search(r"^date-released\s*:", citation, re.M) is None,
+        "the candidate citation record must omit date-released until publication",
+    )
     entry = _live_bibtex(_material_text(manifest, "tenkz.bib"), key="tenkz")
     year, month, _ = release.date.split("-")
     # Read from the fields of the package's own entry, with comments taken out first: a
