@@ -744,6 +744,20 @@ def test_a_manifest_without_its_tables_is_named_rather_than_raised() -> None:
         )
 
 
+def test_candidate_citation_rejects_premature_release_date() -> None:
+    manifest = tenkz_ctan.read_manifest()
+    release = tenkz_ctan.read_release()
+    citation = ROOT / manifest["material"]["CITATION.cff"]
+    original = citation.read_text(encoding="utf-8")
+    try:
+        for value in ('"2026-09-05"', '1999-01-01'):
+            citation.write_text(original + f"date-released: {value}\n", encoding="utf-8")
+            failures = tenkz_ctan.check_version(release, manifest).failures
+            assert any("must omit date-released" in reason for reason in failures), failures
+    finally:
+        citation.write_text(original, encoding="utf-8")
+
+
 def test_a_record_stating_its_version_twice_fails() -> None:
     """A release edit that leaves the previous line standing beside the new one
     has stated two versions, and a citation record states one."""

@@ -1532,6 +1532,10 @@ def check_version(release: Release, manifest: dict) -> Report:
             f"the citation record must state {field_name} {value} as its own "
             f"field, once; it states {stated}",
         )
+    report.require(
+        re.search(r"^date-released\s*:", citation, re.M) is None,
+        "the candidate citation record must omit date-released until publication",
+    )
     entry = _live_bibtex(_material_text(manifest, "tenkz.bib"), key="tenkz")
     year, month, _ = release.date.split("-")
     # Read from the fields of the package's own entry, with comments taken out first: a
