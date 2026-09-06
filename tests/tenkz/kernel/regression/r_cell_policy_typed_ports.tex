@@ -23,8 +23,28 @@
     \int_gincr:N \g__tenkz_test_cell_policy_port_open_int
     \__tenkz_test_cell_policy_port_open:n {#1}
   }
+% The single-host physical trace must save its rounded route before replay:
+% rounding only the replay style leaves sharp corners in both ink and audit.
+\int_new:N \g__tenkz_test_cell_policy_rounded_int
+\tl_new:N \l__tenkz_test_cell_policy_event_tl
+\cs_new_eq:NN \__tenkz_test_cell_policy_event:n \__tenkz_kernel_event:n
+\cs_set_protected:Npn \__tenkz_kernel_event:n #1
+  {
+    \tl_set:Ne \l__tenkz_test_cell_policy_event_tl {#1}
+    \exp_args:NnV \regex_match:nnT
+      { \A wire-ink .* name=trace-physical-1 \| }
+      \l__tenkz_test_cell_policy_event_tl
+      {
+        \int_gincr:N \g__tenkz_test_cell_policy_rounded_int
+        \tl_if_in:VnF \l__tenkz_test_cell_policy_event_tl {;c:}
+          { \errmessage{physical~trace~lost~its~rounded~saved~route} }
+      }
+    \__tenkz_test_cell_policy_event:n {#1}
+  }
 \AtEndDocument
   {
+    \int_compare:nNnF { \g__tenkz_test_cell_policy_rounded_int } = {1}
+      { \errmessage{physical~trace~rounded~route~was~not~inspected~once} }
     \int_compare:nNnF { \g__tenkz_test_cell_policy_label_int } = {7}
       {
         \errmessage

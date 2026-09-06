@@ -19,7 +19,7 @@ Record the commit and archive SHA-256 with the results outside the archive
 reproducible manual build and `tenkz_ctan.py check --require-smoke` must pass.
 Review the rendered manual before approving publication.
 
-The inherited benchmark ledger has 116 faithful cases, 9 cosmetic gaps and
+The current benchmark ledger has 122 faithful cases, 3 cosmetic gaps and
 five deferred structural gaps. The old full-review fingerprint is stale;
 these are per-case verdicts, not a fresh visual review of the entire corpus.
 The manual retains repeated-topology audit advisories. The cover labels

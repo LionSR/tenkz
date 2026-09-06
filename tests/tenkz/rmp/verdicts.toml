@@ -162,15 +162,15 @@ note = "The X row is resolved: the case records the source pairing boxes and ope
 
 [[verdict]]
 id = "rmp-ii-mpu-normal-form"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
-case_sha256 = "cf4e23aa60b027881156e534a03c5faa63b10ad71969119c566bd2fe48fdc2f7"
-reviewed = "2026-08-03"
-renderer = "codex-plane-transverse-source-review-2026-08-03-400dpi"
-second_viewer = "codex-plane-source-oracle-2026-08-03"
-note = "Each PEPS star now separates four in-plane virtual legs from the frame's page-vertical physical leg. The receding virtual legs still follow the shared plane carrier rather than the author's 45-degree bearing, and the marked paths keep polygonal bends."
+case_sha256 = "dd6fe8962a7d88893b530ff0244fd774602fb06553935870d852c688f4ffa2b2"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 restores short dotted S-shaped paths with local free endpoints and both markers on the source-correct virtual legs in each panel. Marker beads explicitly carry no physical legs. Fresh author-source rendering and independent root and agent review confirm all four free string ends, marked-leg incidences, and one physical leg per PEPS star. Shared plane bearing and projected glyph shape are equivalent house presentation."
 
 [[verdict]]
 id = "rmp-ii-reduced-density"
@@ -866,10 +866,11 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-source-and-annotation-review-2026-08-01"
 defects = []
-case_sha256 = "b2432ac83ce86ee71327d2f9ca04c06d6d39c9a35ba577944ed537d62f084b47"
-reviewed = "2026-08-29"
-renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
-note = "The class-fixed extent migration preserves the source topology, upper i and lower j ordering, upper R_{i,b} and lower R_{j,a} resolver order, lower-rail bead, and outgoing tail. Cosmetic residue: the two resolver names now sit immediately outside their white boxes rather than inside them as in the author panel; both remain legible."
+case_sha256 = "6c5e56d6b8e54e656c736b5f6049a9e6005f871f943b4f83efc4a6bceb9af819"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+note = "The 2026-09-06 label-placement correction moves the lower resolver name east to clear the string while preserving both resolver and anyon orders, the lower-rail bead and outgoing tail. Cosmetic residue remains: both resolver names are outside their white boxes rather than inscribed as in the source."
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
 
 [[verdict]]
 id = "rmp-iii-b-condensation"
@@ -877,10 +878,11 @@ status = "cosmetic-gap"
 pairing = "verified"
 pairing_by = "codex-source-topology-review-2026-08-02"
 defects = []
-case_sha256 = "1344b6356d4b7a8d4b26860e68d7286603d24429c7de64beca30f819a94f0a10"
-reviewed = "2026-08-05"
-renderer = "fable-doubled-plane-migration-review-2026-08-05-200dpi"
-note = "the kernel plane bilayer keeps both 6x4 sheets, all 40 perimeter openings, all 24 inter-sheet contractions, and both marked strings, whose six interior marks are now portless affine beads dressing the crossed bonds; residues: the string bows between beads where the source runs taut, and the contract bilayer basis ties each sheet pair along the in-plane diagonal rather than the source's vertical drop. Under #5582 the 24 inter-sheet pairs are recorded physical by the transverse pairing rule, matching the author's tm pic, which joins the two sheet beads at every site; the case bytes and the boundary signature are unchanged and the 200 dpi raster is byte-identical to the pre-retyping build"
+case_sha256 = "7e7344e3af26bf145437b112a7758792f53c32f57482768c9ebe34479d885688"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+note = "Source-backed adjustment on 2026-09-06 adds collinear midpoint constraints to reduce the bowing between the three markers on each sheet. Both 6x4 sheets, all 40 perimeter openings and all 24 physical inter-sheet pairs remain intact. Cosmetic residue remains: the middle curves are not exactly taut and the shared bilayer basis joins sheets diagonally rather than by the source vertical drop."
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
 
 [[verdict]]
 id = "rmp-iv-ground-space-1d"
@@ -895,14 +897,14 @@ note = "Arc-route landing (#6201), re-reviewed as the old note's own trigger ask
 
 [[verdict]]
 id = "rmp-iv-ground-space-2d"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 case_sha256 = "a36afb3fe1ba52666f1a2e9f2108244763377fdcbba04677c4209c69a2dc2c73"
-reviewed = "2026-08-05"
-renderer = "fable-w6-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w6-countersign-2026-08-05-400dpi"
-note = "Kernel migration verified against GS2D.pdf and the paper's fig4 twin at 900dpi: the sites are now the source's box tensors, the sheet and the boundary operator are two nested contours with X on the outer one at the east, and the perimeter bonds are cut just past the inner window as in the source. The old note's 'arrowed legs absent' claim is a misreading: both source PDFs draw plain undirected legs, so physical=up records the source faithfully and no directed-leg capability is needed here. Residue: the kernel extends every physical leg through both windows at the hull's full page-up reach, so the sheet stands under a forest of long verticals where the source draws short out-of-plane ticks; meaning is intact but the default is crowded (K3, family-level leg-reach metric). Re-pinned 2026-08-22: the inert inset=1 was dropped from the outer contour with the key's retirement (#6194); the with/without rasters are byte-identical at 400dpi, so the reviewed render is unchanged."
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+note = "The 2026-09-06 physical-leg correction keeps the source short local out-of-plane ticks inside the nested region windows instead of extending each leg to the outer hull. Independent root source/render review confirms the two contours, east X, perimeter cuts, tensors and local physical legs; the focused 170-regression check passes. No directed-leg interpretation is introduced."
 
 [[verdict]]
 id = "rmp-iv-intersection-lhs-one"
@@ -1130,27 +1132,27 @@ note = "both X branches meet the A and conjugate-A rails, and their physical leg
 
 [[verdict]]
 id = "rmp-workbench-ii-peps-gauge-old"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
-case_sha256 = "c667237f82b6425246d511925b52581f97fce409d5c6596906f9266d947ff595"
-reviewed = "2026-08-03"
-renderer = "codex-plane-transverse-source-review-2026-08-03-400dpi"
-second_viewer = "codex-plane-source-oracle-2026-08-03"
-note = "Both PEPS stars now separate four in-plane virtual legs from an independent page-vertical physical leg. The marked route stays cell-orthogonal where the author draws a softer oblique path."
+case_sha256 = "76294691f82bd6c4170cc794068cf8b808da2da933ae489248d73905c4921d54"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 smooths the right-hand path through its three virtual-leg markers and removes inherited physical stubs from the marker beads. The lower blue endpoint exits southwest, separately from the black virtual tip. Fresh author-source comparison and independent root review confirm the one-to-three marked-leg relation, all open ends, and one physical leg on each PEPS star; remaining projection and label placement are equivalent house presentation."
 
 [[verdict]]
 id = "rmp-workbench-ii-peps-gauge-without-a"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "pairing-sweep-two-viewers-2026-07-23"
 defects = []
-case_sha256 = "0e3de36db6bb34652cb296f37c4b2a6e6118050d3100d37bfe3f7f9def9fe9b5"
-reviewed = "2026-08-03"
-renderer = "codex-plane-transverse-source-review-2026-08-03-400dpi"
-second_viewer = "codex-plane-source-oracle-2026-08-03"
-note = "Both sides now separate four in-plane virtual legs from an independent page-vertical physical leg. The marked routes remain angular and cell-orthogonal compared with the author's rounded projection."
+case_sha256 = "18dd6e17c28e371d759ae60e514418e4ba433d67d2ef6114d11584a4e7ee332a"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 restores the source leg pairings: west and north on the left star, east and south on the right. Each marked path is one smooth open string and its beads have no physical stubs. Fresh author-source comparison and independent root review confirm both marked-leg incidences, open endpoints, and the single physical leg of each star."
 
 [[verdict]]
 id = "rmp-workbench-ii-mpu-wrap-second"
@@ -1448,15 +1450,15 @@ note = "Promoted to faithful 2026-08-29 on maintainer countersign (p.123): ident
 
 [[verdict]]
 id = "rmp-workbench-iii-mpo-on-peps-definition"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
-case_sha256 = "712eba7a54b2c6cd45d58a9ee9fad6b172f843a73d6db91eec3efe0af5a3cec0"
-reviewed = "2026-09-05"
-renderer = "codex-source-backed-gap-repair-2026-09-05"
-note = "Source-backed repair on 2026-09-05 restores the separate five-leg PEPS star, removes the invented central A from the MPO ring, restores all eight radial virtual openings, and strokes the ring red. Independently compared with freshly compiled author lines 521-537. Remaining cosmetic differences are the flat circle and square skins versus the projected ellipse and parallelograms, and panel proportions. The source equality is schematic: five left openings versus eight right openings, so the equation-sibling advisory is retained rather than suppressed."
+case_sha256 = "191b90cf488308bad3ec33078b961f606ce111dc8ed5ac69e0318fd6fcab3a0e"
+reviewed = "2026-09-06"
+renderer = "codex-source-backed-cosmetic-repair-2026-09-06"
+note = "The 2026-09-06 compact plane redraw restores the projected MPO ring and its four skins alongside the separate five-leg PEPS star. All eight radial virtual openings remain explicit; the ring is red and has no invented central tensor. Root and independent source-render review confirm equivalent source geometry and incidence. The source equality is schematic: five left openings versus eight right openings, so the equation-sibling advisory remains visible."
 
-second_viewer = "codex-independent-source-render-review-2026-09-05"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
 
 [[verdict]]
 id = "rmp-workbench-iii-eq60-now"
@@ -1507,15 +1509,15 @@ note = "Fresh exact-hash 200/400dpi countersign on 2026-08-30 confirms four tens
 
 [[verdict]]
 id = "rmp-workbench-iii-peps-renormalization-one"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-pairing-sweep-2026-07-24"
 defects = []
-case_sha256 = "b595885bb9eab9d8015cf935a16eebbd8c2fdc455f15353cee92ed3711e4a5a3"
-reviewed = "2026-08-05"
-renderer = "fable-w7-crossings-vision-review-2026-08-05-200dpi"
-second_viewer = "fable-w7-crossings-recheck-2026-08-05-400dpi"
-note = "The X contradiction is resolved: the four edge-centred PEPS sites the manifest requires are present as glyphless junctions, each with its 50-degree physical leg as the source draws. Residue: the kernel's declared crossings gap the under bonds where the source butts plain lattice ink, and the external half-edges run a full pitch where the source stops at a quarter."
+case_sha256 = "8a7da628f220f0801d9507bec4e6e27d5e86d3fcfa778183ab72faded889a26f"
+reviewed = "2026-09-06"
+renderer = "codex-banach-source-render-review-2026-09-06"
+second_viewer = "codex-root-independent-source-render-review-2026-09-06"
+note = "Source-backed redraw on 2026-09-06 restores eight open virtual half-indices meeting four edge-centred glyphless PEPS sites and four short angled physical legs. Ordinary index lines cross at the corners without invented over-under gaps or extra contractions. Fresh author-source comparison by the case agent and independent root render review confirm the twelve open ends and source incidence; isolated compilation, lint and audit pass. Remaining spacing and proportions are equivalent house presentation."
 
 [[verdict]]
 id = "rmp-workbench-iii-peps-renormalization-two"

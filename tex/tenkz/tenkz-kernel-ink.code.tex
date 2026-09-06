@@ -149,7 +149,7 @@
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_trace_stroke_aux:nn #1#2
   {
-    \path [ spath/save = {#1} ] #2 ;
+    \path [ rounded~corners = \__tenkz_dim:n {corner}, spath/save = {#1} ] #2 ;
     % A trace paints two layers: a foreground stroke inheriting the
     % restylable `bond` style and a paper preaction halo of the fixed sum
     % wirewidth + crossgap (tenkz-core.code.tex, the `trace` style).  The
@@ -798,9 +798,13 @@
           \l__tenkz_kernel_r_x_fp \l__tenkz_kernel_r_y_fp
         \fp_set:Nn \l__tenkz_kernel_r_reach_fp
           { \__tenkz_metric_ratio:n {physleg} }
-        \exp_args:NVV \__tenkz_kernel_r_physical_enclosure:nn
-          \l__tenkz_kernel_physical_axis_host_tl
-          \l__tenkz_kernel_r_b_tl
+        % A plane transverse leg leaves the sheet, not its perimeter.
+        \bool_if:NF \l__tenkz_kernel_r_basis_plane_bool
+          {
+            \exp_args:NVV \__tenkz_kernel_r_physical_enclosure:nn
+              \l__tenkz_kernel_physical_axis_host_tl
+              \l__tenkz_kernel_r_b_tl
+          }
         \fp_set:Nn \l__tenkz_kernel_r_xb_fp
           {
             \l__tenkz_kernel_r_x_fp
@@ -2092,9 +2096,13 @@
                   \l__tenkz_kernel_r_x_fp \l__tenkz_kernel_r_y_fp
                 \fp_set:Nn \l__tenkz_kernel_r_reach_fp
                   { \__tenkz_metric_ratio:n {physleg} }
-                \exp_args:NVV \__tenkz_kernel_r_physical_enclosure:nn
-                  \l__tenkz_kernel_r_trace_ink_host_tl
-                  \l__tenkz_kernel_r_trace_ink_face_tl
+                % A plane transverse leg leaves the sheet, not its perimeter.
+                \bool_if:NF \l__tenkz_kernel_r_basis_plane_bool
+                  {
+                    \exp_args:NVV \__tenkz_kernel_r_physical_enclosure:nn
+                      \l__tenkz_kernel_r_trace_ink_host_tl
+                      \l__tenkz_kernel_r_trace_ink_face_tl
+                  }
                 \fp_set:Nn \l__tenkz_kernel_r_port_tip_y_fp
                   {
                     \l__tenkz_kernel_r_y_fp
@@ -3428,11 +3436,13 @@
           }
         \fp_set:Nn \l__tenkz_kernel_r_reach_fp
           { \__tenkz_metric_ratio:n {physleg} }
-        % A reach is the maximum over everything declared to meet it.  A leg
-        % of a site inside a contour is pierced, not grazed: it runs past the
-        % contour by one clearance, so the crossing the author claimed by
-        % enclosing the site exists rather than being asserted.
-        \__tenkz_kernel_r_physical_enclosure:nn {#1} {#2}
+        % An in-plane physical leg passes its enclosing contour by one
+        % clearance. A plane transverse leg instead leaves the sheet itself;
+        % the sheet's perimeter does not determine its reach.
+        \bool_if:NF \l__tenkz_kernel_r_basis_plane_bool
+          {
+            \__tenkz_kernel_r_physical_enclosure:nn {#1} {#2}
+          }
         % A leg crossed by a route is as long as the outermost route crossing
         % it, plus one clearance, so a crossing the author claimed by naming
         % the side always exists and the crossing police can no longer fall

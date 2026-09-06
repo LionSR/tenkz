@@ -1,5 +1,6 @@
 % Regression: typed physical ports and physical-policy legs share enclosure
-% reach, so neither endpoint can stop inside a contour around its host.
+% reach in a row chart. Plane transverse legs leave the sheet itself and
+% retain their local reach instead of extending to the in-plane perimeter.
 \documentclass{standalone}
 \usepackage{tenkz}
 \makeatletter
@@ -63,5 +64,20 @@
   }
   < {0.000001}
   { \errmessage{typed~port~and~policy~leg~used~different~enclosure~reach} }
+\ExplSyntaxOff
+% A two-row enclosure used to stretch the lower transverse leg to the hull.
+\begin{tenkz}[lattice={2x2}, frame=plane, bonds=none, physical=up]
+  \tn[at=(1,1)]{B}
+  \tn[at=(2,1)]{A}
+  \tn[at=(1,2)]{C}
+  \tn[at=(2,2)]{D}
+  \tnmark[form=enclosure]{(1,1)..(2,2)}{}
+\end{tenkz}
+\ExplSyntaxOn
+\fp_compare:nNnF
+  {abs(\g__tenkz_test_policy_enclosure_reach_fp
+       -\__tenkz_metric_ratio:n {physleg})}
+  < {0.000001}
+  { \errmessage{plane~transverse~leg~extended~to~the~sheet~perimeter} }
 \ExplSyntaxOff
 \end{document}

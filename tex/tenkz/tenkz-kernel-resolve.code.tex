@@ -1702,6 +1702,23 @@
       \l__tenkz_kernel_r_port_turn_tl
     \__tenkz_model_get:nnN {#1} {port-type}
       \l__tenkz_kernel_port_type_tl
+    % A bare glyphless site's physical leg starts at the site, as a policy
+    % leg does. Pairing hosts retain their bounded local silhouette.
+    \str_if_eq:VnT \l__tenkz_kernel_port_type_tl {physical}
+      {
+        \exp_args:NV \__tenkz_kernel_hull_resolve_skin:n
+          \l__tenkz_kernel_port_record_tl
+        \str_if_eq:VnT \l__tenkz_kernel_hull_skin_tl {none}
+          {
+            \prop_if_in:NVF \l__tenkz_kernel_skin_pairing_host_prop
+              \l__tenkz_kernel_port_record_tl
+              {
+                \exp_args:NV \__tenkz_kernel_r_xy:nNN
+                  \l__tenkz_kernel_port_record_tl
+                  \l__tenkz_kernel_r_port_x_fp \l__tenkz_kernel_r_port_y_fp
+              }
+          }
+      }
     \fp_set_eq:NN \l__tenkz_kernel_r_x_fp
       \l__tenkz_kernel_r_port_x_fp
     \fp_set_eq:NN \l__tenkz_kernel_r_y_fp

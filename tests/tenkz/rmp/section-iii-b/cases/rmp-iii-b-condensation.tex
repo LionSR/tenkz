@@ -28,9 +28,9 @@
     \tn[at=0.6875 e of (4,2,2), skin=dot, size=s, species=marked, name=m3B]{}
     % one marked string per sheet through its beads
     \tnwire[kind=string, species=operator, name=strK,
-            via={m1K, m2K, m3K}]{aK}{cK}
+            via={m1K, midway m1K and m2K, m2K, midway m2K and m3K, m3K}]{aK}{cK}
     \tnwire[kind=string, species=operator, name=strB,
-            via={m1B, m2B, m3B}]{aB}{cB}
+            via={m1B, midway m1B and m2B, m2B, midway m2B and m3B, m3B}]{aB}{cB}
     % ket-sheet east-west bonds
     \tnwire{(1,1,1)}{(1,2,1)} \tnwire{(1,2,1)}{(1,3,1)} \tnwire{(1,3,1)}{(1,4,1)}
     \tnwire{(2,1,1)}{(2,2,1)} \tnwire{(2,2,1)}{(2,3,1)} \tnwire{(2,3,1)}{(2,4,1)}

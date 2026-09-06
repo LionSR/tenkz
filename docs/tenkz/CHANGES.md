@@ -1,5 +1,18 @@
 # tenkz 0.8.0 — 2026-09-05
 
+## Drawing corrections (2026-09-06)
+
+Plane physical legs remain local to their tensor instead of stretching to the
+containing region. Bare glyphless sites now attach their physical ports at the
+site, and saved trace paths retain the existing rounded-corner style. These
+corrections add no public options.
+
+Source-backed benchmark redraws correct the normal-form and gauge routes,
+project the MPO ring into its plane, and restore the renormalization
+plaquette's plain crossings and eight virtual openings. Three improved
+drawings still carry explicit cosmetic gaps: MPDO loop proportions,
+condensation projection, and braid-four label layout.
+
 ## Repository split (2026-08-25)
 
 The package, corpus, manual, and tooling now live in
@@ -273,7 +286,7 @@ The manual sources now ship beside the PDF under `doc/` and are rebuilt from
 the unpacked upload during the CTAN check. The inactive release campaign has
 been removed in favor of ordinary tests, review and maintainer approval.
 
-The 130-target benchmark ledger records 116 faithful cases, 9 cosmetic gaps
+The 130-target benchmark ledger records 122 faithful cases, 3 cosmetic gaps
 and five deferred structural gaps. This is a record of individual reviews;
 the older full-review fingerprint is stale. Automated compile and audit passes
 do not constitute a new visual proof of every figure or mathematical identity.
