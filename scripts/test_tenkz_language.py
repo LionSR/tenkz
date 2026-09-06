@@ -197,6 +197,11 @@ def main() -> int:
     if mpo_preludes != [("skin", "mpo", "base=box")]:
         raise SystemExit("the executable registry lost the stock MPO box declaration")
     reference = tenkz_language.REFERENCE.read_text(encoding="utf-8")
+    if "Sunset" in reference or "Tombstoned" in reference:
+        raise SystemExit("the current manual exposes historical registry rows")
+    if not any(e.kind == "command" and e.fields[0] == "tenkzkernel"
+               for e in registry):
+        raise SystemExit("manual filtering removed the runtime compatibility contract")
     if "Prelude class & Name & Declaration" not in reference or "base=box" not in reference:
         raise SystemExit("the generated language reference omitted the stock MPO declaration")
     # Both chapters say they are generated, so both must equal what the

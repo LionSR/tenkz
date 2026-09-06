@@ -77,6 +77,12 @@ runtime dependencies above. No repository checkout or generated figure files
 are needed. For an arXiv submission, copy the top-level runtime `.sty` and
 `.tex` files beside the manuscript; the `doc/` directory is not needed.
 
+## Known limitation
+
+The projected `wind` renderer does not reliably depict the two fundamental
+torus cycles. The manual explains the quotient construction separately; see
+https://github.com/LionSR/tenkz/issues/301 for the renderer follow-up.
+
 ## Author and maintainer
 
 Sirui Lu <sirui.lu@mpq.mpg.de>
@@ -94,5 +100,5 @@ its header.
 
 ## Version
 
-Version 0.7, released 2026-07-22. The change record is in `CHANGES.md`, and
+Version 0.8.0, released 2026-09-05. The change record is in `CHANGES.md`, and
 `CITATION.cff` and `tenkz.bib` carry the citation metadata.

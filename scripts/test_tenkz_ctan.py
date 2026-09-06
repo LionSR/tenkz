@@ -14,6 +14,7 @@ import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/tenkz_ctan.py"
@@ -775,6 +776,26 @@ def test_a_commented_version_does_not_answer_for_the_record() -> None:
     year = release.date.split("-")[0]
     stale = original.replace(f"year         = {{{year}}}", "year         = {1999}")
     stale = f"% year = {{{year}}}, version {release.version}\n" + stale
+    try:
+        bibliography.write_text(stale, encoding="utf-8")
+        failures = tenkz_ctan.check_version(release, manifest).failures
+    finally:
+        bibliography.write_text(original, encoding="utf-8")
+    assert any(f"year {year}" in reason for reason in failures), failures
+
+
+def test_a_stale_tenkz_bibtex_entry_fails_when_other_entries_share_the_year() -> None:
+    """The version check isolates the package's own BibTeX record, so other cited
+    works from the same release year cannot mask a stale package entry."""
+
+    manifest = tenkz_ctan.read_manifest()
+    release = tenkz_ctan.read_release()
+    bibliography = ROOT / manifest["material"]["tenkz.bib"]
+    original = bibliography.read_text(encoding="utf-8")
+    year = release.date.split("-")[0]
+    # Replace ONLY the package's own entry year (the first occurrence), leaving
+    # other 2026 entries intact in the same bibliography.
+    stale = original.replace(f"year         = {{{year}}}", "year         = {1999}", 1)
     try:
         bibliography.write_text(stale, encoding="utf-8")
         failures = tenkz_ctan.check_version(release, manifest).failures
@@ -1691,6 +1712,19 @@ def test_uploaded_manual_recorder_rejects_repository_fallback() -> None:
             work, "xelatex", manual_dir=manual, package_tree=package,
         )
         assert str(foreign) in findings, findings
+
+
+def test_uploaded_manual_must_match_the_shipped_pdf() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
+        with zipfile.ZipFile(archive) as bundle:
+            shipped = bundle.read("tenkz/tenkz.pdf")
+        with patch.object(tenkz_ctan.shutil, "which", return_value="xelatex"):
+            with patch.object(tenkz_ctan.manual_build, "build", return_value=(shipped, [])):
+                assert not tenkz_ctan.check_documentation(archive, required=True).failures
+            with patch.object(tenkz_ctan.manual_build, "build", return_value=(b"%PDF-stale", [])):
+                failures = tenkz_ctan.check_documentation(archive, required=True).failures
+                assert any("differs from shipped" in failure for failure in failures), failures
 
 
 def test_uploaded_manual_missing_its_entry_point_fails() -> None:

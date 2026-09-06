@@ -1,0 +1,174 @@
+% The tensor network literature: foundational, modern, and formalization references.
+\section{References}\label{ch:references}
+
+\providecommand{\doi}[1]{\href{https://doi.org/#1}{\nolinkurl{doi:#1}}}
+\providecommand{\arxiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{arXiv:#1}}}
+
+The \pkg{} package was developed for \textsc{TNLean}, a Lean~4 formalization of
+the mathematical theory of tensor networks, and its diagram grammar reflects
+the structural insights established across more than three decades of
+quantum many-body research.  In \pkg{}, a diagram is not merely placed ink;
+it is a typed mathematical record whose ports, contractions, and boundary
+signatures respect the algebraic reality of tensor networks.
+
+The references below gather the foundational and modern tensor-network literature
+that forms the theoretical backbone of the language, with particular emphasis on
+the seminal works of J.~I.~Cirac and collaborators on Matrix Product States
+(MPS), Matrix Product Density Operators (MPDO), Matrix Product Unitaries (MPU),
+and Projected Entangled Pair States (PEPS), alongside standard reviews,
+diagrammatic lecture courses, and machine-checked formalizations.
+
+\makeatletter
+\renewenvironment{thebibliography}[1]{%
+  \begin{small}%
+  \list{\@biblabel{\@arabic\c@enumiv}}%
+       {\settowidth\labelwidth{\@biblabel{#1}}%
+        \leftmargin\labelwidth
+        \advance\leftmargin\labelsep
+        \itemsep 0.35\baselineskip plus 0.1\baselineskip minus 0.05\baselineskip
+        \parsep 0pt
+        \usecounter{enumiv}%
+        \let\p@enumiv\@empty
+        \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+  \sloppy
+  \clubpenalty4000
+  \@clubpenalty \clubpenalty
+  \widowpenalty4000%
+  \sfcode`\.\@m
+}{%
+  \def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+  \endlist
+  \end{small}%
+}
+\makeatother
+
+\begin{thebibliography}{99}
+
+\bibitem{CiracRMP2021}
+J.~I.~Cirac, D.~P{\'e}rez-Garc{\'i}a, N.~Schuch, and F.~Verstraete.
+\newblock Matrix product states and projected entangled pair states: Concepts,
+  symmetries, theorems.
+\newblock \emph{Reviews of Modern Physics}, 93(4):045003, 2021.
+\newblock \doi{10.1103/RevModPhys.93.045003}. \arxiv{2011.12127}.
+
+\bibitem{PerezGarcia2007MPS}
+D.~P{\'e}rez-Garc{\'i}a, F.~Verstraete, M.~M.~Wolf, and J.~I.~Cirac.
+\newblock Matrix product state representations.
+\newblock \emph{Quantum Information \& Computation}, 7(5):401--430, 2007.
+\newblock \arxiv{quant-ph/0608197}.
+
+\bibitem{VerstraeteCirac2004PEPS}
+F.~Verstraete and J.~I.~Cirac.
+\newblock Renormalization algorithms for quantum-many body systems in two and
+  higher dimensions.
+\newblock 2004.
+\newblock \arxiv{cond-mat/0407066}.
+
+\bibitem{Cirac2017MPDO}
+J.~I.~Cirac, D.~P{\'e}rez-Garc{\'i}a, N.~Schuch, and F.~Verstraete.
+\newblock Matrix product density operators: Renormalization fixed points and
+  boundary theories.
+\newblock \emph{Annals of Physics}, 378:100--149, 2017.
+\newblock \doi{10.1016/j.aop.2016.12.030}. \arxiv{1606.00608}.
+
+\bibitem{CiracMPU2017}
+J.~I.~Cirac, D.~P{\'e}rez-Garc{\'i}a, N.~Schuch, and F.~Verstraete.
+\newblock Matrix product unitaries: Structure, symmetries, and topological
+  invariants.
+\newblock \emph{Journal of Statistical Mechanics: Theory and Experiment},
+  2017(8):083105, 2017.
+\newblock \doi{10.1088/1742-5468/aa7e3b}. \arxiv{1703.09188}.
+
+\bibitem{Molnar2018Normal}
+A.~Moln{\'a}r, J.~Garre-Rubio, D.~P{\'e}rez-Garc{\'i}a, N.~Schuch, and
+  J.~I.~Cirac.
+\newblock Normal projected entangled pair states generating the same state.
+\newblock \emph{New Journal of Physics}, 20(11):113017, 2018.
+\newblock \doi{10.1088/1367-2630/aae94f}. \arxiv{1804.04964}.
+
+\bibitem{Sanz2010Wielandt}
+M.~Sanz, D.~P{\'e}rez-Garc{\'i}a, M.~M.~Wolf, and J.~I.~Cirac.
+\newblock A quantum version of {Wielandt}'s inequality.
+\newblock \emph{IEEE Transactions on Information Theory}, 56(9):4668--4673,
+  2010.
+\newblock \doi{10.1109/TIT.2010.2054562}. \arxiv{0909.5347}.
+
+\bibitem{PerezGarcia2008StringOrder}
+D.~P{\'e}rez-Garc{\'i}a, M.~M.~Wolf, M.~Sanz, F.~Verstraete, and J.~I.~Cirac.
+\newblock String order and symmetries in quantum spin lattices.
+\newblock \emph{Physical Review Letters}, 100(16):167202, 2008.
+\newblock \doi{10.1103/PhysRevLett.100.167202}. \arxiv{0802.0447}.
+
+\bibitem{Schuch2010PEPS}
+N.~Schuch, I.~Cirac, and D.~P{\'e}rez-Garc{\'i}a.
+\newblock {PEPS} as ground states: Degeneracy and topology.
+\newblock \emph{Annals of Physics}, 325(10):2153--2192, 2010.
+\newblock \doi{10.1016/j.aop.2010.05.008}. \arxiv{1001.3807}.
+
+\bibitem{DeLasCuevas2017Irreducible}
+G.~De las Cuevas, J.~I.~Cirac, N.~Schuch, and D.~P{\'e}rez-Garc{\'i}a.
+\newblock Irreducible forms of matrix product states: Theory and
+  applications.
+\newblock \emph{Journal of Mathematical Physics}, 58(12):121901, 2017.
+\newblock \doi{10.1063/1.4998639}. \arxiv{1708.00029}.
+
+\bibitem{CiracGarreRubio2019OpenProblems}
+J.~I.~Cirac, J.~Garre-Rubio, and D.~P{\'e}rez-Garc{\'i}a.
+\newblock Mathematical open problems in projected entangled pair states.
+\newblock \emph{Revista Matem{\'a}tica Complutense}, 32(3):579--599, 2019.
+\newblock \doi{10.1007/s13163-019-00305-6}. \arxiv{1903.09439}.
+
+\bibitem{Lu2026Autoformalization}
+S.~Lu, E.~Tjoa, and J.~I.~Cirac.
+\newblock Multi-agent autoformalization of tensor network theory.
+\newblock 2026.
+\newblock \arxiv{2607.07857}.
+
+\bibitem{Fannes1992FCS}
+M.~Fannes, B.~Nachtergaele, and R.~F.~Werner.
+\newblock Finitely correlated states on quantum spin chains.
+\newblock \emph{Communications in Mathematical Physics}, 144(3):443--490, 1992.
+\newblock \doi{10.1007/BF02099178}.
+
+\bibitem{Schollwock2011DMRG}
+U.~Schollw{\"o}ck.
+\newblock The density-matrix renormalization group in the age of matrix
+  product states.
+\newblock \emph{Annals of Physics}, 326(1):96--192, 2011.
+\newblock \doi{10.1016/j.aop.2010.09.012}. \arxiv{1008.3477}.
+
+\bibitem{Orus2014Practical}
+R.~Or{\'u}s.
+\newblock A practical introduction to tensor networks: Matrix product states
+  and projected entangled pair states.
+\newblock \emph{Annals of Physics}, 349:117--158, 2014.
+\newblock \doi{10.1016/j.aop.2014.06.013}. \arxiv{1306.2164}.
+
+\bibitem{BridgemanChubb2017Handwaving}
+J.~C.~Bridgeman and C.~T.~Chubb.
+\newblock Hand-waving and interpretive dance: An introductory course on tensor
+  networks.
+\newblock \emph{Journal of Physics A: Mathematical and Theoretical},
+  50(22):223001, 2017.
+\newblock \doi{10.1088/1751-8121/aa6dc3}. \arxiv{1603.03039}.
+
+\bibitem{Wolf2012Notes}
+M.~M.~Wolf.
+\newblock Quantum channels \& operations: Guided tour.
+\newblock Lecture notes, Technical University of Munich, 2012.
+\newblock \url{https://mediatum.ub.tum.de/doc/1099654/1099654.pdf}.
+
+\bibitem{TNLean}
+The TNLean Project Contributors.
+\newblock \textsc{TNLean}: A Lean~4 formalization of the mathematical theory of
+  tensor networks.
+\newblock 2026.
+\newblock \url{https://github.com/LionSR/TNLean}.
+
+\bibitem{tenkz}
+S.~Lu.
+\newblock \pkg{}: Declarative tensor-network diagrams in {\LaTeX}.
+\newblock {\LaTeX} package, version 0.8.0, 2026.
+\newblock \url{https://github.com/LionSR/tenkz}.
+
+\end{thebibliography}

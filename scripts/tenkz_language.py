@@ -20,7 +20,7 @@ from tenkzlib.texcase import strip_comments
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = ROOT / "docs/tenkz/chapters2/generated-language-reference.tex"
-ALIASES = ROOT / "docs/tenkz/chapters2/generated-language-aliases.tex"
+ALIASES = ROOT / "docs/tenkz/history/generated-language-aliases.tex"
 CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
 # The kernel's six stages, in the order tenkz.sty loads them.  The gate reads
 # them as one text because that is what the loader assembles at run time; a
@@ -262,12 +262,12 @@ def _group(text: str, start: int) -> tuple[str, int]:
     raise ValueError(f"unclosed registry group at offset {start}")
 
 
-def load_registry() -> list[Entry]:
+def load_registry(path: Path | None = None) -> list[Entry]:
     # A record the file comments out does not run, so the tools may not read
     # it either; otherwise the registry means one thing to TeX and another to
     # everything that checks it.  The shared reader blanks a comment in place,
     # so every offset below is the offset in the file.
-    text = strip_comments(REGISTRY.read_text(encoding="utf-8"))
+    text = strip_comments((REGISTRY if path is None else path).read_text(encoding="utf-8"))
     pattern = re.compile(
         r"\\__tenkz_language_registry_"
         r"(environment|command|key|alias|example|prelude|tombstone):[n]+"
@@ -1142,13 +1142,21 @@ def _tex(value: str) -> str:
     )
 
 
+def current_reference_entries(entries: list[Entry]) -> list[Entry]:
+    """The manual teaches active vocabulary; sunset rows remain in the registry."""
+    return [entry for entry in entries
+            if not (entry.kind in {"command", "key"}
+                    and re.search(r"\bSunset \S+\.$", entry.fields[-1]))]
+
+
 def reference_texts(entries: list[Entry]) -> tuple[str, str]:
     """Render the two generated chapters; the writer and the checker share this."""
-    commands = [e.fields for e in entries if e.kind == "command"]
+    current = current_reference_entries(entries)
+    commands = [e.fields for e in current if e.kind == "command"]
     examples = {e.fields[0]: e.fields[1:] for e in entries if e.kind == "example"}
     keys = [
         e.fields
-        for e in entries
+        for e in current
         if e.kind == "key" and parse_status(e.fields[4])[0] != "alias"
     ]
     aliases = [

@@ -1,15 +1,21 @@
 % Typed atom extension and document house style.
-\section{Atom extension and house style}\label{ch:house}
+\section{Custom Atoms and Typographic Style}\label{ch:house}
 
-The stock atom skins are shared across layouts.  A dot is an unnamed tensor
-site, a box or pill carries an inscribed label, an MPO has physical input and
-output faces, and a ring is a matrix on an existing wire.  The semantic kind,
-typed ports, and visual skin are separate data.
+Good typography depends upon a disciplined visual vocabulary.  In \pkg{}, the
+standard tensor nodes are shared consistently across all layout frames: a
+\tnval{dot} represents an unnamed tensor site; a \tnval{box} or \tnval{pill}
+encloses an inscribed tensor label; an \tnval{mpo} provides facing physical input
+and output ports for local operators or MPO nodes; and a \tnval{ring} denotes a
+single-site operator or gauge matrix seated upon an existing wire.  Always
+remember that a tensor's semantic kind, its typed ports (physical vs. virtual),
+and its visual skin are three independent concepts.
 
-\subsection{Declare one typed atom}
+\subsection{Declaring a custom atom}
 
-Use \tncmd{tndeclare} only when the stock atom vocabulary cannot express a
-recurring mathematical kind:
+When should you extend the node vocabulary?  The command \tncmd{tndeclare}
+exists for those occasions when the built-in skins cannot express a specialized
+quantum many-body entity (such as a multi-legged projector $P$, an isometry
+$W$, or a disentangler $U$):
 
 \cmdsig{\textbackslash tndeclare\{atom\}\{\meta{command}\}\\
 \{skin=\meta{dot|box|pill|mpo},\\
@@ -23,36 +29,44 @@ recurring mathematical kind:
 \begin{tenkz}[cols=1] \tnprojector{P} \end{tenkz}
 \end{Verbatim}
 
-A face is an angle in the atom's own axes: \tnval{180} and \tnval{0} are the
-two ends of the wire, \tnval{90} is above and \tnval{270} below.  Types are
-\tnval{virtual} and \tnval{physical}.  The declaration creates a
-one-label atom command with optional per-use cell keys.  Its port list is
-complete: an anchor without a type is not an extension contract.
+Each port face is specified as an angle in the atom's internal coordinate axes:
+\tnval{180} and \tnval{0} are the western and eastern ends of the wire, while
+\tnval{90} points north and \tnval{270} south.  The allowed types are
+\tnval{virtual} and \tnval{physical}.  The declaration defines a one-label atom
+command that accepts optional per-cell keys.  Notice that the port specification
+must be exhaustive: in \pkg{}, a geometric anchor without a mathematical type
+does not constitute a valid extension contract.
 
-\whynote{The declaration adds a new atom kind and therefore a new word in the
-atom class.  A skin or role change on an existing atom is a key instead.}
+\whynote{Declaring an atom introduces a new mathematical entity and therefore a
+new word in the atom grammatical class.  By contrast, changing the skin or role
+of an existing atom is done through options.}
 
-There is no \tncmd{tndefine}.  Naming a repeated whole figure would hide the
-grammar benchmark and create a second topology source.  Compose ordinary TeX
-macros only outside canonical benchmark bodies, and keep their expansion in
-public tenkz syntax.
+To abbreviate repeated structures in a paper, use ordinary \TeX{} definitions
+whose expansions produce the public \pkg{} syntax.  Keep benchmark examples
+expanded so that each source states the topology it draws.
 
-\subsection{Extension gate}
+\subsection{Criteria for language extensions}
 
-A new key needs at least three manifested RMP consumers.  A new command needs
-a new grammatical class.  Every accepted capability also needs a registry
-entry, a short standalone example, a stable coded
-diagnostic, a negative test, and a teachability review.
+To protect the language from creeping bloat, \pkg{} enforces a strict gate for
+new features.  A proposed key must demonstrate at least three distinct,
+manifested consumers in the published literature; a new command must represent a
+genuinely new grammatical class.  Furthermore, every accepted feature requires a
+registry entry, a standalone example, a coded diagnostic, a negative test case,
+and a teachability review.
 
-\subsection{House style}
+\subsection{House style and typography}
 
-Use \tncmd{tnset} for document-wide metric or semantic policy and picture keys
-for local policy.  Themes may rebind semantic hues and typography; they do not
-add topology.  Use roles for meaning and labels for identity.  Never assign
-arbitrary colors to distinguish tensors of the same kind.
+Consistent style is an art that rewards restraint.  Use \tncmd{tnset} in your
+preamble to declare document-wide metrics or semantic themes, and use picture
+options for local policies.  Document themes may adjust colors and typography,
+but they never alter topology.  Use semantic roles to convey function, and
+textual labels to establish mathematical identity.  Never resort to arbitrary
+rainbow colors merely to tell identical tensors apart!
 
-Labels occupy reserved bands outside measured silhouettes.  If an entire
-picture needs more room, use the documented metric or layer separation.  A
-manual coordinate nudge is the last resort and is never canonical benchmark
-syntax.  The geometry stage measures occupied ink and separates it with one
-daylight constant.
+In \pkg{}, labels dwell in reserved bands outside measured silhouettes.  If a
+diagram feels crowded, increase the documented metric spacing or layer
+separation.  Manual coordinate nudging is an emergency measure of last resort,
+and has no place in canonical benchmark code.  The layout engine measures
+occupied ink automatically, but authored routes and label stations can still
+overlap.  Inspect the resulting figure and adjust the documented placement
+options when needed.

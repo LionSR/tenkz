@@ -3,33 +3,37 @@
 % shown on purpose, and the exercises' answers close the chapter.  Every
 % object is named in the tensor-network community's own vocabulary
 % (arXiv:2011.12127) before its spelling appears.
-\section{A twenty-minute tutorial}\label{ch:tutorial}
+\section{Tutorial}\label{ch:tutorial}
 
-Everything you will type here is the kernel surface: the one language the
-package binds the moment it loads.  If you have met an older tenkz
-document, two sentences make you current.  \tncmd{tenkzkernel} is an inert
-word --- it rebinds what loading already bound --- and the spellings it
-once switched on are dead, tombstoned in Appendix~\ref{ch:compatibility}.
-New sources need neither.
+This chapter is an invitation to learn \pkg{} by doing.  We shall climb a
+gentle ladder of eight examples, starting from a single matrix product state
+(MPS) and culminating in the expectation value of a two-dimensional PEPS state.
+In the spirit of \emph{The \TeX{}book}, each step introduces exactly one new idea
+built upon the ones before it.  Along the way, we shall meet the familiar
+objects of tensor-network theory---matrix product states, transfer operators,
+gauge transformations, 2D PEPS sheets, and double-layer norm
+networks---calling each by its standard mathematical name in the quantum
+information and condensed matter literature (e.g. arXiv:2011.12127) as it
+arrives.
 
-Eight examples take you from one word of tensors to the expectation value
-of a two-dimensional state, and each adds exactly one idea to the one
-before it.  The objects are the ones the tensor-network literature draws
---- the matrix product state, its transfer matrix, the gauge identity,
-the PEPS and its double layer --- and each is named in that language as
-it arrives.  Every source is complete: paste it into any document that
-loads the package and it compiles as printed.  Read each one in the same
-order --- layout, picture policy, then body declarations.  This tutorial
-needs only \tnenv{tenkz} and, at the equation step, \tnenv{tenkzeq}; when
-a figure of your own wants a ring or another carrier this ladder does not
-climb, the chooser in Section~\ref{ch:chooser} decides by topology.
+The package loads the diagram language automatically.  The examples use its
+current commands and keys throughout.
 
-\subsection{A word of tensors}
+Every code example is complete: paste it into any document that loads \pkg{}
+and it will compile exactly as printed.  As you read each example, look out
+for the little ``dangerous bend'' signs (\textdbend) in the margin: they flag
+technical subtleties and deeper design insights that you may safely skip on a
+first reading.  At the end of each section, you will find short exercises to
+test your understanding; their answers await you at the end of the chapter.
+(Try to solve them before looking!)
 
-The first object is the matrix product state: one tensor $A$ per site,
-with two virtual indices of bond dimension $D$ that neighbouring sites
-sum over and one physical index of dimension $d$ that stays free.  Here
-are three sites of it.
+\subsection{A chain of tensors}
+
+Let us begin with the foundation of one-dimensional tensor networks: the
+matrix product state (MPS).  Each lattice site carries one tensor $A$, with two
+horizontal virtual indices of bond dimension $D$ (or $\chi$) that contract with
+adjacent sites, and one vertical physical index of dimension $d$ corresponding
+to the local Hilbert space.  Here is a three-site segment:
 
 \begin{tnexample}[
   label={tnex:tut-word},
@@ -48,36 +52,43 @@ are three sites of it.
 \end{tenkz}
 \end{tnexample}
 
-You have drawn the matrix-product word $(A^{i_1}A^{i_2}A^{i_3})_{\alpha\beta}$.
-\tnenv{tenkz} holds one typed
-tensor network in one frame: \tnkey{cols=3} lays three cells on a wire,
-each \tncmd{tn} declares an atom in the next cell, and \verb|&| advances
-one site.  Adjacent cells contract by default --- those are the virtual
-bonds --- so the only indices you declare are the open ones.
-\tnkey{ports=} types each face and may label it; a port is the point
-where an index line meets its tensor.  A typed port with no partner is
-an open index --- an uncontracted one.  Open ink is declared content:
-the picture exposes exactly the indices its atoms state, and the margin
-quotes the boundary signature --- the list of the picture's uncontracted
-indices --- that the compiler wrote to the \tnfile{.tnlog} event stream:
-two virtual stubs, three physical legs, nothing you did not say.
+There!  You have just typeset your first matrix product state contraction
+$(A^{i_1}A^{i_2}A^{i_3})_{\alpha\beta}$.  Notice how cleanly the code
+expresses the underlying mathematics.  The \tnenv{tenkz} environment holds one
+typed tensor network in a single, coherent frame: \tnkey{cols=3} establishes
+three lattice sites along the 1D chain, each \tncmd{tn} declares a local tensor
+at that site, and the familiar \verb|&| alignment tab advances to the next site.
+Because adjacent sites contract by default---forming the internal virtual
+bonds---the only indices you need to declare explicitly are the open ones: the
+boundary virtual indices $\alpha,\beta$ and the physical legs $i_1,i_2,i_3$.
 
-\dbendpar Beamer reads a frame's body before typesetting it, so a chained
-picture reaches the environment with its \verb|&| already an ordinary
-alignment tab.  The picture reads its body as captured tokens and finds
-the tab there itself, so it compiles in a plain frame; no
-\texttt{[fragile]} marking is needed.
+The \tnkey{ports=} key defines each port around an atom's perimeter and
+optionally attaches an index label.  (A port is simply the geometric anchor
+where an index wire meets its tensor node.)  A typed port that finds no partner
+cell to contract with remains an open physical or virtual index.  Notice also
+the marginal annotation: during compilation, \pkg{} audits the picture and
+writes its resolved boundary signature into the \tnfile{.tnlog} event stream:
+two virtual boundary stubs, three physical legs, and nothing you did not ask
+for.
 
-\tnexercise{ex:tut-matrix} Draw the plain matrix $M$ --- one atom, both
-virtual indices open, no physical leg --- and say what boundary
-signature, what list of uncontracted indices, it writes.
+\dbendpar Users of the \textsf{beamer} presentation package will be pleased to
+learn that \pkg{} pictures require no special fuss.  Because \textsf{beamer}
+scans a frame's body before typesetting, an alignment tab \verb|&| inside a
+diagram reaches \pkg{} as an ordinary token.  The environment captures its body
+and interprets the tab directly, so your diagrams compile happily inside
+standard slides without needing the \texttt{[fragile]} option.
 
-\subsection{Layers and side policy}
+\tnexercise{ex:tut-matrix} Try drawing a single matrix $M$ by itself---one
+tensor atom, both virtual indices open, with no physical leg---and determine
+what boundary signature \pkg{} writes to the log.
 
-One new idea: rows are layers.  The object is the map every
-matrix-product calculation applies and reapplies, the transfer channel
-$\mathcal E_A(X)=\sum_i A^iXA^{i\dagger}$ --- a ket layer over a bra
-layer, with the matrix $X$ closing the input side.
+\subsection{Layers and boundary policies}
+
+Now let us add a second idea to our repertoire: rows represent layers.  Our
+object of interest is the workhorse of matrix-product algorithms (such as DMRG
+and TEBD), the transfer operator $\mathcal E_A(X)=\sum_i A^iXA^{i\dagger}$,
+which sandwiches an input matrix $X$ on the virtual space between a ket layer
+above and a bra layer below.
 
 \begin{tnexample}[
   formula={\mathcal E_A(X)=\sum_i A^i X A^{i\dagger}},
@@ -95,42 +106,48 @@ layer, with the matrix $X$ closing the input side.
 \end{tenkz}
 \end{tnexample}
 
-\tnkey{rows=} declares a ket layer over a bra layer, and the frame
-contracts their facing physical ports --- the vertical bond that sums $i$.
-The conjugate is label mathematics: $\overline{A}$ is a name, not a flag.
-The sides then state policy from a four-word alphabet.  \tnval{open} mints
-legs and puts them in the signature; \tnval{none}, the default, is a side
-with no indices at all; \tnval{trace} returns a row to itself; \tnval{cup}
-closes adjacent layers onto each other.  Here \tnkey{east=}\tnval{\{cup=\$X\$\}}
-closes the pair through the matrix $X$, and the west pair stays open, so
-the picture is a map on virtual matrices --- which is exactly what its
-two-entry signature says.
+Here \tnkey{rows=} declares a ket layer standing over a bra layer, and the
+frame automatically contracts their facing physical ports---producing the
+vertical bond that sums over the physical index $i$.  Notice that complex
+conjugation is pure mathematics: $\overline{A}$ is an ordinary label name, not
+a cryptic internal switch!
 
-\dbendpar The labelled cup is sugar: it expands to the side word
-\tnval{cup} plus a ring atom standing halfway along the generated cup
-wire, so the kernel record stream never contains a ``labelled cup'',
-only a wire named \tnval{cup-1-2} and an atom on it.  Every sugar row in
-the registry states its expansion this way, and \tncmd{tnset}\tnval{\{strict\}}
-rejects sugar outright.
+The perimeter sides declare boundary policy from a tidy four-word alphabet:
+\tnval{open} mints legs and records them in the boundary signature;
+\tnval{none} (the default) leaves a side unadorned; \tnval{trace} loops a row
+back onto itself; and \tnval{cup} closes adjacent layers together.  In this
+example, \tnkey{east=}\tnval{\{cup=\$X\$\}} closes the eastern pair through the
+matrix $X$, while the western pair remains open, yielding a linear map on
+virtual matrices---precisely matching the two-entry signature quoted in the
+margin.
 
-\tnexercise{ex:tut-transfer} Draw the transfer matrix
-$E=\sum_i A^i\otimes\overline{A^i}$ of the state --- the map on the
-$D^2$-dimensional doubled virtual space: ket over bra, the physical pair
-contracted, all four virtual ends open.
+\dbendpar A labelled cup is what computer scientists call ``syntactic sugar'':
+behind the scenes, \pkg{} expands it into an ordinary \tnval{cup} wire plus a
+ring atom seated at its midpoint.  The kernel record stream never contains an
+ad-hoc ``labelled cup'' entity, but only a wire named \tnval{cup-1-2} and an
+atom on it.  Every convenience sugar row in the language registry defines its
+canonical expansion this way, and authors who insist on absolute purity can
+specify \tncmd{tnset}\tnval{\{strict\}} to reject sugar outright.
 
-\tnexercise{ex:tut-closed} A contraction loop with no tensor on it ---
-the spelling \verb|\tnwire[closed]{(1,1)}{(2,1)}| --- refuses to
-compile.  Why?
+\tnexercise{ex:tut-transfer} Draw the full transfer matrix
+$E=\sum_i A^i\otimes\overline{A^i}$ of the state---the map on the
+$D^2$-dimensional doubled virtual space: a ket layer over a bra layer, with
+the physical pair contracted and all four virtual ends left open.
 
-\subsection{The boundary alphabet, three ways}
+\tnexercise{ex:tut-closed} A contraction loop with no tensor on it---the
+spelling \verb|\tnwire[closed]{(1,1)}{(2,1)}|---refuses to compile.  Why?
 
-One row of matrices is three objects of the literature: a word with
-trivial boundary, the open-boundary matrix product
-$(M_1M_2M_3)_{\alpha\beta}$, and the periodic trace
-$\operatorname{tr}(M_1M_2M_3)$ --- the coefficient of a matrix product
-state with open and with periodic boundary conditions.  The pair
-spelling \tnkey{boundary=} states \tnkey{west=} and \tnkey{east=} at
-once, and its three words draw all three objects from one row:
+\subsection{Boundary conditions: open, periodic, and closed}
+
+A single row of matrices can represent three distinct mathematical objects
+frequently encountered in tensor-network algorithms: an open matrix product
+$(M_1M_2M_3)_{\alpha\beta}$ with free virtual boundary bonds, a finite chain
+with trivial 1D boundary vectors where outer virtual bonds close without exposed
+ink, and the periodic trace $\operatorname{tr}(M_1M_2M_3)$ representing a
+state with periodic boundary conditions (PBC).  The convenient \tnkey{boundary=}
+key sets both \tnkey{west=} and \tnkey{east=} policies simultaneously.  Watch
+how easily its three settings produce all three objects from the very same row
+of tensors:
 
 \begin{tnmultiples}[
   formula={(M_1M_2M_3)_{\alpha\beta}},
@@ -149,68 +166,76 @@ once, and its three words draw all three objects from one row:
 \end{tenkz}
 \end{tnmultiples}
 
-One family, one figure: the three panels share every token except the
-word under them.  \tnval{none} is the explicit spelling of the default
---- a side that says nothing exposes nothing, the way a bond that closes
-trivially at the chain's outer ends deserves no ink.  \tnval{open} turns
-the row into the matrix $M_1M_2M_3$, and \tnval{periodic} (sugar for
-\tnkey{west=}\tnval{trace}, \tnkey{east=}\tnval{trace}) closes the row on
-itself.  Same atoms, same bonds; only the boundary signature moves.
+This is a delightful demonstration of ``small multiples'' (in Edward Tufte's
+sense): all three panels share identical code, varying only in the boundary
+word beneath them.  The setting \tnval{none} explicitly spells the default---a
+side that specifies no policy exposes no dangling ink, corresponding to a
+finite chain whose outer boundary closes with trivial 1D boundary vectors.
+The word \tnval{open} turns the row into an open matrix
+$(M_1M_2M_3)_{\alpha\beta}$ with exposed boundary virtual bonds, while
+\tnval{periodic} (convenient sugar for \tnkey{west=}\tnval{trace},
+\tnkey{east=}\tnval{trace}) loops the virtual bond back upon itself to compute
+the trace.  The atoms and internal bonds remain completely identical; only the
+boundary signature moves!
 
-\dbendpar The default is a statement, not an omission.  The deleted
-0.7 dialect drew west and east stubs unbidden and sealed them with
-\tnval{none}; the kernel mints a leg only on declaration, so
-\tnval{none} now changes nothing and merely says so.  That reading died
-with the old front end --- if you sealed stubs once, stop: there are no
-stubs to seal.
+\dbendpar A boundary leg appears only when it is declared.  The setting
+\tnval{none} states the default; use \tnval{open} when the diagram should
+expose an index.
 
-\tnexercise{ex:tut-trace} Draw the coefficient of the periodic matrix
-product state --- the scalar $\operatorname{tr}(M_1M_2M_3)$ --- and say
-what its boundary signature is.
+\tnexercise{ex:tut-trace} Draw the coefficient of a periodic matrix product
+state---the scalar $\operatorname{tr}(M_1M_2M_3)$---and state what boundary
+signature it produces.
 
-\subsection{A mark over a run}
+\subsection{Highlighting subsystems and regions}
 
-Blocking is the coarse-graining step of every renormalization argument
-in the matrix-product literature: three sites read as one blocked tensor
-$A^{[3]}$.  The contraction does not change; a mark speaks over it.
+In real-space renormalization group (RG) arguments, DMRG site-blocking, or
+entanglement bipartition studies, one frequently groups several adjacent sites
+into an effective block tensor $A^{[3]}$ or defines a subsystem $A$.  The
+underlying tensor contraction does not change; instead, an annotation or
+``mark'' speaks over the grouping.
 
 \begin{tnexample}[
   formula={A^{[3]}=A^{i_1}A^{i_2}A^{i_3}},
   caption={blocking three sites},
-  index={The bracket speaks from the south, past the site names and their
-    ink.  The signature is Example \ref{tnex:tut-word}'s, unchanged: a
+  index={The bracket speaks from the south.  Box silhouettes keep the site
+    names inside their measured ink.  The signature is Example \ref{tnex:tut-word}'s, unchanged: a
     mark owns no topology.},
   signature={kernel-boundary|signature=open:e, open:w, phys:n, phys:n, phys:n}]
 % Formula: the blocked word A^{[3]}; the mark adds no index.
 \begin{tenkz}[cols=3]
-  \tn[ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
-  \tn[ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
-  \tn[ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
+  \tn[skin=box, ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
   \tnmark[form=bracket]{(1,1) .. (1,3)}{$A^{[3]}$}
 \end{tenkz}
 \end{tnexample}
 
-\tncmd{tnmark} annotates a target without touching the contraction.  The
-target here is a selector: \tnval{(1,1)} names a cell of the frame, and
-the two-dot range \tnval{(1,1) .. (1,3)} names the records between two
-cells in the frame's own order.  A bracket that names no side speaks from
-the south, where a brace under a span belongs.  Compare the margin with
-Example~\ref{tnex:tut-word}: the signature has not moved, because marks
-never own topology --- delete every mark and no contraction changes.
+The \tncmd{tnmark} command annotates a designated target without altering the
+underlying network topology.  The target here is specified as a selector:
+\tnval{(1,1)} names a cell in the frame, and the two-dot range \tnval{(1,1) ..
+(1,3)} selects all records spanning between the two cells in sequence.  A
+bracket mark with no side specified naturally speaks from the south, where a
+horizontal brace under a formula belongs.  Observe the margin note: the boundary
+signature is entirely identical to Example~\ref{tnex:tut-word}!  Marks own
+annotations, never topology: if you delete every mark from a picture, not a
+single tensor contraction changes.
 
-\dbendpar The range is written with two dots, never a hyphen, because
-generated record names carry hyphens of their own: a cluster member is
-named \tnval{a-2-2}, and a hyphen range could not be told from it.
+\dbendpar Notice that the span is written with two dots (\texttt{..}), rather
+than a hyphen.  This is because internal generated record names already use
+hyphens (for instance, a cluster atom is named \tnval{a-2-2}); using two dots
+keeps ranges visually unambiguous and easy for \TeX{} to parse.
 
-\tnexercise{ex:tut-enclosure} Restate the same blocked run as a tinted
-enclosure whose label sits below the contour.
+\tnexercise{ex:tut-enclosure} Try restating the same blocked run using a tinted
+enclosure whose label is placed below the bounding contour.
 
-\subsection{An equation under audit}
+\subsection{Diagrammatic equations and verification}
 
-The fifth idea is the one the others were preparing: whole pictures
-compose into an equation, and the equation is an audit scope.  The
-identity is the gauge freedom of the matrix product state --- two
-tensors, $B^i=XA^iX^{-1}$, generating the same state.
+We now arrive at one of the crowning features of \pkg{}: composing multiple
+diagrams into an equation, and having \TeX{} verify that index contractions
+remain balanced across equality signs!  Our example is the fundamental gauge
+freedom of matrix product states: two sets of tensors $A$ and $B$, related by
+an invertible gauge matrix $X$ via $B^i = X A^i X^{-1}$, generate the exact same
+quantum state.
 
 \begin{tnexample}[
   label={tnex:tut-eq},
@@ -236,18 +261,19 @@ tensors, $B^i=XA^iX^{-1}$, generating the same state.
 \]
 \end{tnexample}
 
-\tnenv{tenkzeq} places its panels around the mathematics between them ---
-the equals sign is ordinary TeX --- under one shared metric, so a glyph
-is one size on both sides of an equality.  Then it audits: every panel
-carries a boundary signature, and a relation requires its two sides to
-expose the same one.  \tnkey{check=}\tnval{signature} names that audit
-(it is also the default: writing it states what is already running), and
-the margin quotes the \tnval{check} event the equation wrote beside each
-panel's boundary line.  A diagrammatic identity in this language is not a
-juxtaposition that looks right; it is a comparison that ran.
+The \tnenv{tenkzeq} environment neatly balances tensor diagrams on either side
+of standard mathematical relation symbols under a unified scale and baseline.
+Even better, it audits!  In tensor network theory, a diagrammatic identity
+requires both sides of an equality to match in tensor rank and index structure:
+the same set of open physical and virtual indices.  With
+\tnkey{check=}\tnval{signature} active (which is the default setting), \pkg{}
+verifies this balance automatically, recording the \tnval{check} event in the
+\tnfile{.tnlog} stream.  This checks boundary index compatibility: both sides
+must carry matching physical and virtual open ports.  The mathematical identity
+itself remains the author's responsibility.
 
-What does a failed comparison look like?  Drop the physical leg of $B$
-and the compiler answers:
+What happens when an equation fails the audit?  Let us deliberately omit the
+physical leg from tensor $B$, and see how the compiler responds:
 
 \begin{tnrefusal}[
   caption={the audit catches a dropped leg},
@@ -272,31 +298,34 @@ and the compiler answers:
 \]
 \end{tnrefusal}
 
-Read refusals as language, not as accidents: the code names the check
-that failed, and the message prints both signatures so the missing entry
-is visible at once.  The correction is the port list of
-Example~\ref{tnex:tut-eq}'s~$B$.
+Don't be alarmed by compiler refusals!  Think of them as a vigilant proofreader
+standing by your shoulder.  The diagnostic code names the exact check that
+failed, and prints both boundary signatures side by side so the missing index
+is immediately apparent.  The remedy here is simply to restore the port
+\tnval{90:physical:\$i\$} to tensor~$B$.
 
-\ddbendpar Relations are one of three joiner classes.  A sum also
-requires equal signatures; a product instead contracts the facing cut,
-east entries of the left factor cancelling west entries of the right,
-and exposes the rest.  A relation whose two sides are known, unequal, and
-equal anyway for a reason the diagram does not draw carries a recorded opt-out,
-\tnval{off=\{<relation>: <reason>\}}, written to the event stream beside
-the waiver.  The audit cannot be switched off silently.
+\ddbendpar Mathematical relations are one of three joiner classes in
+\tnenv{tenkzeq}.  A summation also requires matching signatures; a product, by
+contrast, contracts facing cuts (eastern entries of the left factor cancelling
+western entries of the right) and exposes the remainder.  Should you ever need
+to state an equality where the two sides are legitimately unequal for reasons
+outside the diagram (such as an implicit projection), you can record an explicit
+opt-out using \tnval{off=\{<relation>: <reason>\}}.  The waiver is faithfully
+logged to the event stream, ensuring that the audit cannot be silenced
+covertly.
 
-\tnexercise{ex:tut-checkword} Why does
-\tnkey{check=}\tnval{\{signature=false\}} refuse?
+\tnexercise{ex:tut-checkword} Why does the spelling
+\tnkey{check=}\tnval{\{signature=false\}} trigger a refusal?
 
-\subsection{A sheet of tensors}
+\subsection{Two-dimensional lattices and PEPS}
 
-The chain taught the whole alphabet; the second dimension only adds a
-frame.  The object is the projected entangled pair state (PEPS), the
-wavefunction of a two-dimensional system: one five-index tensor $A$ per
-lattice site, four virtual indices of bond dimension $D$ contracted with
-the four neighbours, one physical index of dimension $d$ standing free
-above the sheet, and the tensor $A$ generating the state
-$\lvert\psi(A)\rangle$.
+Now that we have explored one-dimensional chains, we are ready to step into
+the second dimension.  Our model object is the projected entangled pair state
+(PEPS), which represents the wavefunction $\lvert\psi(A)\rangle$
+of a two-dimensional quantum lattice system (such as a 2D spin model): one
+five-index tensor $A$ per site, four virtual indices of bond dimension $D$
+contracted with its four planar nearest neighbours, and one physical index of
+local Hilbert space dimension $d$ standing perpendicular to the sheet.
 
 \begin{tnexample}[
   label={tnex:tut-peps},
@@ -317,33 +346,38 @@ $\lvert\psi(A)\rangle$.
 \end{tenkz}
 \end{tnexample}
 
-Two spellings put the sheet on the page.  \tnkey{lattice=}\tnval{\{3x3\}}
-is sugar for three wire rows of three columns, and the cells contract
-with their neighbours exactly as chain cells do --- those are the virtual
-bonds of the sheet.  \tnkey{frame=}\tnval{plane} projects the grid, and
-\tnkey{physical=}\tnval{up} grows one physical leg per site along the
-plane's transverse axis --- the direction that stands vertically on the
-page and belongs to the frame itself.  No side policy is stated, so no
-virtual index is exposed: the patch has open boundary conditions, and its
-boundary signature is the nine physical legs of the wavefunction.
+Just two concise options bring this two-dimensional sheet onto the page.  The
+option \tnkey{lattice=}\tnval{\{3x3\}} is convenient shorthand for three rows
+of three sites each, whose cells contract with their neighbours just as
+chain cells do---these form the in-plane virtual bonds mediating 2D entanglement.
+Next, \tnkey{frame=}\tnval{plane} projects the grid into perspective, while
+\tnkey{physical=}\tnval{up} sprouts one physical leg per site along the
+plane's transverse axis, pointing vertically on the page into the local Hilbert
+space.  Because no boundary policy is stated on the perimeter, no virtual index
+is exposed: the patch has open boundary conditions, and its boundary signature
+lists exactly the nine physical legs of the state.
 
-\dbendpar A plane owns three directions, and only two lie in the sheet.
-\tnval{ports=\{90:physical\}} on a plane atom is the in-sheet north face,
-not the transverse leg; the physical axis is reached only through the
-picture policy.  A PEPS tensor is four numeric ports plus the policy ---
-never a fifth angle compensating for the projection.
+\dbendpar A projected plane possesses three spatial directions, but only two
+lie within the sheet itself.  Specifying \tnval{ports=\{90:physical\}} on a
+planar atom refers to the in-sheet north face, not the upward transverse leg;
+the transverse physical axis is governed through the picture policy.  A PEPS
+tensor is described by four numeric planar ports plus the frame policy---never
+by an artificial fifth angle attempting to fake the 3D projection.
 
-\tnexercise{ex:tut-pepstensor} Draw one PEPS tensor by itself --- the
-five-index $A^{i}_{\,uldr}$: four open virtual ports labelled $u$, $l$,
-$d$, $r$ in the sheet, and the physical leg above.
+\tnexercise{ex:tut-pepstensor} Try drawing a single PEPS tensor by itself---the
+five-index $A^{i}_{\,uldr}$: four open virtual ports labelled $u$, $l$, $d$,
+$r$ in the sheet, and the physical leg pointing above.
 
-\subsection{One sheet, four readings}
+\subsection{Planar projections and viewing angles}
 
-The same sheet is four objects of the two-dimensional literature, and
-one enum word turns between them: a fully contracted network is a
-partition function $Z$; legs up is the state $\lvert\psi\rangle$; legs
-down is its conjugate $\langle\psi\rvert$; legs both ways is a projected
-entangled pair operator $O$, the PEPO.
+The very same sheet of tensors can represent four fundamental concepts of the
+two-dimensional literature, selected by a single enumeration key: a fully
+contracted network computes a classical partition function $Z$ or scalar
+overlap; physical legs pointing up define the quantum ket state
+$\lvert\psi\rangle$; physical legs pointing down yield the conjugate bra
+$\langle\psi\rvert$; and physical legs extending in both directions produce a
+Projected Entangled Pair Operator (PEPO) $O$ representing a 2D Hamiltonian or
+density matrix.
 
 \begin{tnmultiples}[
   formula={Z,\;\lvert\psi\rangle,\;\langle\psi\rvert,\;O},
@@ -363,26 +397,28 @@ entangled pair operator $O$, the PEPO.
 \end{tenkz}
 \end{tnmultiples}
 
-One family, one figure again: the four panels share every token except
-the word under them, and the family is enumerated in full.  The
-signature tells a ket from a bra before any render is looked at: a leg
-above the sheet writes \tnval{phys:n}, a leg below writes \tnval{phys:s},
-so the record stream distinguishes the state from its dual, and the PEPO
-panel exposes both lists at once.
+Here again we see the elegance of small multiples: the four panels share every
+token of input except the policy key beneath them.  Moreover, the boundary
+signature distinguishes a ket from a bra even before the diagram is rendered: a
+leg extending above the sheet logs \tnval{phys:n}, while one extending below
+logs \tnval{phys:s}.  The event stream tells them apart immediately, and the
+PEPO panel exposes both lists simultaneously.
 
-\tnexercise{ex:tut-torus} A PEPS with periodic boundary conditions lives
-on a torus.  The one word \tnkey{surface=}\tnval{torus} closes all four
-sides of the patch --- sugar for \tnval{trace} on each of \tnkey{west=},
-\tnkey{east=}, \tnkey{north=}, and \tnkey{south=}.  What does it change
-in the boundary signature of Example~\ref{tnex:tut-peps}, and what in
-the network?
+\tnexercise{ex:tut-torus} A PEPS with periodic boundary conditions naturally
+lives on a torus.  The single key \tnkey{surface=}\tnval{torus} wraps all four
+sides of the patch---convenient sugar for \tnval{trace} on each of
+\tnkey{west=}, \tnkey{east=}, \tnkey{north=}, and \tnkey{south=}.  What does
+this change in the boundary signature of Example~\ref{tnex:tut-peps}, and what
+does it change in the network?
 
-\subsection{The double layer}
+\subsection{Double layers and expectation values}
 
-Every expectation value in the PEPS literature is computed in the double
-layer: the conjugate sheet laid over the state, each site's physical
-index contracted with its conjugate copy.  The norm
-$\langle\psi|\psi\rangle$ is the double layer with nothing inserted.
+Virtually every expectation value or correlation function in the PEPS
+literature is computed within the ``double layer'': a conjugate bra sheet laid
+atop the ket state, with each site's physical index contracted with its conjugate
+partner to yield an effective 2D network with squared bond dimension $D^2$.  The
+norm $\langle\psi|\psi\rangle$ is simply the double layer with no operator
+inserted between them:
 
 \begin{tnexample}[
   label={tnex:tut-doublelayer},
@@ -410,26 +446,27 @@ $\langle\psi|\psi\rangle$ is the double layer with nothing inserted.
 \end{tenkz}
 \end{tnexample}
 
-\tnval{planes} is sugar for one plane frame with a two-member basis ---
-a ket sheet and a bra sheet --- so both copies live in one frame and
-every site has a member address: \tnval{(r,c,1)} is the ket copy of cell
-\tnval{(r,c)}, \tnval{(r,c,2)} the bra copy.  A multi-member basis draws
-no bond it is not told --- \tnkey{bonds=}\tnval{none} says so --- and the
-body declares each one: eight virtual bonds, sheet by sheet, then four
-ket--bra pairings.  A pairing carries the type neither of its ends can
-state, because a member address names a lattice place and a place is not
-a port; the frame knows its transverse axis, types the wire physical,
-and the record stream says so.
+The key \tnval{planes} provides shorthand for a plane frame possessing a
+two-member basis: sheet~1 for the ket, and sheet~2 for the bra.  Both sheets
+inhabit a single coordinate frame, and every site is addressed as
+\tnval{(r,c,sheet)}.  Because a multi-member basis does not guess your wiring,
+we specify \tnkey{bonds=}\tnval{none} and declare each bond explicitly in the
+body: eight in-sheet virtual bonds, followed by four vertical ket--bra
+contractions.  Notice how cleanly \pkg{} handles these vertical wires: because
+a member address names a lattice position rather than an explicit port, the
+frame uses its knowledge of the transverse axis to type the wire as physical
+automatically.
 
-\dbendpar The two sheets interleave in projection, and several bonds
-pass close by sites of the other sheet.  Nothing contracts there:
-coordinate coincidence neither identifies records nor creates an edge,
-and the only contractions are the twelve wires the body declares.
+\dbendpar In projection, the two sheets naturally overlap, and several bond
+lines pass near vertices of the opposite sheet.  Rest assured that nothing
+contracts by accident: geometric coincidence in \TeX{} never creates an edge!
+The only contractions that exist are the twelve wires explicitly declared in
+the body.
 
-\tnexercise{ex:tut-expectation} Insert a one-site operator.  The
-expectation value $\langle\psi\rvert O\lvert\psi\rangle$ stands the
-ring $O$ on one ket--bra pairing: name the pairing wire and put the
-operator halfway along it.
+\tnexercise{ex:tut-expectation} Now let us insert a local operator: the
+expectation value $\langle\psi\rvert O\lvert\psi\rangle$ places a ring atom $O$
+along one of the ket--bra pairing wires.  Name that pairing wire, and seat the
+operator halfway along its length.
 
 \subsection{Answers to the exercises}
 
@@ -460,12 +497,13 @@ operator halfway along it.
 \end{tenkz}
 \end{tnexample}
 
-\tnanswer{ex:tut-closed} A closed wire is a smooth cycle, so it has no
-ends to give; every other wire has exactly two.  The spelling states
-both at once and is refused with the coded error
+\tnanswer{ex:tut-closed} A closed wire represents a smooth, self-contained loop,
+so it has no separate endpoints to specify; every open wire, by contrast,
+connects exactly two points.  Specifying both at once is contradictory, and
+\pkg{} catches it with the informative diagnostic code
 \tnval{[TKZ-LANG-WIRE-ARITY]}: \emph{a closed wire takes no positional
-ends; every other wire takes exactly two}.  Keep \tnval{closed} for a
-free loop, or keep the two ends for a bond.
+ends; every other wire takes exactly two}.  Use \tnval{closed} when you want a
+free loop, and specify two endpoints when you want a standard bond.
 
 \begin{tnexample}[
   answer={ex:tut-trace},
@@ -489,21 +527,21 @@ free loop, or keep the two ends for a bond.
   signature={kernel-boundary|signature=open:e, open:w, phys:n, phys:n, phys:n}]
 % Formula: the blocked word inside one tinted contour.
 \begin{tenkz}[cols=3]
-  \tn[ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
-  \tn[ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
-  \tn[ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
+  \tn[skin=box, ports={180:virtual:$\alpha$, 0:virtual, 90:physical:$i_1$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual, 90:physical:$i_2$}]{A} &
+  \tn[skin=box, ports={180:virtual, 0:virtual:$\beta$, 90:physical:$i_3$}]{A}
   \tnmark[form=enclosure, tint,
           label pos=270]{(1,1) .. (1,3)}{$A^{[3]}$}
 \end{tenkz}
 \end{tnexample}
 
-\tnanswer{ex:tut-checkword} The audit refuses words it does not know
-rather than passing over them, because a spelling the audit ignores is a
-comparison you believe is running and is not.  The coded error is
+\tnanswer{ex:tut-checkword} The audit deliberately refuses unrecognized
+keywords rather than quietly ignoring them, because a check that fails silently
+is an audit you believe is running when it is not!  The coded error is
 \tnval{[TKZ-EQ-CHECK-WORD]}: \emph{the audit does not know
 `signature=false'; check= states the audit (signature) and its recorded opt-outs
-(off=\{<relation>: <reason>\})}.  The word \tnval{signature} names the
-audit; it is not a switch and therefore takes no value.
+(off=\{<relation>: <reason>\})}.  The keyword \tnval{signature} names the
+audit itself; it is not a boolean flag, and therefore takes no value.
 
 \begin{tnexample}[
   answer={ex:tut-pepstensor},
@@ -522,14 +560,15 @@ audit; it is not a switch and therefore takes no value.
 \end{tenkz}
 \end{tnexample}
 
-\tnanswer{ex:tut-torus} Nothing moves in the signature, and six wires
-appear in the network.  Each \tnval{trace} closes virtual bonds the
-patch never exposed, so the boundary signature still reads nine physical
-legs; the network gains one wrap wire per row and per column ---
-\tnval{wrap-1} through \tnval{wrap-3} and \tnval{wrap-col-1} through
-\tnval{wrap-col-3} --- closing the sheet into a torus.  The signature is
-the boundary, not the topology: the open patch and the periodic state
-expose one list and are different networks.
+\tnanswer{ex:tut-torus} The boundary signature does not change at all, but six
+new wrap wires appear in the diagram.  Because each \tnval{trace} closes
+in-sheet virtual bonds that were never exposed on the perimeter, the boundary
+signature continues to record nine physical legs.  Meanwhile, the network gains
+one wrap wire per row and per column (\tnval{wrap-1} through \tnval{wrap-3} and
+\tnval{wrap-col-1} through \tnval{wrap-col-3}), closing the flat patch into a
+topological torus.  Always remember: the boundary signature records external
+connections, not internal topology!  The open patch and the periodic state
+expose identical boundary lists, yet represent fundamentally different networks.
 
 \begin{tnexample}[
   answer={ex:tut-expectation},

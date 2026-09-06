@@ -1488,16 +1488,22 @@ def _material_text(manifest: dict, name: str) -> str:
     return path.read_bytes().decode("utf-8", errors="replace") if path.is_file() else ""
 
 
-def _live_bibtex(bibliography: str) -> str:
-    """The entries of a BibTeX file, with its prose and its comments removed.
+def _live_bibtex(bibliography: str, key: str | None = None) -> str:
+    """The document's declared entries, stripped of comments and whitespace.
 
-    Everything outside an entry is prose BibTeX never reads, and a `%` line is
+    A TeX-style comment (`% ...`) or a BibTeX block outside an entry is
     a comment by every convention this repository writes them under. Both can
     hold a version, a year, or a month, and neither states one: the record's
     own fields do, and they are what the version check reads.
+    When `key` is given, only the entry with that citation key is returned,
+    ensuring that other cited works in the bibliography cannot satisfy the
+    package's own release assertions.
     """
 
     uncommented = re.sub(r"(?m)^\s*%.*$", "", bibliography)
+    if key is not None:
+        match = re.search(rf"@\w+\s*\{{\s*{re.escape(key)}\s*,.*?\n\}}", uncommented, re.DOTALL)
+        return match.group(0) if match else ""
     return "\n".join(re.findall(r"@\w+\s*\{.*?\n\}", uncommented, re.DOTALL))
 
 
@@ -1527,22 +1533,23 @@ def check_version(release: Release, manifest: dict) -> Report:
             f"the citation record must state {field_name} {value} as its own "
             f"field, once; it states {stated}",
         )
-    bibliography = _live_bibtex(_material_text(manifest, "tenkz.bib"))
+    entry = _live_bibtex(_material_text(manifest, "tenkz.bib"), key="tenkz")
     year, month, _ = release.date.split("-")
-    # Read from the fields themselves, with the comments taken out first: a
+    # Read from the fields of the package's own entry, with comments taken out first: a
     # BibTeX comment holding the right year beside a live field holding last
-    # year's is a stale record, and it reads as one here.
+    # year's is a stale record, and searching the whole bibliography would allow
+    # cited literature from the same year to mask a stale package entry.
     report.require(
         re.search(rf"note\s*=\s*\{{[^}}]*version\s+{re.escape(release.version)}",
-                  bibliography) is not None,
+                  entry) is not None,
         f"the BibTeX record must state version {release.version} in its note field",
     )
     report.require(
-        re.search(rf"year\s*=\s*\{{\s*{year}\s*\}}", bibliography) is not None,
+        re.search(rf"year\s*=\s*\{{\s*{year}\s*\}}", entry) is not None,
         f"the BibTeX record must state year {year}",
     )
     report.require(
-        re.search(rf"month\s*=\s*\{{\s*{int(month)}\s*\}}", bibliography) is not None,
+        re.search(rf"month\s*=\s*\{{\s*{int(month)}\s*\}}", entry) is not None,
         f"the BibTeX record must state month {int(month)}",
     )
     report.notes.append(f"{release.archive_stem}.zip from v{release.version} of {release.date}")
@@ -2070,8 +2077,11 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
     manual = executed_tex(text("docs/tenkz/manual2.tex"), ROOT / "docs" / "tenkz")
     changes = text("docs/tenkz/CHANGES.md")
     tnlog = text("docs/tenkz/TNLOG.md")
-    dateline = re.search(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", manual)
-    # Read whole and validated, as `tenkz_manual_build.py` does: a numeric
+    dateline = re.search(
+        r"(?:The TNLean project\s*\\quad---\\quad\s*)?"
+        r"((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4})\s*\\par",
+        manual,
+    )
     # prefix match would report `0.7-beta` as agreeing with `v0.7`.
     manual_version = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", manual)
     if manual_version and not re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", manual_version.group(1).strip()):
@@ -2169,6 +2179,11 @@ def check_documentation(archive: Path, required: bool) -> Report:
                 manual_dir=package / "doc", package_tree=package,
             )
             report.require(bool(pdf), "the uploaded manual produced no PDF")
+            report.require(
+                pdf == (package / "tenkz.pdf").read_bytes(),
+                "rebuilt documentation differs from shipped tenkz.pdf; "
+                "rebuild the release manual before staging",
+            )
             report.notes.append(
                 f"manual rebuilt from unpacked sources; {len(pdf)} PDF bytes, "
                 f"{len(findings)} audit advisories"

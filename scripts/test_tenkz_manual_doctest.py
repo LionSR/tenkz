@@ -33,7 +33,9 @@ SPEC.loader.exec_module(DOCTEST)
 # records has been reviewed and should not be given back.  The counts taken
 # from the synthetic fixture below stay exact: that fixture is fixed, and
 # there each extra or missing example is a defect.
-DISPLAYED_FLOOR = 56
+# The retired-spelling refusal is historical, and the torus figure is now an
+# explicitly conceptual TikZ schematic rather than a misleading tenkz example.
+DISPLAYED_FLOOR = 54
 REFERENCE_FLOOR = 12
 
 QUIET_TNLOG = (

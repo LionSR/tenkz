@@ -213,7 +213,11 @@ def manual_dateline(text: str | None = None) -> str:
     Inert source is blanked first, for the reason `executed_manual` records.
     """
     text = executed_manual(text)
-    matches = re.findall(r"The TNLean project \\quad---\\quad ([^\\]*)\\par", text)
+    pattern = (
+        r"(?:The TNLean project\s*\\quad---\\quad\s*)?"
+        r"((?:" + "|".join(MONTHS) + r")\s+\d{4})\s*\\par"
+    )
+    matches = re.findall(pattern, text)
     if not matches:
         raise ValueError("manual2.tex has no title-page date line")
     if len(matches) > 1:

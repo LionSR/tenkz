@@ -1,0 +1,31 @@
+% Compatibility is quarantined from the canonical tutorial and reference.
+\section{Obsolete Dialects and Compatibility}\label{ch:compatibility}
+
+Compatibility aliases exist to allow older documents to compile without
+surprise.  In new manuals, benchmarks, and research papers, always prefer the
+canonical modern spellings.  The table below, generated automatically from the
+executable language registry, provides the exhaustive alias list.  Since the S4
+surface swap, the front ends that parsed legacy dialects have been retired;
+the command \tncmd{tenkzkernel} remains available as an inert operation that
+rebinds the surface \pkg{} already established at load, so documents that still
+include it compile without incident.
+
+\IfFileExists{chapters2/generated-language-aliases.tex}{%
+  \noindent\input{chapters2/generated-language-aliases.tex}%
+}{%
+  \begin{quote}\small
+  The generated alias table is not present.  Generate it from the executable
+  language registry before publishing the manual.
+  \end{quote}
+}
+
+Whenever an alias is parsed, it normalizes to the exact same semantic events as
+its canonical replacement, without altering value types, defaults, scopes, or
+diagnostic codes.  The canonical-only linter is authoritative for all benchmark
+sources: when updating legacy code, replace the alias with its canonical modern
+counterpart.  Historical notes in \tnfile{docs/tenkz/history/} serve as archival
+records and do not define supported aliases.
+
+Notice that there is no compatibility form of \tncmd{tndefine}: it was once
+proposed but never implemented in the language, so no alias is needed.  For
+custom typed atoms, use \tncmd{tndeclareatom}.
