@@ -920,9 +920,11 @@ grep -Fq 'string|id=vertical|kind=wind|class=0,1|pts=12' \
   echo "FAIL: the vertical torus class did not reach the winding renderer" >&2
   exit 1
 }
+# This pins projected-path contact and authored order, not transversality
+# or seam-continuous routing on the quotient frame.
 grep -Fq 'stringcross|under=vertical|over=horizontal|hits=1' \
     "$WORK/r_wind_two_cycles.tnlog" || {
-  echo "FAIL: two wound cycles lost the order they meet in" >&2
+  echo "FAIL: projected winding paths lost their declared contact order" >&2
   exit 1
 }
 plane_frame=$(grep '^frame|' "$WORK/k_plane.tnlog") || {

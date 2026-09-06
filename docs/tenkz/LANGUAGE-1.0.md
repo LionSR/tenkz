@@ -149,7 +149,7 @@ turns with it and a label on a station of a circle frame stands radially out
 of it. One rule, one alphabet, and the four compass words are one sugar
 spelling of the four right angles serving faces and placements alike.
 
-`auto` places an atom's label on the first face carrying no ink in the fixed
+`auto` places an atom's label on the first unreserved face in the fixed
 order s, n, e, w, read from the frozen wire records: any wire endpoint or
 policy leg standing on a face reserves it, and an atom threaded on a wire
 reserves the two faces its carrier runs through. An atom spanning an even
@@ -160,7 +160,11 @@ that station before the dot's automatic label chooses. A west-to-east traced
 row may move the atom label beyond that ordinary band; the mark reserves only
 when the renderer's shared clearance rule leaves the two stations identical.
 When every face carries ink the station falls back to south, so the station is
-deterministic and an explicit `label pos=` always wins.
+deterministic and an explicit `label pos=` always wins. The choice uses
+supported incident geometry; it does not guarantee separation from every
+wire or other label. Circular frames and unsupported span-internal geometry
+receive fallback placement without a verified clearance claim. Use explicit
+`label pos=` when the automatic station leaves a collision.
 
 A typed-port list is a braced comma-separated list of ports, each written
 
