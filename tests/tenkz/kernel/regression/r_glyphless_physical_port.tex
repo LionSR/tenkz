@@ -22,12 +22,48 @@
       {\errmessage{glyphless~physical~leg~floats~away~from~its~site}}
     \int_gincr:N \g__tenkz_test_glyphless_ports_int
   }
+\int_new:N \g__tenkz_test_consumed_ports_int
+\bool_new:N \g__tenkz_test_consumed_bool
+\cs_new_eq:NN \__tenkz_test_wire_end_xy:nNN
+  \__tenkz_kernel_r_wire_end_xy:nNN
+\cs_set_protected:Npn \__tenkz_kernel_r_wire_end_xy:nNN #1#2#3
+  {
+    \__tenkz_test_wire_end_xy:nNN {#1} #2 #3
+    \bool_if:NT \g__tenkz_test_consumed_bool
+      {
+        \str_if_eq:eeT {\__tenkz_kernel_node_item:nn {#1} {face}} {230}
+          {
+            % Check both final endpoints together, including preservation of A
+            % while B is resolved. Coordinates are in the frame's pitch units.
+            \fp_compare:nNnF
+              {abs(\l__tenkz_kernel_r_x_fp)
+               +abs(\l__tenkz_kernel_r_y_fp+0.5)
+               +abs(#2-2)
+               +abs(#3+0.5)}
+              < {0.000001}
+              {\errmessage{consumed~glyphless~physical~wire~misses~its~hosts}}
+            \int_gincr:N \g__tenkz_test_consumed_ports_int
+          }
+      }
+  }
 \ExplSyntaxOff
 \begin{document}
 \begin{tenkz}[rows={wire,wire}, cols=2, bonds=none]
   \tn[at=midway (1,1) and (2,2), skin=none, ports={50:physical}]{}
 \end{tenkz}
 \ExplSyntaxOn
+\bool_gset_true:N \g__tenkz_test_consumed_bool
+\ExplSyntaxOff
+% Both non-cell endpoints must meet their hosts; resolving the second must
+% also preserve the first endpoint's coordinates.
+\begin{tenkz}[rows={wire,wire}, cols=3, bonds=none]
+  \tn[at=midway (1,1) and (2,1), name=A, skin=none, ports={50:physical}]{}
+  \tn[at=midway (1,3) and (2,3), name=B, skin=none, ports={230:physical}]{}
+  \tnwire[name=consumed]{A.50}{B.230}
+\end{tenkz}
+\ExplSyntaxOn
+\int_compare:nNnF {\g__tenkz_test_consumed_ports_int} > {0}
+  {\errmessage{both~consumed~physical~ports~were~not~checked}}
 \int_compare:nNnF {\g__tenkz_test_glyphless_ports_int} = {1}
   {\errmessage{glyphless~physical~port~was~not~checked}}
 \ExplSyntaxOff

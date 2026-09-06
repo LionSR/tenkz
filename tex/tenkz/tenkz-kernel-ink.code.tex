@@ -1123,6 +1123,24 @@
               \l__tenkz_kernel_r_tl
               \l__tenkz_kernel_r_row_tl \l__tenkz_kernel_r_col_tl
               \l_tmpa_bool
+            % Bare physical ports meet their glyphless host, whether a
+            % wire consumes them or the policy leaves an open leg.
+            \str_if_eq:eeT
+              { \__tenkz_kernel_node_item:nn {#1} {port-type} } {physical}
+              {
+                \exp_args:NV \__tenkz_kernel_hull_resolve_skin:n
+                  \l__tenkz_kernel_r_tl
+                \str_if_eq:VnT \l__tenkz_kernel_hull_skin_tl {none}
+                  {
+                    \prop_if_in:NVF \l__tenkz_kernel_skin_pairing_host_prop
+                      \l__tenkz_kernel_r_tl
+                      {
+                        \exp_args:NV \__tenkz_kernel_r_xy:nNN
+                          \l__tenkz_kernel_r_tl #2 #3
+                        \bool_set_true:N \l_tmpa_bool
+                      }
+                  }
+              }
             \bool_if:NF \l_tmpa_bool
               {
                 \__tenkz_kernel_r_hull_port_xy:nVNN
