@@ -1229,11 +1229,11 @@ selection.
 \end{tenkz}\]
 ```
 
-The wound string takes no route either: its class is its
-path. The rendered curve realizes `{1,0}` or the picture is refused (§5), and
-waypoint routing is mutually exclusive with winding. A route may perfectly well name the whole picture,
-which is a record like any other and answers to `picture` (§3, §12.7); what
-no route can do is stand in for a class the string states itself.
+The string records the winding pair `{1,0}` and draws a projected parametric
+curve. This does not certify a path on the quotient frame (§5). Winding and
+waypoint routing are mutually exclusive. For an argument that depends on
+identified seams or intersection numbers, use an explicitly authored
+fundamental-square schematic, as in the manual's torus example.
 
 ### 12.3 Pulling-through (`rmp-iii-a-pulling-through`)
 
