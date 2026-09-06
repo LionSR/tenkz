@@ -3,8 +3,8 @@
 The candidate uses package version 0.8.0 and date 2026-09-05 throughout the
 manual, READMEs, citation metadata and change record. It is a pre-1.0 release
 with a breaking migration from the retired front ends, not a compatibility
-freeze. The semantic event contract stays at 1.3; no event behavior changes
-in this preparation.
+freeze. The event schema stays at 1.3; the rendering corrections also update
+the geometry recorded in wire-ink events.
 
 The upload includes `tenkz.pdf` and the current manual sources under `doc/`.
 The CTAN check rebuilds the manual from the unpacked archive, verifies the
@@ -19,7 +19,7 @@ Record the commit and archive SHA-256 with the results outside the archive
 reproducible manual build and `tenkz_ctan.py check --require-smoke` must pass.
 Review the rendered manual before approving publication.
 
-The inherited benchmark ledger has 113 faithful cases, 12 cosmetic gaps and
+The current benchmark ledger has 125 faithful cases, no cosmetic gaps and
 five deferred structural gaps. The old full-review fingerprint is stale;
 these are per-case verdicts, not a fresh visual review of the entire corpus.
 The manual retains repeated-topology audit advisories. The cover labels

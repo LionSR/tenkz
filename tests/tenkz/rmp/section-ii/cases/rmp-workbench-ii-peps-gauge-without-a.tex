@@ -18,11 +18,10 @@
     \tnwire{A.0}{open e}
     \tnwire{A.90}{open n}
     \tnwire{A.270}{open s}
-    \tn[at=(3,2), name=gW, skin=dot, species=gauge]{}
-    \tn[at=(4,3), name=gS, skin=dot, species=gauge]{}
-    \tnwire[kind=string, species=gauge]{open n}{gW}
-    \tnwire[kind=string, species=gauge, route=orth, via={(4,2)}]{gW}{gS}
-    \tnwire[kind=string, species=gauge]{gS}{open e}
+    \tn[at=(3,2), name=gW, skin=dot, physical=none, species=gauge]{}
+    \tn[at=(2,3), name=gS, skin=dot, physical=none, species=gauge]{}
+    \tnwire[kind=string, species=gauge,
+      via={gW,gS}]{open s}{open e}
   \end{tenkz}\;=\;
   \underset{B}{\begin{tenkz}[
       rows={wire,wire,wire,wire,wire}, cols=5, bonds=none, frame=plane,
@@ -33,10 +32,9 @@
     \tnwire{B.0}{open e}
     \tnwire{B.90}{open n}
     \tnwire{B.270}{open s}
-    \tn[at=(3,4), name=gE, skin=dot, species=gauge]{}
-    \tn[at=(2,3), name=gN, skin=dot, species=gauge]{}
-    \tnwire[kind=string, species=gauge]{open s}{gE}
-    \tnwire[kind=string, species=gauge, route=orth, via={(2,4)}]{gE}{gN}
-    \tnwire[kind=string, species=gauge]{gN}{open w}
+    \tn[at=(3,4), name=gE, skin=dot, physical=none, species=gauge]{}
+    \tn[at=(4,3), name=gN, skin=dot, physical=none, species=gauge]{}
+    \tnwire[kind=string, species=gauge,
+      via={gE,gN}]{open n}{open w}
   \end{tenkz}}
 \]

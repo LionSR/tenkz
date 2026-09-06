@@ -5157,3 +5157,25 @@ The author-source sections were hash-verified and the corrected drawings
 independently inspected. The two verdicts remain gaps, with the remaining
 limitations recorded. No language, parser, metric, or renderer code changes;
 all other census values are unchanged.
+
+### Source-backed drawing corrections — 2026-09-06
+
+The mean non-comment case length falls from 26.68 to 26.62. Existing frame,
+route, and relative-placement options correct the gauge, MPO-definition, and
+renormalization drawings; no public keys, parser paths, or metrics are added.
+Three bounded renderer corrections keep plane physical legs local, attach
+unpaired glyphless physical ports to their sites, and retain rounded trace
+corners in saved paths. Each has a regression that fails before its fix.
+The nine reviewed drawings improve; six close their recorded gaps, while
+MPDO loop proportions, condensation projection, and braid-four label layout
+remain explicit cosmetic gaps. The other five structural gaps are unchanged.
+
+### Final three cosmetic corrections — 2026-09-06
+
+Census-correction: #302. The mean case length rises from 26.62 to 26.79
+to record the condensation source's front/back crossings and braid-four's
+eight resolver attachments and two parallel branches explicitly. The redraws
+use existing basis, span, port, and crossing options. The MPDO loop uses the
+existing trace-clearance metric for compact height and bounded round caps.
+No public key, parser path, or metric is added. Independent source/render
+review closes all three remaining cosmetic gaps; five structural gaps remain.

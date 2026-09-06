@@ -1,5 +1,21 @@
 # tenkz 0.8.0 — 2026-09-05
 
+## Drawing corrections (2026-09-06)
+
+Plane physical legs remain local to their tensor instead of stretching to the
+containing region. Bare glyphless sites now attach their physical ports at the
+site, and saved trace paths retain the existing rounded-corner style. These
+corrections add no public options.
+
+Source-backed benchmark redraws correct the normal-form and gauge routes,
+project the MPO ring into its plane, and restore the renormalization
+plaquette's plain crossings and eight virtual openings. Compact MPDO trace
+capsules, the condensation diagram's layer and crossing order, and braid-four's
+labelled four-port resolvers now close the remaining three cosmetic gaps.
+Fresh source comparison also restores braid-four's two inter-resolver branches
+and upper return arch. Flat physical traces use the existing trace clearance
+for their height and bound their rounded caps by the available width.
+
 ## Repository split (2026-08-25)
 
 The package, corpus, manual, and tooling now live in
@@ -266,14 +282,15 @@ compatibility rules are declared in `TNLOG.md`.
 This is the first CTAN candidate, with a breaking migration from the retired
 0.7 front ends. It does not claim the future 1.0 compatibility freeze.
 The package, manual, README and citations name 0.8.0, dated 2026-09-05.
-The event contract remains format 1.3: this release preparation changes no
-runtime behavior or event bytes, and adds no in-band version negotiation.
+The event schema remains format 1.3, with no in-band version negotiation.
+The rendering corrections change runtime geometry and the corresponding
+wire-ink event coordinates and curve segments.
 
 The manual sources now ship beside the PDF under `doc/` and are rebuilt from
 the unpacked upload during the CTAN check. The inactive release campaign has
 been removed in favor of ordinary tests, review and maintainer approval.
 
-The 130-target benchmark ledger records 113 faithful cases, 12 cosmetic gaps
+The 130-target benchmark ledger records 125 faithful cases, no cosmetic gaps
 and five deferred structural gaps. This is a record of individual reviews;
 the older full-review fingerprint is stale. Automated compile and audit passes
 do not constitute a new visual proof of every figure or mathematical identity.

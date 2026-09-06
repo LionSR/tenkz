@@ -1,11 +1,11 @@
 % Target: rmp-workbench-iii-mpo-on-peps-definition
 % Formula: The source illustrates a PEPS tensor and its four-site MPO projector.
-% Ink: Kernel flat frame; a five-leg PEPS star and four boxes on a red MPO ring.
+% Ink: Kernel plane MPO ring with four boxes, beside a five-leg PEPS star.
 % Boundary: The PEPS star has five open legs; the MPO has eight virtual openings.
 %   The source equality is schematic, not a boundary-compatible equation claim.
 % Source: author source ImagesReview Section III/ImagesReview Section III.tex
 %   lines 521-537; archival output DefofMPOonjPEPSten.pdf
-% Capabilities: kernel, typed-ports
+% Capabilities: kernel, typed-ports, plane-frame
 \[
   \tenkzkernel
   \tndeclare{species}{operator}{hue=source:red}
@@ -14,7 +14,8 @@
         45:virtual, 225:virtual, 90:physical}]{}
   \end{tenkz}
   \;=\;
-  \begin{tenkz}[rows={wire,wire,wire}, cols=3, bonds=none]
+  \begin{tenkz}[rows={wire,wire,wire}, cols=3, frame=plane,
+                metrics=compact, bonds=none]
     \tn[skin=mpo, at=(2,1), name=w,
         ports={0:virtual, 90:virtual, 180:virtual, 270:virtual}]{}
     \tn[skin=mpo, at=(1,2), name=n,

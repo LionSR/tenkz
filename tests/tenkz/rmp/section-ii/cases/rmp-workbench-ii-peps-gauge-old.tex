@@ -19,7 +19,7 @@
     \tnwire{A.90}{open n}
     \tnwire{A.270}{open s}
     \tnwire[kind=string, species=gauge, name=gA, via={(3,2)}]{open n}{open s}
-    \tn[at=on gA 0.5, skin=dot, species=gauge]{}
+    \tn[at=on gA 0.5, skin=dot, physical=none, species=gauge]{}
   \end{tenkz}}
   \;=\;
   \underset{B}{\begin{tenkz}[
@@ -31,16 +31,10 @@
     \tnwire{B.0}{open e}
     \tnwire{B.90}{open n}
     \tnwire{B.270}{open s}
-    \tn[at=(4,3), name=gS, skin=dot, species=gauge]{}
-    \tn[at=(3,4), name=gE, skin=dot, species=gauge]{}
-    \tn[at=(2,3), name=gN, skin=dot, species=gauge]{}
-    \tnwire[kind=string, species=gauge, name=gInput,
-      crossing=over, route=orth, via={(4,1)}]{open s}{gS}
-    \tnwire[kind=string, species=gauge, name=gEast,
-      crossing=over, route=orth, via={(4,4)}]{gS}{gE}
-    \tnwire[kind=string, species=gauge, name=gNorth,
-      crossing=over, route=orth, via={(2,4)}]{gE}{gN}
-    \tnwire[kind=string, species=gauge, name=gOutput,
-      cross={over at crossing of gOutput and gNorth}]{gN}{open n}
+    \tn[at=(4,3), name=gS, skin=dot, physical=none, species=gauge]{}
+    \tn[at=(3,4), name=gE, skin=dot, physical=none, species=gauge]{}
+    \tn[at=(2,3), name=gN, skin=dot, physical=none, species=gauge]{}
+    \tnwire[kind=string, species=gauge, name=gB,
+      via={gS,gE,gN}]{open sw}{open nw}
   \end{tenkz}}
 \]
