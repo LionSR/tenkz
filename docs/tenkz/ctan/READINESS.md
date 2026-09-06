@@ -3,8 +3,8 @@
 The candidate uses package version 0.8.0 and date 2026-09-05 throughout the
 manual, READMEs, citation metadata and change record. It is a pre-1.0 release
 with a breaking migration from the retired front ends, not a compatibility
-freeze. The semantic event contract stays at 1.3; no event behavior changes
-in this preparation.
+freeze. The event schema stays at 1.3; the rendering corrections also update
+the geometry recorded in wire-ink events.
 
 The upload includes `tenkz.pdf` and the current manual sources under `doc/`.
 The CTAN check rebuilds the manual from the unpacked archive, verifies the
