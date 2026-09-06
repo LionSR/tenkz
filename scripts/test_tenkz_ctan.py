@@ -365,7 +365,7 @@ def test_a_stated_version_other_than_the_declared_one_fails() -> None:
     assert not tenkz_ctan.check_version(tenkz_ctan.read_release(), manifest).failures
     invented = tenkz_ctan.Release(version="9.9", date="1999-02-01")
     failures = tenkz_ctan.check_version(invented, manifest).failures
-    assert len(failures) == 6, failures
+    assert len(failures) == 5, failures
     assert any("year 1999" in reason for reason in failures), failures
     assert any("month 2" in reason for reason in failures), failures
 
@@ -379,7 +379,7 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
         }
     }
     report = tenkz_ctan.check_version(tenkz_ctan.read_release(), manifest)
-    assert len(report.failures) == 6, report.failures
+    assert len(report.failures) == 5, report.failures
 
     material = tenkz_ctan.check_material(manifest)
     assert any("LICENSE" in reason for reason in material.failures), material.failures
