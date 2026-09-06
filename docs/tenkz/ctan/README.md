@@ -100,5 +100,5 @@ its header.
 
 ## Version
 
-Version 0.8.0, released 2026-09-05. The change record is in `CHANGES.md`, and
+Release candidate 0.8.0, package date 2026-09-05. The change record is in `CHANGES.md`, and
 `CITATION.cff` and `tenkz.bib` carry the citation metadata.

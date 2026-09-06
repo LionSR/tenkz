@@ -13,7 +13,6 @@ authors:
     email: "sirui.lu@mpq.mpg.de"
     affiliation: "Max-Planck-Institut für Quantenoptik"
 version: "0.8.0"
-date-released: "2026-09-05"
 license: "Apache-2.0"
 repository-code: "https://github.com/LionSR/tenkz"
 url: "https://github.com/LionSR/tenkz"
