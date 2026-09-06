@@ -1,7 +1,7 @@
 # CTAN candidate 0.8.0 — 2026-09-06
 
-The candidate uses package version 0.8.0 and date 2026-09-05 throughout the
-manual, READMEs, citation metadata and change record. The package has not been
+The candidate uses package version 0.8.0 and package date 2026-09-05. The
+manual, READMEs, citation metadata and change record identify version 0.8.0. The package has not been
 publicly released. This is the first release candidate; the documentation describes the current language. The future 1.0
 compatibility freeze is not claimed. The event schema stays at 1.3; the
 rendering corrections also update the geometry recorded in wire-ink events.
