@@ -149,7 +149,7 @@
   }
 \cs_new_protected:Npn \__tenkz_kernel_r_trace_stroke_aux:nn #1#2
   {
-    \path [ rounded~corners = \__tenkz_dim:n {corner}, spath/save = {#1} ] #2 ;
+    \path [ spath/save = {#1}, rounded~corners = \__tenkz_dim:n {corner} ] #2 ;
     % A trace paints two layers: a foreground stroke inheriting the
     % restylable `bond` style and a paper preaction halo of the fixed sum
     % wirewidth + crossgap (tenkz-core.code.tex, the `trace` style).  The
