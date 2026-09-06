@@ -431,14 +431,16 @@ note = "kernel respell verified against newfig13: both splits preserve their bou
 
 [[verdict]]
 id = "rmp-iii-a-symmetry-sector"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "fable-structural-redraw-2026-07-27"
 defects = []
 case_sha256 = "5f8ac90ed3a7b49c6d3abd7e45626266d9782c7e0692b3a836f6e9af06d1f5fd"
-reviewed = "2026-08-29"
+reviewed = "2026-09-06"
 renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
-note = "The class-fixed extent migration preserves the two loop constructions, rho closures, vertical R bonds, and lower X insertions. The longer R_alpha and X_g^dagger names use explicit west and south-west stations so they clear neighboring glyphs. Cosmetic residue: R and X names now sit beside empty red capsules rather than inside them as in the author panel; all remain legible."
+note = "Maintainer accepted this rendering on 2026-09-06. Both loop constructions and the outside R/X labels are satisfactory; no inscription or placement change is required."
+
+second_viewer = "maintainer-explicit-acceptance-2026-09-06"
 
 [[verdict]]
 id = "rmp-iii-a-f-symbol"
@@ -811,14 +813,16 @@ note = "one plane basis carries both rails and the diagonal transversal; seven f
 
 [[verdict]]
 id = "rmp-iii-b-r-tensor-right"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "codex-source-and-annotation-review-2026-08-01"
 defects = []
 case_sha256 = "fc695f6d5f14dfd173039879e38a5cc6b9c39a6ac3a34877afe3105cfe3b41a3"
-reviewed = "2026-08-29"
+reviewed = "2026-09-06"
 renderer = "codex-class-fixed-extent-review-2026-08-29-300dpi"
-note = "The class-fixed extent migration preserves the plane basis, two rails, diagonal transversal, resolver contour, and ordered b, a, b continuations. The resolver name uses an explicit north station to clear the lower rail and red strings. Cosmetic residue: R_{i,b} now sits above its empty white box rather than inside it as in the author panel; it remains legible."
+note = "Maintainer accepted this rendering on 2026-09-06. The resolver and its outside label are satisfactory; no label-placement or contour change is required."
+
+second_viewer = "maintainer-explicit-acceptance-2026-09-06"
 
 [[verdict]]
 id = "rmp-iii-b-braid-one"
@@ -1293,15 +1297,15 @@ note = "Body now equals the pulling-through respell of the same author lines (Di
 
 [[verdict]]
 id = "rmp-workbench-iii-historical-composite"
-status = "cosmetic-gap"
+status = "faithful"
 pairing = "verified"
 pairing_by = "site-glyph-source-review-2026-07-27"
 defects = []
 case_sha256 = "ab66abc6a228b71d2e6b2641e2d393ef4991ae670e1f341adb5623d96b2a332e"
-reviewed = "2026-08-31"
+reviewed = "2026-09-06"
 renderer = "codex-historical-orth-cycle-2026-08-31-200dpi"
-second_viewer = "codex-independent-historical-orth-pass-2026-08-31-400dpi"
-note = "Exact-hash review against author lines 170-197 confirms that both panels keep the four-station boundary loop through the lambda corner, the directed pendant feeds and drains, the outward half-edges, and the top-left/bottom-right sweeping arcs. The existing closed-string route=orth contract now rules each red cycle as the source's rectangle instead of waving between its stations; square house turns replace the source's rounded corners. The east and south outward half-edges both ink their recorded dir=to marks under the cardinal-bearing regression. Residue: the source's short inward station ticks remain absent because a port stub crossing the carrying string has no declarable order (K1)."
+second_viewer = "maintainer-explicit-acceptance-2026-09-06"
+note = "Maintainer accepted this rendering on 2026-09-06. The rectangular cycles, station order and directed half-edges are satisfactory; the previously recorded short-tick difference does not require a repair."
 
 [[verdict]]
 id = "rmp-workbench-iii-diagram-four"
