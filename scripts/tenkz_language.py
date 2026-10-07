@@ -22,7 +22,7 @@ REGISTRY = ROOT / "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = ROOT / "docs/tenkz/chapters2/generated-language-reference.tex"
 ALIASES = ROOT / "docs/tenkz/history/generated-language-aliases.tex"
 CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
-# The kernel's six stages, in the order tenkz.sty loads them.  The gate reads
+# The kernel's six stages, in the order tikz-tensor-networks.sty loads them.  The gate reads
 # them as one text because that is what the loader assembles at run time; a
 # definition is a definition wherever the stage split put it.
 KERNEL_STAGES = tuple(
@@ -1133,7 +1133,7 @@ def check(
         "% Next stage:",
     )
     internal_files = [
-        ROOT / "tex/tenkz/tenkz.sty",
+        ROOT / "tex/tenkz/tikz-tensor-networks.sty",
         *sorted((ROOT / "tex/tenkz").glob("*.code.tex")),
     ]
     for path in internal_files:

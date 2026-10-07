@@ -2,7 +2,7 @@
 
 The steps between a release head and an accepted upload, in order. Nothing
 here authorizes a version bump: the version is whatever
-`tex/tenkz/tenkz.sty` declares, and only the release-preparation change
+`tex/tenkz/tikz-tensor-networks.sty` declares, and only the release-preparation change
 named by `RELEASE-POLICY.md` §3 may change it.
 
 ## 1. Before building the archive
@@ -10,7 +10,7 @@ named by `RELEASE-POLICY.md` §3 may change it.
 - [ ] The release head is the exact commit the maintainer approved. The
       archive is a function of the tree, so any later commit is a different
       archive.
-- [ ] The archive includes `tenkz.pdf` and the rebuildable sources under
+- [ ] The archive includes `tikz-tensor-networks.pdf` and the rebuildable sources under
       `doc/`. `check --require-smoke` rebuilds the manual from the unpacked
       upload and rejects missing sources or external tenkz inputs.
 - [ ] The standing gates listed in `RELEASE-POLICY.md` §2 are green at that
@@ -35,18 +35,18 @@ named by `RELEASE-POLICY.md` §3 may change it.
       for byte, the event stream audits clean, and the title page names the
       package's month and year. The PDF it installs at
       `output/pdf/tenkz-manual.pdf` is the documentation the upload carries.
-      The archive stages those exact bytes as `tenkz.pdf`; rebuilding the
+      The archive stages those exact bytes as `tikz-tensor-networks.pdf`; rebuilding the
       manual after this check would therefore make a different release input
       and requires running the check again.
 
 ## 2. Building the archive
 
 ```
-python3 scripts/tenkz_ctan.py archive --out build/ctan
+python3 scripts/tenkz_ctan.py archive --out build/ctan-renamed
 ```
 
-writes `build/ctan/tenkz/` (the tree as it will unpack),
-`build/ctan/tenkz-VERSION.zip`, and the archive's digest beside it. Record
+writes `build/ctan-renamed/tikz-tensor-networks/` (the tree as it will unpack),
+`build/ctan-renamed/tikz-tensor-networks-VERSION.zip`, and the archive's digest beside it. Record
 the digest in the release notes and in the announcement's archive-hash
 field.
 
@@ -56,7 +56,7 @@ field.
       built; the archive's compressed bytes additionally depend on the
       compression library, so a digest is quoted for one archive rather than
       as a property of the version.
-- [ ] The archive unpacks into a single `tenkz/` directory.
+- [ ] The archive unpacks into a single `tikz-tensor-networks/` directory.
 
 ## 3. The upload form
 
@@ -65,7 +65,7 @@ material, so they are reviewed with it rather than typed fresh each time.
 
 | Field | Value |
 |---|---|
-| Package name | `tenkz` |
+| Package name | `tikz-tensor-networks` |
 | Version | the `\ProvidesPackage` version at the release head |
 | License | Apache License 2.0 (CTAN's free-license key `apache2`) |
 | Author | Sirui Lu |
@@ -76,7 +76,7 @@ material, so they are reviewed with it rather than typed fresh each time.
 | Repository | https://github.com/LionSR/tenkz |
 | Bug tracker | https://github.com/LionSR/tenkz/issues |
 | Support | the same tracker |
-| Suggested directory | `graphics/pgf/contrib/tenkz` |
+| Suggested directory | `graphics/pgf/contrib/tikz-tensor-networks` |
 | Announcement | `docs/tenkz/ANNOUNCEMENT.md`, with every pending field filled |
 
 The package retains Apache-2.0; CTAN lists it at
@@ -97,7 +97,7 @@ https://ctan.org/license/apache2. A license change is not an upload prerequisite
 
 `scripts/tenkz_ctan.py check` proves the archive is a function of the tree:
 it builds twice, under two file-creation masks and in two directories, and
-compares the bytes. It walks the load graph from `tenkz.sty` and refuses a
+compares the bytes. It walks the load graph from `tikz-tensor-networks.sty` and refuses a
 runtime file the entry point does not load, or a load the pinned manifest
 does not know about. It reads the version from the one declaration that owns
 it and rejects a README, citation record, or archive name that states

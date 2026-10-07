@@ -1,8 +1,12 @@
-# tenkz
+# tikz-tensor-networks
 
 Tensor-network diagrams from a description of the network.
 
-tenkz is a LaTeX package that draws matrix product states, tensor trains,
+Formerly named `tenkz`; renamed at CTAN's request before the first public
+release. Load `tikz-tensor-networks`; the `tenkz` and `tenkzeq` environments
+and `\tn` commands keep their existing names.
+
+tikz-tensor-networks is a LaTeX package that draws matrix product states, tensor trains,
 PEPS sheets, string diagrams, and channel sandwiches from a statement of
 what the network is. An author writes down the tensors, their indices, and
 how the indices meet; the drawing measures where the ink goes. Common networks need no physical coordinates or lengths; irregular
@@ -23,7 +27,7 @@ The two tensors are chained by `&`, the bond between them is drawn because
 their adjacent index slots meet, and the open indices are the ones the
 source names.
 
-While drawing, tenkz writes an event stream recording the structure it
+While drawing, tikz-tensor-networks writes an event stream recording the structure it
 resolved. Checking tools read that stream to confirm that a printed picture
 and the contraction it claims to show agree.
 
@@ -57,7 +61,7 @@ The public language is [`docs/tenkz/LANGUAGE.md`](docs/tenkz/LANGUAGE.md).
 ## Installation
 
 Put the files under `tex/tenkz/` on `TEXINPUTS`, or in a local texmf tree
-under `tex/latex/tenkz/`. Then `\usepackage{tenkz}` binds the `tenkz` and
+under `tex/latex/tikz-tensor-networks/`. Then `\usepackage{tikz-tensor-networks}` binds the `tenkz` and
 `tenkzeq` environments.
 
 A CTAN staging archive is built by `python3 scripts/tenkz_ctan.py archive`.

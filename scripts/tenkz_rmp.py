@@ -804,7 +804,7 @@ def standalone_wrapper(target: Target) -> str:
         (
             r"\documentclass[border=8pt,varwidth=270mm]{standalone}",
             r"\usepackage{amsmath,amssymb,mathtools}",
-            r"\usepackage{tenkz}",
+            r"\usepackage{tikz-tensor-networks}",
             r"\begin{document}",
             rf"\input{{{target.case.as_posix()}}}",
             r"\end{document}",

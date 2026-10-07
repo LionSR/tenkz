@@ -12,7 +12,7 @@ without a traced consumer fails `scripts/tenkz_ctan.py check`.
 
 ## 1. The one package
 
-`tikz`, loaded by `tenkz.sty`. Everything else on this page is a TikZ library.
+`tikz`, loaded by `tikz-tensor-networks.sty`. Everything else on this page is a TikZ library.
 
 Two of the libraries are not part of pgf and come from packages of their own.
 `hobby` and `spath3` are separate CTAN packages, and an installation without
@@ -51,7 +51,7 @@ this is the group a host document's own TikZ styles reach into.
 
 ## 4. Loaded and unread
 
-`fit` is loaded by `tenkz.sty` and read by nothing.
+`fit` is loaded by `tikz-tensor-networks.sty` and read by nothing.
 
 ### How that is established
 
@@ -94,7 +94,7 @@ the load list changes.
 The commutative-diagram, free-placement, and lattice front ends were removed
 along with the loads they brought. No file under `tex/tenkz/` loads `tikz-cd`,
 `tikzcd`, or `quantikz`. The one occurrence of the phrase in the package is a
-sentence in `tenkz.sty` saying commutative diagrams belong to tikz-cd and are
+sentence in `tikz-tensor-networks.sty` saying commutative diagrams belong to tikz-cd and are
 outside this language, and the closure walk blanks comments before it reads a
 load, so that sentence cannot reach the dependency list and a surviving load
 would be the only way the name could. `scripts/tenkz_ctan.py check` reads the
@@ -102,7 +102,7 @@ absence from the walked closure rather than asserting it.
 
 The blueprint keeps its own `tikz-cd` load in
 `blueprint/src/macros/diagrams.tex`. That is the blueprint's dependency, not
-the package's: it is not on the load graph walked from `tenkz.sty`, and nothing
+the package's: it is not on the load graph walked from `tikz-tensor-networks.sty`, and nothing
 the archive carries reads it.
 
 ## 6. The offline flat

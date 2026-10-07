@@ -188,7 +188,7 @@ shell command % \tntree{commented}
 \usepackage[
   draft
 ]{graphicx}
-\usepackage{amsmath,tenkz}
+\usepackage{amsmath,tikz-tensor-networks}
 \begin{tenkz} \tn{multiline-package} \end{tenkz}
 \end{Verbatim}
 % \begin{tnexample}
@@ -245,7 +245,7 @@ shell command % \tntree{commented}
 \documentclass[
   border=2pt
 ]{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz} \tn{complete} \end{tenkz}
 \end{document}
@@ -314,7 +314,7 @@ shell command % \tntree{commented}
         source.write_text("manual source\n", encoding="utf-8")
         document = (
             "\\documentclass{article}\n"
-            "\\usepackage{tenkz}\n"
+            "\\usepackage{tikz-tensor-networks}\n"
             "\\begin{document}\n"
             "\\begin{tenkz}\\tn{A}\\end{tenkz}\n"
             "\\end{document}\n"
@@ -466,27 +466,31 @@ shell command % \tntree{commented}
     ):
         raise AssertionError("a commented environment classified a Verbatim block")
     package_names = DOCTEST._package_names(
-        "\\usepackage{amsmath,% package note\n tenkz}"
+        "\\usepackage{amsmath,% package note\n tikz-tensor-networks}"
     )
-    if "tenkz" not in package_names:
-        raise AssertionError("a comment hid tenkz in a multi-package declaration")
+    if "tikz-tensor-networks" not in package_names:
+        raise AssertionError(
+            "a comment hid tikz-tensor-networks in a multi-package declaration"
+        )
     repeated_package = (
-        "\\iffalse\n\\usepackage{tenkz}\n\\fi\n"
+        "\\iffalse\n\\usepackage{tikz-tensor-networks}\n\\fi\n"
         "\\IfFileExists{missing-instrumentation.tex}"
-        "{\\usepackage{tenkz}}{}\n"
-        "% \\usepackage{tenkz}\n"
-        "\\usepackage{tenkz}\n"
+        "{\\usepackage{tikz-tensor-networks}}{}\n"
+        "% \\usepackage{tikz-tensor-networks}\n"
+        "\\usepackage{tikz-tensor-networks}\n"
         "\\begin{document}\\tn{A}\\end{document}\n"
     )
     instrumented, marker = DOCTEST._instrument_command(
         repeated_package, "tn", Path.cwd()
     )
-    if instrumented.index(marker) < instrumented.rindex("\\usepackage{tenkz}"):
+    if instrumented.index(marker) < instrumented.rindex(
+        "\\usepackage{tikz-tensor-networks}"
+    ):
         raise AssertionError(
             "runtime instrumentation used a commented package spelling"
         )
     inert_invocations = (
-        "\\usepackage{tenkz}\n"
+        "\\usepackage{tikz-tensor-networks}\n"
         "\\iffalse\n\\tn{dead}\\fi\n"
         "\\newcommand{\\stored}{\\tn{stored}}\n"
         "\\begin{document}\\tn{live}\\end{document}\n"
@@ -497,7 +501,7 @@ shell command % \tntree{commented}
     if instrumented.index(marker) < instrumented.index(r"\begin{document}"):
         raise AssertionError("runtime instrumentation selected an inert invocation")
     inert_only = (
-        "\\usepackage{tenkz}\n"
+        "\\usepackage{tikz-tensor-networks}\n"
         "\\iffalse\n\\tn{dead}\\fi\n"
         "\\newcommand{\\stored}{\\tn{stored}}\n"
     )
@@ -510,9 +514,11 @@ shell command % \tntree{commented}
         raise AssertionError("an inert command spelling counted as executable")
     escaped_verb = (
         "Write \\\\verb|without a closing delimiter on this line\n"
-        "\\usepackage{tenkz}\n"
+        "\\usepackage{tikz-tensor-networks}\n"
     )
-    if r"\usepackage{tenkz}" not in DOCTEST._mask_inline_verbatim(escaped_verb):
+    if r"\usepackage{tikz-tensor-networks}" not in DOCTEST._mask_inline_verbatim(
+        escaped_verb
+    ):
         raise AssertionError("an escaped verb spelling masked a later source line")
     first_label = DOCTEST._source_label(DOCTEST.CHAPTERS / "basic" / "example.tex")
     second_label = DOCTEST._source_label(DOCTEST.CHAPTERS / "advanced" / "example.tex")

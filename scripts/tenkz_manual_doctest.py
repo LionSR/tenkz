@@ -260,7 +260,7 @@ def _is_tenkz_verbatim(body: str, source_dir: Path) -> bool:
     scan = _mask_nonexecuted_tokens(strip_comments(body))
     environment_matches = re.finditer(rf"\\begin\{{(?:{environment_pattern})\}}", scan)
     return bool(
-        any("tenkz" in _package_names(package) for package in packages)
+        any("tikz-tensor-networks" in _package_names(package) for package in packages)
         or any(_has_executable_command(body, command) for command in commands)
         or any(not _is_escaped(scan, match.start()) for match in environment_matches)
     )
@@ -678,12 +678,14 @@ def _instrument_command(
         (
             (start, end)
             for start, end in _usepackage_ranges(document, source_dir)
-            if "tenkz" in _package_names(document[start:end])
+            if "tikz-tensor-networks" in _package_names(document[start:end])
         ),
         None,
     )
     if selected is None:
-        raise ValueError(f"reference for \\{command} does not load tenkz")
+        raise ValueError(
+            f"reference for \\{command} does not load tikz-tensor-networks"
+        )
     scan = _mask_nonexecuted_tokens(
         strip_comments(_mask_inert_tex(document, source_dir))
     )
@@ -753,8 +755,10 @@ def _standalone_document(
         return body[:begin] + definitions + body[begin:] + "\n"
 
     preamble, content = _extract_usepackages(body, source_dir)
-    if not any("tenkz" in _package_names(package) for package in preamble):
-        preamble.append(r"\usepackage{tenkz}")
+    if not any(
+        "tikz-tensor-networks" in _package_names(package) for package in preamble
+    ):
+        preamble.append(r"\usepackage{tikz-tensor-networks}")
     if variant_style is not None:
         preamble.extend(_variant_definitions(variant_style))
     return "\n".join(

@@ -368,7 +368,7 @@ def main() -> int:
     ):
         rejected = compile_source(
             rf"""\documentclass{{standalone}}
-\usepackage{{tenkz}}
+\usepackage{{tikz-tensor-networks}}
 \ExplSyntaxOn
 \__tenkz_kernel_install_prelude:nnn
   {{{declaration_class}}}{{{name}}}{{{descriptor}}}
@@ -382,7 +382,7 @@ def main() -> int:
             )
     good = compile_source(
         r"""\documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \tndeclareatom{\tnphase}{skin=box, ports={west:virtual,east:virtual}}
 \begin{document}
 \begin{tenkz}[rows={wire}]\tn{A}&\tnphase{B}\end{tenkz}
@@ -393,7 +393,7 @@ def main() -> int:
         raise SystemExit(f"typed declaration did not compile:\n{good.stdout}")
     bad = compile_source(
         r"""\documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \tndeclareatom{\tnbad}{skin=box, ports={west:physical}}
 \begin{document}x\end{document}
 """
@@ -404,7 +404,7 @@ def main() -> int:
     # probe compares a sugar row with its kernel expansion instead.
     canonical, canonical_events = compile_event_source(
         r"""\documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[rows={ket,op,bra}, cols=2]\end{tenkz}
 \end{document}
@@ -412,7 +412,7 @@ def main() -> int:
     )
     sugared, sugared_events = compile_event_source(
         r"""\documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[sandwich, cols=2]\end{tenkz}
 \end{document}
@@ -454,7 +454,7 @@ def main() -> int:
     for word, migration in branches:
         refused = compile_source(
             rf"""\documentclass{{standalone}}
-\usepackage{{tenkz}}
+\usepackage{{tikz-tensor-networks}}
 \begin{{document}}
 \begin{{tenkz}}[rows={{ket}}, cols=2, bonds=none]
   \tn[name=a]{{A}} & \tn[name=b]{{B}}
@@ -484,7 +484,7 @@ def main() -> int:
 
     live = compile_source(
         r"""\documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[rows={ket}, cols=2]
   \tn{A} & \tn{A}

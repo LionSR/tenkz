@@ -31,7 +31,7 @@ from tenkz_manual_doctest import _mask_inert_tex
 from tenkzlib.texcase import strip_comments
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE = ROOT / "tex" / "tenkz" / "tenkz.sty"
+PACKAGE = ROOT / "tex" / "tenkz" / "tikz-tensor-networks.sty"
 MANUAL_DIR = ROOT / "docs" / "tenkz"
 MANUAL = MANUAL_DIR / "manual2.tex"
 # Everything the manual reads besides the package itself.  A source the
@@ -79,7 +79,7 @@ UNRESOLVED = re.compile(
 
 
 def package_release() -> tuple[str, str]:
-    """The `\\ProvidesPackage` date (YYYY/MM/DD) and version of tenkz.sty.
+    """The `\\ProvidesPackage` date (YYYY/MM/DD) and version of tikz-tensor-networks.sty.
 
     Inert source is blanked first, for the reason `executed_manual` records:
     a previous declaration left commented -- or wrapped in `\\iffalse` -- above
@@ -88,7 +88,7 @@ def package_release() -> tuple[str, str]:
     """
     raw = PACKAGE.read_text(encoding="utf-8")
     text = _mask_inert_tex(strip_comments(raw), PACKAGE.parent)
-    declaration = r"\\ProvidesPackage\s*\{tenkz\}\s*\["
+    declaration = r"\\ProvidesPackage\s*\{tikz-tensor-networks\}\s*\["
     # Masking removes what TeX never reaches, but it recognises `\iffalse` and
     # not an inactive `\else` arm, and teaching it every conditional shape is
     # a losing race.  One declaration in the file is the property that makes
@@ -96,18 +96,21 @@ def package_release() -> tuple[str, str]:
     written = len(re.findall(declaration, strip_comments(raw)))
     if written > 1:
         raise ValueError(
-            f"tenkz.sty writes {written} \\ProvidesPackage declarations; only "
+            f"tikz-tensor-networks.sty writes {written} \\ProvidesPackage declarations; only "
             "one can be the release"
         )
     match = re.search(
-        r"\\ProvidesPackage\s*\{tenkz\}\s*\[(\d{4}/\d{2}/\d{2})\s+v(\S+)", text
+        r"\\ProvidesPackage\s*\{tikz-tensor-networks\}\s*\[(\d{4}/\d{2}/\d{2})\s+v(\S+)",
+        text,
     )
     if match is None:
-        raise ValueError("tenkz.sty has no active \\ProvidesPackage date and version")
+        raise ValueError(
+            "tikz-tensor-networks.sty has no active \\ProvidesPackage date and version"
+        )
     version = match.group(2)
     if not VERSION.fullmatch(version):
         raise ValueError(
-            f"tenkz.sty names a version this reader cannot read: {version!r}"
+            f"tikz-tensor-networks.sty names a version this reader cannot read: {version!r}"
         )
     return match.group(1), version
 
@@ -263,12 +266,12 @@ def metadata_errors(
     expected = f"{MONTHS[month - 1]} {year}"
     if dateline != expected:
         errors.append(
-            f"manual2.tex title page reads {dateline!r} but tenkz.sty is dated "
+            f"manual2.tex title page reads {dateline!r} but tikz-tensor-networks.sty is dated "
             f"{package_date} ({expected!r}); synchronize the release metadata"
         )
     if package_version and version != package_version:
         errors.append(
-            f"manual2.tex names version {version!r} but tenkz.sty provides "
+            f"manual2.tex names version {version!r} but tikz-tensor-networks.sty provides "
             f"v{package_version}; synchronize the release metadata"
         )
     return errors
@@ -317,7 +320,7 @@ def audit_direct_pictures(work: Path, epoch: int, engine: str) -> int:
     work.mkdir(parents=True, exist_ok=True)
     driver = work / "direct.tex"
     driver.write_text(
-        "\\documentclass{standalone}\n\\usepackage{tenkz}\n"
+        "\\documentclass{standalone}\n\\usepackage{tikz-tensor-networks}\n"
         "\\begin{document}\n" + "\n\\par\n".join(pictures) + "\n\\end{document}\n",
         encoding="utf-8",
     )
@@ -413,7 +416,7 @@ def foreign_inputs(
             if (
                 # This repository's own material must come from this repository,
                 # from whichever tree an installed copy might sit in.
-                Path(opened).name.startswith("tenkz")
+                Path(opened).name.startswith(("tenkz", "tikz-tensor-networks"))
                 or Path(opened).name in own
             )
             and not any(

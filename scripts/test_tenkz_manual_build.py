@@ -159,7 +159,7 @@ def main() -> int:
     seeded_package = package_source.replace(declaration, f"% {declaration}\n{bumped}")
     original = build.PACKAGE
     with tempfile.TemporaryDirectory(prefix="tenkz-package-seed-") as tmp:
-        path = Path(tmp) / "tenkz.sty"
+        path = Path(tmp) / "tikz-tensor-networks.sty"
         path.write_text(seeded_package, encoding="utf-8")
         build.PACKAGE = path
         try:
@@ -176,7 +176,7 @@ def main() -> int:
     if doubled == package_source:
         raise SystemExit("could not double the package declaration")
     with tempfile.TemporaryDirectory(prefix="tenkz-package-two-") as tmp:
-        path = Path(tmp) / "tenkz.sty"
+        path = Path(tmp) / "tikz-tensor-networks.sty"
         path.write_text(doubled, encoding="utf-8")
         build.PACKAGE = path
         try:
@@ -207,7 +207,7 @@ def main() -> int:
     if buried == package_source:
         raise SystemExit("could not bury the package declaration")
     with tempfile.TemporaryDirectory(prefix="tenkz-package-branch-") as tmp:
-        path = Path(tmp) / "tenkz.sty"
+        path = Path(tmp) / "tikz-tensor-networks.sty"
         path.write_text(buried, encoding="utf-8")
         build.PACKAGE = path
         try:

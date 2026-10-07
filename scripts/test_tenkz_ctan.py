@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/tenkz_ctan.py"
-PACKAGE_DIR = "tenkz"
+PACKAGE_DIR = "tikz-tensor-networks"
 
 sys.path.insert(0, str(ROOT / "scripts"))
 import tenkz_ctan  # noqa: E402
@@ -40,9 +40,9 @@ def fake_source(room: Path) -> Path:
 
     source = room / "tex"
     source.mkdir(parents=True)
-    (source / "tenkz.sty").write_text(
+    (source / "tikz-tensor-networks.sty").write_text(
         STAGE_CONTRACT
-        + "\\ProvidesPackage{tenkz}[2026/07/22 v0.7 Declarative diagrams]\n"
+        + "\\ProvidesPackage{tikz-tensor-networks}[2026/07/22 v0.7 Declarative diagrams]\n"
         "\\RequirePackage{tikz}\n"
         "\\usetikzlibrary{calc,\n  hobby}\n"
         "% \\input{tenkz-tombstone.code.tex}\n"
@@ -59,9 +59,9 @@ def fake_source(room: Path) -> Path:
 def test_closure_reads_the_load_graph_and_not_the_prose() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = fake_source(Path(directory))
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
     assert closure.files == [
-        "tenkz.sty",
+        "tikz-tensor-networks.sty",
         "tenkz-stage.code.tex",
         "tenkz-leaf.code.tex",
     ], closure.files
@@ -77,11 +77,11 @@ def test_a_load_spelled_as_text_is_not_a_load() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / "tex"
         source.mkdir()
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\def\\showload{\\\\usepackage{tikz-cd}}\n",
             encoding="utf-8",
         )
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
     assert closure.packages == [], closure.packages
     assert not tenkz_ctan.check_dependencies(closure, _ownership([], [], [])).failures
 
@@ -95,14 +95,17 @@ def test_closure_reads_the_unbraced_input() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / "tex"
         source.mkdir()
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\input tenkz-stage.code.tex\n", encoding="utf-8"
         )
         (source / "tenkz-stage.code.tex").write_text(
             STAGE_CONTRACT + "\\usepackage{tikz-cd}\n", encoding="utf-8"
         )
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-        assert closure.files == ["tenkz.sty", "tenkz-stage.code.tex"], closure.files
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+        assert closure.files == [
+            "tikz-tensor-networks.sty",
+            "tenkz-stage.code.tex",
+        ], closure.files
         assert closure.packages == ["tikz-cd"], closure.packages
         # Web2C's quoted form, which may follow the control word with no
         # space, and expl3's own file input.
@@ -113,11 +116,14 @@ def test_closure_reads_the_unbraced_input() -> None:
             "\\InputIfFileExists{tenkz-stage.code.tex}{}{}",
             "\\file_if_exist_input:n {tenkz-stage.code.tex}",
         ):
-            (source / "tenkz.sty").write_text(
+            (source / "tikz-tensor-networks.sty").write_text(
                 STAGE_CONTRACT + spelling + "\n", encoding="utf-8"
             )
-            quoted = tenkz_ctan.walk_closure(source, "tenkz.sty")
-            assert quoted.files == ["tenkz.sty", "tenkz-stage.code.tex"], spelling
+            quoted = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+            assert quoted.files == [
+                "tikz-tensor-networks.sty",
+                "tenkz-stage.code.tex",
+            ], spelling
 
 
 def test_closure_reads_the_stream_opened_file() -> None:
@@ -146,11 +152,11 @@ def test_closure_reads_the_stream_opened_file() -> None:
             "\\ior_open:NnF \\g_src_ior {local.cfg} {}",
             '\\ior_open:Nn \\g_src_ior {"local.cfg"}',
         ):
-            (source / "tenkz.sty").write_text(
+            (source / "tikz-tensor-networks.sty").write_text(
                 STAGE_CONTRACT + spelling + "\n", encoding="utf-8"
             )
-            closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-            assert closure.files == ["tenkz.sty", "local.cfg"], spelling
+            closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+            assert closure.files == ["tikz-tensor-networks.sty", "local.cfg"], spelling
         # The write side creates its file, so there is nothing for the
         # archive to carry, and a comment is not a load.
         for innocent in (
@@ -165,27 +171,35 @@ def test_closure_reads_the_stream_opened_file() -> None:
             "\\openinside{note}",
             "\\openin_aux:w stop;",
         ):
-            (source / "tenkz.sty").write_text(
+            (source / "tikz-tensor-networks.sty").write_text(
                 STAGE_CONTRACT + innocent + "\n", encoding="utf-8"
             )
-            closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-            assert closure.files == ["tenkz.sty"], innocent
+            closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+            assert closure.files == ["tikz-tensor-networks.sty"], innocent
         # Both syntaxes are visited in source order: the closure's contract
         # is the load order, and a stream opened before an input loads first.
         (source / "second.tex").write_text("data\n", encoding="utf-8")
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\openin\\src=local.cfg\n\\input second.tex\n",
             encoding="utf-8",
         )
-        ordered = tenkz_ctan.walk_closure(source, "tenkz.sty")
-        assert ordered.files == ["tenkz.sty", "local.cfg", "second.tex"], ordered.files
+        ordered = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+        assert ordered.files == [
+            "tikz-tensor-networks.sty",
+            "local.cfg",
+            "second.tex",
+        ], ordered.files
         # The stream primitive opens data, not TeX source: text inside the
         # file that looks like a load is not one.
         (source / "local.cfg").write_text(
             "\\input{ghost.tex}\n\\usepackage{ghostpkg}\n", encoding="utf-8"
         )
-        data = tenkz_ctan.walk_closure(source, "tenkz.sty")
-        assert data.files == ["tenkz.sty", "local.cfg", "second.tex"], data.files
+        data = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+        assert data.files == [
+            "tikz-tensor-networks.sty",
+            "local.cfg",
+            "second.tex",
+        ], data.files
         assert "ghostpkg" not in data.packages, data.packages
         (source / "local.cfg").write_text("data\n", encoding="utf-8")
         # A file the runtime writes and later reopens is the run's own
@@ -195,20 +209,20 @@ def test_closure_reads_the_stream_opened_file() -> None:
             "\\iow_open:Nn \\g_out_iow {scratch.dat}\n"
             "\\ior_open:Nn \\g_in_ior {scratch.dat}\n",
         ):
-            (source / "tenkz.sty").write_text(
+            (source / "tikz-tensor-networks.sty").write_text(
                 STAGE_CONTRACT + product, encoding="utf-8"
             )
-            closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-            assert closure.files == ["tenkz.sty"], product
+            closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+            assert closure.files == ["tikz-tensor-networks.sty"], product
         # A macro-supplied file name is opened after expansion, which a
         # static walk cannot perform: the walk fails closed rather than
         # certifying a closure it could not see.
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\def\\filename{local.cfg}\n\\openin\\src\\filename\n",
             encoding="utf-8",
         )
         try:
-            tenkz_ctan.walk_closure(source, "tenkz.sty")
+            tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
         except SystemExit as refusal:
             assert "macro-supplied" in str(refusal), refusal
         else:
@@ -216,11 +230,11 @@ def test_closure_reads_the_stream_opened_file() -> None:
         # A stream-opened file the tree does not hold is a missing load,
         # not a pass: behaviour depending on a machine-local file is not
         # submittable even when the file's absence is handled.
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\openin\\src=absent.cfg\n", encoding="utf-8"
         )
         try:
-            tenkz_ctan.walk_closure(source, "tenkz.sty")
+            tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
         except SystemExit as refusal:
             assert "absent.cfg" in str(refusal)
         else:
@@ -231,15 +245,18 @@ def test_closure_reads_tex_spacing_before_arguments() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / "tex"
         source.mkdir()
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\RequirePackage [draft] {tikz}\n"
             "\\usetikzlibrary\n  {calc}\n"
             "\\input % the stage below\n  {tenkz-stage.code.tex}\n",
             encoding="utf-8",
         )
         (source / "tenkz-stage.code.tex").write_text(STAGE_CONTRACT, encoding="utf-8")
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-    assert closure.files == ["tenkz.sty", "tenkz-stage.code.tex"], closure.files
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+    assert closure.files == [
+        "tikz-tensor-networks.sty",
+        "tenkz-stage.code.tex",
+    ], closure.files
     assert closure.packages == ["tikz"], closure.packages
     assert closure.libraries == ["calc"], closure.libraries
 
@@ -251,7 +268,7 @@ def test_a_runtime_file_that_is_not_utf8_is_refused_by_name() -> None:
             STAGE_CONTRACT.encode("utf-8") + b"% \xff\xfe not text\n"
         )
         try:
-            tenkz_ctan.walk_closure(source, "tenkz.sty")
+            tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
         except SystemExit as refusal:
             assert "tenkz-leaf.code.tex is not UTF-8" in str(refusal), str(refusal)
         else:
@@ -268,7 +285,7 @@ def test_closure_agrees_with_the_pinned_manifest() -> None:
 def test_a_source_file_outside_the_load_graph_fails_the_check() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = fake_source(Path(directory))
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
         manifest = {"source_tree": {"excluded": []}}
         assert not tenkz_ctan.check_source_tree(closure, manifest, source).failures
         (source / "tenkz-orphan.code.tex").write_text("% nothing\n", encoding="utf-8")
@@ -281,7 +298,7 @@ def test_a_source_file_outside_the_load_graph_fails_the_check() -> None:
 def test_an_unlicensed_runtime_file_fails_the_header_audit() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = fake_source(Path(directory))
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
         assert not tenkz_ctan.check_headers(closure, source).failures
         stripped = (source / "tenkz-leaf.code.tex").read_text(encoding="utf-8")
         (source / "tenkz-leaf.code.tex").write_text(
@@ -294,44 +311,48 @@ def test_an_unlicensed_runtime_file_fails_the_header_audit() -> None:
 
 def test_the_version_comes_from_one_declaration_or_from_none() -> None:
     with tempfile.TemporaryDirectory() as directory:
-        entry = Path(directory) / "tenkz.sty"
+        entry = Path(directory) / "tikz-tensor-networks.sty"
         entry.write_text(
-            "\\ProvidesPackage{tenkz}[2026/07/22 v0.7 Declarative diagrams]\n",
+            "\\ProvidesPackage{tikz-tensor-networks}[2026/07/22 v0.7 Declarative diagrams]\n",
             encoding="utf-8",
         )
         release = tenkz_ctan.read_release(entry)
         assert (release.version, release.date) == ("0.7", "2026-07-22")
-        assert release.archive_stem == "tenkz-0.7"
+        assert release.archive_stem == "tikz-tensor-networks-0.7"
 
         entry.write_text(
-            "\\ProvidesPackage{tenkz}[2026/07/22 v0.7 One]\n"
-            "\\ProvidesPackage{tenkz}[2026/07/23 v0.8 Two]\n",
+            "\\ProvidesPackage{tikz-tensor-networks}[2026/07/22 v0.7 One]\n"
+            "\\ProvidesPackage{tikz-tensor-networks}[2026/07/23 v0.8 Two]\n",
             encoding="utf-8",
         )
         assert _refuses(entry, "exactly one")
 
-        entry.write_text("\\ProvidesPackage{tenkz}[whenever v0.7]\n", encoding="utf-8")
+        entry.write_text(
+            "\\ProvidesPackage{tikz-tensor-networks}[whenever v0.7]\n", encoding="utf-8"
+        )
         assert _refuses(entry, "not spelled")
 
         # A dotted run of digits is not a version. Each of these would
         # otherwise become an archive name and three citation strings.
         for typo in ("v1..0", "v1.", "v.1", "v..."):
             entry.write_text(
-                f"\\ProvidesPackage{{tenkz}}[2026/07/22 {typo} Diagrams]\n",
+                f"\\ProvidesPackage{{tikz-tensor-networks}}[2026/07/22 {typo} Diagrams]\n",
                 encoding="utf-8",
             )
             assert _refuses(entry, "not spelled"), typo
 
         # A date of the right shape that no calendar has.
         entry.write_text(
-            "\\ProvidesPackage{tenkz}[2026/02/31 v0.7 Diagrams]\n", encoding="utf-8"
+            "\\ProvidesPackage{tikz-tensor-networks}[2026/02/31 v0.7 Diagrams]\n",
+            encoding="utf-8",
         )
         assert _refuses(entry, "is not a calendar date")
 
         # An empty description, which the release harness's own assertion
         # rejects; the two gates read the same declaration and must agree.
         entry.write_text(
-            "\\ProvidesPackage{tenkz}[2026/07/22 v0.7 ]\n", encoding="utf-8"
+            "\\ProvidesPackage{tikz-tensor-networks}[2026/07/22 v0.7 ]\n",
+            encoding="utf-8",
         )
         assert _refuses(entry, "not spelled")
 
@@ -342,7 +363,7 @@ def test_a_manifest_that_would_write_the_wrong_file_is_refused() -> None:
 
     closure = tenkz_ctan.walk_closure()
     for material, fragment in (
-        ({"tenkz.sty": "LICENSE"}, "runtime or documentation name"),
+        ({"tikz-tensor-networks.sty": "LICENSE"}, "runtime or documentation name"),
         ({"../outside.md": "LICENSE"}, "will not be written"),
         ({"README.md": "LICENSE", "readme.md": "LICENSE"}, "differ only in case"),
     ):
@@ -381,7 +402,7 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
         "material": {
             "README.md": "docs/tenkz/ctan/nothing-here.md",
             "CITATION.cff": "docs/tenkz/ctan/nothing-here.cff",
-            "tenkz.bib": "docs/tenkz/ctan/nothing-here.bib",
+            "tikz-tensor-networks.bib": "docs/tenkz/ctan/nothing-here.bib",
         }
     }
     report = tenkz_ctan.check_version(tenkz_ctan.read_release(), manifest)
@@ -392,7 +413,9 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
     assert any(
         "CHANGES.md" in reason for reason in material.failures
     ), material.failures
-    assert any("tenkz.pdf" in reason for reason in material.failures), material.failures
+    assert any(
+        "tikz-tensor-networks.pdf" in reason for reason in material.failures
+    ), material.failures
 
     encoding = tenkz_ctan.check_encoding(
         {name: ROOT / relative for name, relative in manifest["material"].items()}
@@ -402,8 +425,11 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
 
 def test_the_manual_is_canonical_binary_material() -> None:
     manifest = tenkz_ctan.read_manifest()
-    assert manifest["material"]["tenkz.pdf"] == "output/pdf/tenkz-manual.pdf"
-    manual = ROOT / manifest["material"]["tenkz.pdf"]
+    assert (
+        manifest["material"]["tikz-tensor-networks.pdf"]
+        == "output/pdf/tenkz-manual.pdf"
+    )
+    manual = ROOT / manifest["material"]["tikz-tensor-networks.pdf"]
     assert manual.read_bytes().startswith(b"%PDF-")
 
     # A PDF is binary rather than malformed UTF-8; an ordinary material file
@@ -412,7 +438,9 @@ def test_the_manual_is_canonical_binary_material() -> None:
         room = Path(directory)
         binary = room / "manual.pdf"
         binary.write_bytes(b"%PDF-1.7\n\xff\x00\n")
-        report = tenkz_ctan.check_encoding({"tenkz.pdf": binary, "README.md": binary})
+        report = tenkz_ctan.check_encoding(
+            {"tikz-tensor-networks.pdf": binary, "README.md": binary}
+        )
     assert len(report.failures) == 1, report.failures
     assert "README.md is not UTF-8" in report.failures[0], report.failures
 
@@ -422,11 +450,13 @@ def test_the_manual_cannot_be_staged_from_another_pdf() -> None:
     wrong = {
         "material": dict(
             manifest["material"],
-            **{"tenkz.pdf": "output/pdf/some-other-manual.pdf"},
+            **{"tikz-tensor-networks.pdf": "output/pdf/some-other-manual.pdf"},
         )
     }
     failures = tenkz_ctan.check_material(wrong).failures
-    assert any("tenkz.pdf is staged from" in reason for reason in failures), failures
+    assert any(
+        "tikz-tensor-networks.pdf is staged from" in reason for reason in failures
+    ), failures
 
 
 def test_a_non_pdf_manual_is_refused() -> None:
@@ -438,12 +468,16 @@ def test_a_non_pdf_manual_is_refused() -> None:
             manual.parent.mkdir(parents=True)
             manual.write_bytes(b"not a PDF\n")
             failures = tenkz_ctan.check_material(
-                {"material": {"tenkz.pdf": "output/pdf/tenkz-manual.pdf"}}
+                {
+                    "material": {
+                        "tikz-tensor-networks.pdf": "output/pdf/tenkz-manual.pdf"
+                    }
+                }
             ).failures
     finally:
         tenkz_ctan.ROOT = root
     assert any(
-        "tenkz.pdf does not begin with" in reason for reason in failures
+        "tikz-tensor-networks.pdf does not begin with" in reason for reason in failures
     ), failures
 
 
@@ -504,7 +538,7 @@ def test_the_whole_check_reports_an_unwritable_name_rather_than_raising() -> Non
 def test_the_archive_is_a_function_of_the_files_it_carries() -> None:
     with tempfile.TemporaryDirectory() as directory:
         room = Path(directory)
-        subject = room / "tenkz.sty"
+        subject = room / "tikz-tensor-networks.sty"
         subject.write_text("% one\n", encoding="utf-8")
         release = tenkz_ctan.Release(version="0.7", date="2026-07-22")
         digests = []
@@ -512,7 +546,10 @@ def test_the_archive_is_a_function_of_the_files_it_carries() -> None:
             destination = room / label
             destination.mkdir()
             archive = tenkz_ctan.write_archive(
-                destination, release, release.epoch, {"tenkz.sty": subject}
+                destination,
+                release,
+                release.epoch,
+                {"tikz-tensor-networks.sty": subject},
             )
             digests.append(archive.read_bytes())
         assert digests[0] == digests[1]
@@ -521,7 +558,7 @@ def test_the_archive_is_a_function_of_the_files_it_carries() -> None:
         destination = room / "third"
         destination.mkdir()
         changed = tenkz_ctan.write_archive(
-            destination, release, release.epoch, {"tenkz.sty": subject}
+            destination, release, release.epoch, {"tikz-tensor-networks.sty": subject}
         )
         assert changed.read_bytes() != digests[0]
 
@@ -530,18 +567,18 @@ def test_staging_ignores_the_builders_file_creation_mask() -> None:
     release = tenkz_ctan.Release(version="0.7", date="2026-07-22")
     with tempfile.TemporaryDirectory() as directory:
         room = Path(directory)
-        subject = room / "tenkz.sty"
+        subject = room / "tikz-tensor-networks.sty"
         subject.write_text("% one\n", encoding="utf-8")
         previous = os.umask(0o077)
         try:
             tree = tenkz_ctan.stage(
-                room / "out", release, 1000000, {"tenkz.sty": subject}
+                room / "out", release, 1000000, {"tikz-tensor-networks.sty": subject}
             )
         finally:
             os.umask(previous)
-        assert (tree / "tenkz.sty").stat().st_mode & 0o777 == 0o644
+        assert (tree / "tikz-tensor-networks.sty").stat().st_mode & 0o777 == 0o644
         assert tree.stat().st_mode & 0o777 == 0o755
-        assert (tree / "tenkz.sty").stat().st_mtime == 1000000
+        assert (tree / "tikz-tensor-networks.sty").stat().st_mtime == 1000000
         assert not tenkz_ctan.check_permissions(tree).failures
         tree.chmod(0o700)
         failures = tenkz_ctan.check_permissions(tree).failures
@@ -579,10 +616,13 @@ def test_the_environment_may_fix_the_timestamp() -> None:
         os.environ["SOURCE_DATE_EPOCH"] = "0"
         with tempfile.TemporaryDirectory() as directory:
             room = Path(directory)
-            subject = room / "tenkz.sty"
+            subject = room / "tikz-tensor-networks.sty"
             subject.write_text("% one\n", encoding="utf-8")
             archive = tenkz_ctan.write_archive(
-                room, release, tenkz_ctan.chosen_epoch(release), {"tenkz.sty": subject}
+                room,
+                release,
+                tenkz_ctan.chosen_epoch(release),
+                {"tikz-tensor-networks.sty": subject},
             )
             assert archive.is_file()
     finally:
@@ -598,14 +638,17 @@ def test_the_clean_install_check_reads_where_the_runtime_came_from() -> None:
         record = Path(directory) / "smoke.fls"
         record.write_text(
             "PWD /work\n"
-            "INPUT /work/tenkz/tenkz.sty\n"
+            "INPUT /work/tenkz/tikz-tensor-networks.sty\n"
             "INPUT /usr/share/texmf/tex/latex/tikz/tikz.sty\n"
             "INPUT tenkz/tenkz-render.code.tex\n"
             "OUTPUT /work/smoke.pdf\n",
             encoding="utf-8",
         )
         opened = tenkz_ctan.resolved_runtime_files(record)
-    assert opened == ["/work/tenkz/tenkz.sty", "tenkz/tenkz-render.code.tex"], opened
+    assert opened == [
+        "/work/tenkz/tikz-tensor-networks.sty",
+        "tenkz/tenkz-render.code.tex",
+    ], opened
 
     with tempfile.TemporaryDirectory() as directory:
         room = Path(directory).resolve()
@@ -615,7 +658,7 @@ def test_the_clean_install_check_reads_where_the_runtime_came_from() -> None:
         installed.mkdir()
         strangers = tenkz_ctan.foreign_runtime_files(
             [
-                str(unpacked / "tenkz.sty"),
+                str(unpacked / "tikz-tensor-networks.sty"),
                 "tenkz/tenkz-render.code.tex",
                 str(installed / "tenkz-kernel.code.tex"),
             ],
@@ -629,10 +672,10 @@ def test_names_outside_the_invariant_subset_fail() -> None:
     accidental = Path("/dev/null")
     report = tenkz_ctan.check_names(
         {
-            "tenkz.sty": accidental,
+            "tikz-tensor-networks.sty": accidental,
             "tenkz-café.tex": accidental,
             "-tenkz.tex": accidental,
-            "TENKZ.STY": accidental,
+            "TIKZ-TENSOR-NETWORKS.STY": accidental,
             "README.": accidental,
             "NUL": accidental,
             "com1.tex": accidental,
@@ -649,7 +692,7 @@ def test_the_staged_tree_carries_no_compilation_leftovers() -> None:
     with tempfile.TemporaryDirectory() as directory:
         tree = Path(directory) / "tenkz"
         tree.mkdir()
-        (tree / "tenkz.sty").write_text("% one\n", encoding="utf-8")
+        (tree / "tikz-tensor-networks.sty").write_text("% one\n", encoding="utf-8")
         assert not tenkz_ctan.check_debris(tree).failures
         (tree / "tenkz.log").write_text("a compilation leftover\n", encoding="utf-8")
         failures = tenkz_ctan.check_debris(tree).failures
@@ -678,14 +721,16 @@ def test_an_output_directory_loses_only_this_tools_artifacts() -> None:
         # An archive of another release, and a plain file wearing the staged
         # tree's name: both are somebody else's, whatever they are called.
         (out / "somebody-elses-notes.txt").unlink()
-        (out / "tenkz-0.1.zip").write_text("an older release\n", encoding="utf-8")
+        (out / "tikz-tensor-networks-0.1.zip").write_text(
+            "an older release\n", encoding="utf-8"
+        )
         try:
             tenkz_ctan.clear_destination(out, release)
         except SystemExit as refusal:
-            assert "tenkz-0.1.zip" in str(refusal), str(refusal)
+            assert "tikz-tensor-networks-0.1.zip" in str(refusal), str(refusal)
         else:
             raise AssertionError("an archive this run does not write was removed")
-        (out / "tenkz-0.1.zip").unlink()
+        (out / "tikz-tensor-networks-0.1.zip").unlink()
         (out / PACKAGE_DIR).write_text("not the staged tree\n", encoding="utf-8")
         try:
             tenkz_ctan.clear_destination(out, release)
@@ -709,7 +754,7 @@ def test_an_output_directory_loses_only_this_tools_artifacts() -> None:
         assert "outside build/" in str(refusal), str(refusal)
     else:
         raise AssertionError("the source directory was accepted as an output directory")
-    assert (ROOT / "tex/tenkz/tenkz.sty").is_file()
+    assert (ROOT / "tex/tenkz/tikz-tensor-networks.sty").is_file()
 
 
 def _without_table(manifest: str, table: str) -> str:
@@ -799,7 +844,7 @@ def test_a_commented_version_does_not_answer_for_the_record() -> None:
 
     manifest = tenkz_ctan.read_manifest()
     release = tenkz_ctan.read_release()
-    bibliography = ROOT / manifest["material"]["tenkz.bib"]
+    bibliography = ROOT / manifest["material"]["tikz-tensor-networks.bib"]
     original = bibliography.read_text(encoding="utf-8")
     year = release.date.split("-")[0]
     stale = original.replace(f"year         = {{{year}}}", "year         = {1999}")
@@ -818,7 +863,7 @@ def test_a_stale_tenkz_bibtex_entry_fails_when_other_entries_share_the_year() ->
 
     manifest = tenkz_ctan.read_manifest()
     release = tenkz_ctan.read_release()
-    bibliography = ROOT / manifest["material"]["tenkz.bib"]
+    bibliography = ROOT / manifest["material"]["tikz-tensor-networks.bib"]
     original = bibliography.read_text(encoding="utf-8")
     year = release.date.split("-")[0]
     # Replace ONLY the package's own entry year (the first occurrence), leaving
@@ -857,8 +902,8 @@ def test_a_material_name_pointed_at_the_wrong_file_is_reported() -> None:
         "material": dict(
             manifest["material"],
             **{
-                "CITATION.cff": manifest["material"]["tenkz.bib"],
-                "tenkz.bib": manifest["material"]["CITATION.cff"],
+                "CITATION.cff": manifest["material"]["tikz-tensor-networks.bib"],
+                "tikz-tensor-networks.bib": manifest["material"]["CITATION.cff"],
             },
         )
     }
@@ -916,7 +961,7 @@ def test_the_clean_install_failure_paths_report_what_went_wrong() -> None:
 
     class Bounced:
         returncode = 3
-        stdout = "! LaTeX Error: File `tenkz.sty' not found.\n"
+        stdout = "! LaTeX Error: File `tikz-tensor-networks.sty' not found.\n"
         stderr = "the engine's own complaint\n"
 
     with tempfile.TemporaryDirectory() as directory:
@@ -949,7 +994,10 @@ def test_the_manifest_declares_the_schema_and_the_package() -> None:
     good = (ROOT / "docs/tenkz/ctan/MANIFEST.toml").read_text(encoding="utf-8")
     for edit, fragment in (
         (("schema = 1", "schema = 999"), "this tool reads schema 1"),
-        (('package = "tenkz"', 'package = "not-tenkz"'), "not 'tenkz'"),
+        (
+            ('package = "tikz-tensor-networks"', 'package = "not-tenkz"'),
+            "not 'tikz-tensor-networks'",
+        ),
     ):
         with tempfile.TemporaryDirectory() as directory:
             manifest = Path(directory) / "MANIFEST.toml"
@@ -967,14 +1015,16 @@ def test_the_manifest_declares_the_schema_and_the_package() -> None:
 
 def test_a_runtime_source_outside_the_repository_is_refused() -> None:
     try:
-        tenkz_ctan.inside_repository("tenkz.sty", Path("/etc/hosts"))
+        tenkz_ctan.inside_repository("tikz-tensor-networks.sty", Path("/etc/hosts"))
     except SystemExit as refusal:
         assert "outside the repository" in str(refusal), str(refusal)
     else:
         raise AssertionError("a source outside the tree was staged")
     assert (
-        tenkz_ctan.inside_repository("tenkz.sty", ROOT / "tex/tenkz/tenkz.sty")
-        == (ROOT / "tex/tenkz/tenkz.sty").resolve()
+        tenkz_ctan.inside_repository(
+            "tikz-tensor-networks.sty", ROOT / "tex/tenkz/tikz-tensor-networks.sty"
+        )
+        == (ROOT / "tex/tenkz/tikz-tensor-networks.sty").resolve()
     )
 
 
@@ -990,7 +1040,7 @@ def test_the_release_report_survives_an_absent_artifact() -> None:
     finally:
         tenkz_ctan.ROOT = root
     assert [artifact for artifact, _ in rows] == [
-        "tex/tenkz/tenkz.sty",
+        "tex/tenkz/tikz-tensor-networks.sty",
         "docs/tenkz/manual2.tex",
         "docs/tenkz/CHANGES.md",
         "docs/tenkz/TNLOG.md",
@@ -1072,10 +1122,10 @@ def test_a_package_load_is_read_in_both_of_its_spellings() -> None:
         source = Path(directory) / "tex"
         source.mkdir()
         for spelling in ("usepackage", "RequirePackage", "RequirePackageWithOptions"):
-            (source / "tenkz.sty").write_text(
+            (source / "tikz-tensor-networks.sty").write_text(
                 STAGE_CONTRACT + f"\\{spelling}{{tikz-cd}}\n", encoding="utf-8"
             )
-            closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
+            closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
             assert closure.packages == ["tikz-cd"], (spelling, closure.packages)
             report = tenkz_ctan.check_dependencies(closure, _ownership([], [], []))
             assert any("tikz-cd" in r for r in report.failures), (
@@ -1092,12 +1142,12 @@ def test_a_retired_front_end_vendored_as_a_file_is_caught() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / "tex"
         source.mkdir()
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\input{tikz-cd.sty}\n", encoding="utf-8"
         )
         (source / "tikz-cd.sty").write_text(STAGE_CONTRACT, encoding="utf-8")
-        closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
-    assert closure.files == ["tenkz.sty", "tikz-cd.sty"], closure.files
+        closure = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
+    assert closure.files == ["tikz-tensor-networks.sty", "tikz-cd.sty"], closure.files
     report = tenkz_ctan.check_dependencies(closure, _ownership([], [], []))
     assert any("tikz-cd" in reason for reason in report.failures), report.failures
     # A TikZ library vendored as a file goes by its conventional file name, so
@@ -1110,13 +1160,13 @@ def test_a_retired_front_end_vendored_as_a_file_is_caught() -> None:
     with tempfile.TemporaryDirectory() as directory:
         source = Path(directory) / "tex"
         source.mkdir()
-        (source / "tenkz.sty").write_text(
+        (source / "tikz-tensor-networks.sty").write_text(
             STAGE_CONTRACT + "\\input{tikzlibrarytikzcd.code.tex}\n", encoding="utf-8"
         )
         (source / "tikzlibrarytikzcd.code.tex").write_text(
             STAGE_CONTRACT, encoding="utf-8"
         )
-        vendored = tenkz_ctan.walk_closure(source, "tenkz.sty")
+        vendored = tenkz_ctan.walk_closure(source, "tikz-tensor-networks.sty")
     library = tenkz_ctan.check_dependencies(vendored, _ownership([], [], []))
     assert any("tikzcd" in reason for reason in library.failures), library.failures
 
@@ -1124,7 +1174,7 @@ def test_a_retired_front_end_vendored_as_a_file_is_caught() -> None:
 def test_a_retired_front_end_load_fails_the_dependency_check() -> None:
     """The removed front ends each brought a load. The walk blanks comments
     before it reads one, so a retired name in the closure is a surviving load
-    rather than the sentence in `tenkz.sty` that mentions tikz-cd."""
+    rather than the sentence in `tikz-tensor-networks.sty` that mentions tikz-cd."""
 
     closure = tenkz_ctan.Closure(packages=["tikz", "tikz-cd"], libraries=[])
     report = tenkz_ctan.check_dependencies(closure, _ownership([], [], []))
@@ -1154,7 +1204,9 @@ def test_a_tree_arxiv_would_have_to_build_or_shell_out_for_fails() -> None:
     with tempfile.TemporaryDirectory() as directory:
         tree = Path(directory) / PACKAGE_DIR
         (tree / "nested").mkdir(parents=True)
-        (tree / "tenkz.sty").write_text("% a runtime file\n", encoding="utf-8")
+        (tree / "tikz-tensor-networks.sty").write_text(
+            "% a runtime file\n", encoding="utf-8"
+        )
         # Upper case is the same docstrip run: a file system that preserves
         # case hands the suffix back as it was typed.
         (tree / "tenkz.INS").write_text("% a docstrip run\n", encoding="utf-8")
@@ -1165,7 +1217,7 @@ def test_a_tree_arxiv_would_have_to_build_or_shell_out_for_fails() -> None:
             "\\input{/Users/somebody/tenkz-core.code.tex}\n", encoding="utf-8"
         )
         report = tenkz_ctan.check_arxiv(
-            tree, _loaded("tenkz.sty", "loud.sty", "elsewhere.sty")
+            tree, _loaded("tikz-tensor-networks.sty", "loud.sty", "elsewhere.sty")
         )
     findings = " ".join(report.failures)
     assert "nested" in findings, report.failures
@@ -1400,7 +1452,7 @@ def test_a_loaded_source_is_read_whatever_it_is_called() -> None:
             encoding="utf-8",
         )
         scanned = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.cfg"))
-        unscanned = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+        unscanned = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
     assert any("write18" in reason for reason in scanned.failures), scanned.failures
     assert not unscanned.failures, unscanned.failures
 
@@ -1413,10 +1465,10 @@ def test_an_unbraced_absolute_input_is_an_absolute_path() -> None:
     with tempfile.TemporaryDirectory() as directory:
         tree = Path(directory) / PACKAGE_DIR
         tree.mkdir(parents=True)
-        (tree / "tenkz.sty").write_text(
+        (tree / "tikz-tensor-networks.sty").write_text(
             "\\input /Users/somebody/tenkz-core.code.tex\n", encoding="utf-8"
         )
-        unbraced = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+        unbraced = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
         # A starred form puts its star between the command and its arguments,
         # and LaTeX's star test skips a space before it. A conditional loader
         # is a loader: a runtime whose behaviour depends on a machine-local
@@ -1453,8 +1505,10 @@ def test_an_unbraced_absolute_input_is_an_absolute_path() -> None:
             # A path holding a space is written quoted, braced or not.
             '\\input{"/Users/somebody/My Documents/f.tex"}',
         ):
-            (tree / "tenkz.sty").write_text(load + "\n", encoding="utf-8")
-            found = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+            (tree / "tikz-tensor-networks.sty").write_text(
+                load + "\n", encoding="utf-8"
+            )
+            found = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
             assert any("absolute path" in r for r in found.failures), (
                 load,
                 found.failures,
@@ -1484,8 +1538,8 @@ def test_an_unbraced_absolute_input_is_an_absolute_path() -> None:
             "\\file_if_exist:nTF {{/Users/somebody/data}} {} {}\n",
             "\\file_input:n {{/Users/somebody/data}}\n",
         ):
-            (tree / "tenkz.sty").write_text(innocent, encoding="utf-8")
-            relative = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+            (tree / "tikz-tensor-networks.sty").write_text(innocent, encoding="utf-8")
+            relative = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
             assert not relative.failures, (innocent, relative.failures)
     assert any(
         "absolute path" in reason for reason in unbraced.failures
@@ -1519,23 +1573,29 @@ def test_a_temporary_directory_inside_the_repository_is_not_a_leak() -> None:
     (ROOT / "build").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(dir=ROOT / "build") as directory:
         room = Path(directory)
-        (room / "tenkz.sty").write_text("% the staged runtime\n", encoding="utf-8")
+        (room / "tikz-tensor-networks.sty").write_text(
+            "% the staged runtime\n", encoding="utf-8"
+        )
         assert room.resolve().is_relative_to(ROOT), room
         # The reading the offline check performs, on a room the repository
         # contains. Both halves have to survive it: the runtime one, which asks
         # where a tenkz file resolved, and the repository one, which asks
         # whether anything at all came from the checkout.
         assert not tenkz_ctan.foreign_runtime_files(
-            ["./tenkz.sty", "tenkz.sty"], room, room.resolve()
+            ["./tikz-tensor-networks.sty", "tikz-tensor-networks.sty"],
+            room,
+            room.resolve(),
         )
         assert not tenkz_ctan.repository_inputs(
-            ["./tenkz.sty", "tenkz.sty"], room, room.resolve()
+            ["./tikz-tensor-networks.sty", "tikz-tensor-networks.sty"],
+            room,
+            room.resolve(),
         )
         # A file the repository really did answer is still found, so the room
         # exclusion narrows the reading rather than emptying it.
         assert tenkz_ctan.repository_inputs(
-            [str(ROOT / "tex/tenkz/tenkz.sty")], room, room.resolve()
-        ) == [str(ROOT / "tex/tenkz/tenkz.sty")]
+            [str(ROOT / "tex/tenkz/tikz-tensor-networks.sty")], room, room.resolve()
+        ) == [str(ROOT / "tex/tenkz/tikz-tensor-networks.sty")]
 
 
 def test_a_commented_shell_call_is_not_a_shell_call() -> None:
@@ -1548,12 +1608,12 @@ def test_a_commented_shell_call_is_not_a_shell_call() -> None:
         tree.mkdir(parents=True)
         # A comment, and text that typesets the spellings rather than using
         # them: `\\\\input` is the control symbol and then ordinary characters.
-        (tree / "tenkz.sty").write_text(
+        (tree / "tikz-tensor-networks.sty").write_text(
             "% tenkz never calls \\write18, and never loads {/absolute}.\n"
             "The spelling \\\\input{/absolute/path} is text, not a load.\n",
             encoding="utf-8",
         )
-        report = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+        report = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
     assert not report.failures, report.failures
 
 
@@ -1649,8 +1709,10 @@ def test_a_note_never_contradicts_the_finding_printed_beside_it() -> None:
     with tempfile.TemporaryDirectory() as directory:
         tree = Path(directory) / PACKAGE_DIR
         tree.mkdir(parents=True)
-        (tree / "tenkz.sty").write_text("\\write18{uname -a}\n", encoding="utf-8")
-        loud = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
+        (tree / "tikz-tensor-networks.sty").write_text(
+            "\\write18{uname -a}\n", encoding="utf-8"
+        )
+        loud = tenkz_ctan.check_arxiv(tree, _loaded("tikz-tensor-networks.sty"))
     assert loud.failures, loud
     assert not loud.notes, loud.notes
 
@@ -1708,12 +1770,16 @@ def test_the_offline_check_reports_an_archive_it_cannot_read() -> None:
         (room / "torn.zip").write_bytes(b"not a zip file at all")
         real = ROOT / "docs/tenkz/ctan/MANIFEST.toml"
         with zipfile.ZipFile(room / "loose.zip", "w") as bundle:
-            bundle.writestr("tenkz.sty", real.read_bytes())
+            bundle.writestr("tikz-tensor-networks.sty", real.read_bytes())
         with zipfile.ZipFile(room / "nested.zip", "w") as bundle:
-            bundle.writestr(f"{PACKAGE_DIR}/tenkz.sty", real.read_bytes())
+            bundle.writestr(
+                f"{PACKAGE_DIR}/tikz-tensor-networks.sty", real.read_bytes()
+            )
             bundle.writestr(f"{PACKAGE_DIR}/runtime/", b"")
         with zipfile.ZipFile(room / "extra.zip", "w") as bundle:
-            bundle.writestr(f"{PACKAGE_DIR}/tenkz.sty", real.read_bytes())
+            bundle.writestr(
+                f"{PACKAGE_DIR}/tikz-tensor-networks.sty", real.read_bytes()
+            )
             bundle.writestr("READ-ME-FIRST.txt", b"a stray member\n")
         try:
             tenkz_ctan.shutil.which = lambda _name: "/somewhere/xelatex"
@@ -1794,12 +1860,14 @@ def test_documentation_uses_the_manual_build_inventory() -> None:
         archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
         with zipfile.ZipFile(archive) as bundle:
             for name, source in sources.items():
-                assert bundle.read(f"tenkz/{name}") == source.read_bytes()
+                assert (
+                    bundle.read(f"tikz-tensor-networks/{name}") == source.read_bytes()
+                )
         room = Path(directory) / "flat"
         room.mkdir()
         staged = tenkz_ctan.offline_room(archive, room)
         assert "doc" not in staged and not (room / "doc").exists()
-        assert (room / "tenkz.sty").is_file()
+        assert (room / "tikz-tensor-networks.sty").is_file()
 
 
 def test_documentation_paths_do_not_allow_traversal_or_file_parents() -> None:
@@ -1824,7 +1892,7 @@ def test_documentation_paths_do_not_allow_traversal_or_file_parents() -> None:
 
 def test_material_cannot_replace_a_documentation_source() -> None:
     manifest = {"material": {"doc/manual2.tex": "LICENSE"}}
-    closure = tenkz_ctan.Closure(files=["tenkz.sty"])
+    closure = tenkz_ctan.Closure(files=["tikz-tensor-networks.sty"])
     content = tenkz_ctan.staged_content(manifest, closure)
     report = tenkz_ctan.check_names(content, manifest, closure)
     assert report.failures, report
@@ -1839,7 +1907,7 @@ def test_uploaded_manual_recorder_rejects_repository_fallback() -> None:
         (manual / "manual2.tex").write_text("% source\n")
         work = room / "build"
         work.mkdir()
-        foreign = tenkz_ctan.ROOT / "tex/tenkz/tenkz.sty"
+        foreign = tenkz_ctan.ROOT / "tex/tenkz/tikz-tensor-networks.sty"
         (work / "manual2.fls").write_text(f"INPUT {foreign}\n")
         findings = tenkz_ctan.manual_build.foreign_inputs(
             work,
@@ -1854,7 +1922,7 @@ def test_uploaded_manual_must_match_the_shipped_pdf() -> None:
     with tempfile.TemporaryDirectory() as directory:
         archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
         with zipfile.ZipFile(archive) as bundle:
-            shipped = bundle.read("tenkz/tenkz.pdf")
+            shipped = bundle.read("tikz-tensor-networks/tikz-tensor-networks.pdf")
         with patch.object(tenkz_ctan.shutil, "which", return_value="xelatex"):
             with patch.object(
                 tenkz_ctan.manual_build, "build", return_value=(shipped, [])
@@ -1881,7 +1949,7 @@ def test_uploaded_manual_missing_its_entry_point_fails() -> None:
             broken, "w"
         ) as target:
             for entry in source.infolist():
-                if entry.filename != "tenkz/doc/manual2.tex":
+                if entry.filename != "tikz-tensor-networks/doc/manual2.tex":
                     target.writestr(entry, source.read(entry))
         report = tenkz_ctan.check_documentation(broken, required=True)
         assert report.failures, report

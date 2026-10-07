@@ -18,7 +18,7 @@ from tenkz_audit import Audit
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \pagestyle{empty}
 \begin{document}
 \tndeclare{species}{anyon}{hue=source:red}
@@ -38,7 +38,7 @@ SOURCE = r"""
 
 NESTED_CD_SOURCE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \usepackage{tikz-cd}
 \pagestyle{empty}
 \begin{document}

@@ -9,7 +9,7 @@ an upload is judged on, rather than asserting them.
 What the tool refuses to guess:
 
   the runtime closure   The staged runtime is walked from
-                        `tex/tenkz/tenkz.sty`, following `\\input` through the
+                        `tex/tenkz/tikz-tensor-networks.sty`, following `\\input` through the
                         stage modules and reading `\\RequirePackage` and
                         `\\usetikzlibrary` for what the archive does not carry.
                         A pinned copy in `docs/tenkz/ctan/MANIFEST.toml` fails
@@ -17,7 +17,7 @@ What the tool refuses to guess:
                         module cannot reach an upload unnoticed.
 
   the version           One declaration owns it, the `\\ProvidesPackage` line
-                        of `tex/tenkz/tenkz.sty`. The archive name, the
+                        of `tex/tenkz/tikz-tensor-networks.sty`. The archive name, the
                         README, and the citation records are checked against
                         that line; none of them may state a version of their
                         own. This tool never edits a version.
@@ -65,7 +65,7 @@ import tenkz_manual_build as manual_build  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tex/tenkz"
-ENTRY = SOURCE / "tenkz.sty"
+ENTRY = SOURCE / "tikz-tensor-networks.sty"
 MATERIAL = ROOT / "docs/tenkz/ctan"
 # The pinned staging tree. An environment variable may name another one, so
 # the contract tests can run the whole command against a manifest that is
@@ -76,9 +76,11 @@ MANIFEST_LABEL = (
 )
 DEFAULT_OUT = ROOT / "build/ctan"
 
-PACKAGE = "tenkz"
+PACKAGE = "tikz-tensor-networks"
 MANIFEST_SCHEMA = 1
-DECLARATION = re.compile(r"^\\ProvidesPackage\{tenkz\}\[([^]]*)\]", re.MULTILINE)
+DECLARATION = re.compile(
+    r"^\\ProvidesPackage\{tikz-tensor-networks\}\[([^]]*)\]", re.MULTILINE
+)
 # The version spelling `RELEASE-POLICY.md` §3 fixes: major, minor, and an
 # optional patch, each a nonempty run of digits, followed by a description.
 # A typo such as `v1..0` is a malformed declaration, not a version this tool
@@ -179,8 +181,8 @@ REQUIRED_MATERIAL = (
     "LICENSE",
     "CHANGES.md",
     "CITATION.cff",
-    "tenkz.bib",
-    "tenkz.pdf",
+    "tikz-tensor-networks.bib",
+    "tikz-tensor-networks.pdf",
 )
 
 # Existence is not identity: a manifest can point a staged name at the wrong
@@ -195,7 +197,7 @@ REQUIRED_MATERIAL = (
 CANONICAL_MATERIAL = {
     "LICENSE": "LICENSE",
     "CHANGES.md": "docs/tenkz/CHANGES.md",
-    "tenkz.pdf": "output/pdf/tenkz-manual.pdf",
+    "tikz-tensor-networks.pdf": "output/pdf/tenkz-manual.pdf",
 }
 
 # The tables a staging manifest is made of, and the keys each one is read for.
@@ -212,13 +214,13 @@ MANIFEST_TABLES = {
 MATERIAL_MARKS = {
     "README.md": "## Requirements",
     "CITATION.cff": "cff-version:",
-    "tenkz.bib": "@manual{tenkz",
+    "tikz-tensor-networks.bib": "@manual{tenkz",
 }
 
 # Binary material is enumerated here rather than in a second list: its file
 # signature is both the content check and the UTF-8 exemption.
 BINARY_MATERIAL_MARKS = {
-    "tenkz.pdf": b"%PDF-",
+    "tikz-tensor-networks.pdf": b"%PDF-",
 }
 
 # The one licence marker every runtime file carries, and the sentence beside
@@ -227,7 +229,7 @@ LICENSE_MARKER = "% SPDX-License-Identifier: Apache-2.0"
 LICENSE_SENTENCE = "% Copyright the TNLean project; see LICENSE for the full terms."
 
 SMOKE_DOCUMENT = r"""\documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[cols=2]
   \tn[ports={180:virtual:$\alpha$, 90:physical:$i_1$}]{A} &
@@ -247,7 +249,7 @@ DEPENDENCY_CLASSES = ("placement", "ink", "unconsumed")
 
 # Front ends the package once carried, and the load each of them brought with
 # it. They are checked by absence: the closure walk blanks comments before it
-# reads a load, so the sentence in `tenkz.sty` that says commutative diagrams
+# reads a load, so the sentence in `tikz-tensor-networks.sty` that says commutative diagrams
 # belong to tikz-cd is prose and not a dependency, and a real load would be the
 # only way any of these names could reach the closure.
 RETIRED_DEPENDENCIES = ("tikz-cd", "tikzcd", "quantikz")
@@ -677,7 +679,7 @@ OFFLINE_CASES = (
 # installation rather than on the archive.
 OFFLINE_WRAPPER = r"""\documentclass{article}
 \usepackage{amsmath,amssymb}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \input{%s}
 \end{document}
@@ -747,7 +749,7 @@ def read_release(entry: Path = ENTRY) -> Release:
     if len(declarations) != 1:
         raise SystemExit(
             f"{entry.name} must carry exactly one "
-            f"\\ProvidesPackage{{tenkz}} line; found {len(declarations)}"
+            f"\\ProvidesPackage{{{PACKAGE}}} line; found {len(declarations)}"
         )
     match = PAYLOAD.fullmatch(declarations[0])
     if match is None:
@@ -779,7 +781,7 @@ def walk_closure(source: Path = SOURCE, entry: str = ENTRY.name) -> Closure:
     """Follow the load graph from the entry point, in load order.
 
     Comments are blanked before the graph is read, so a stage named only in
-    prose — the load-order commentary in `tenkz.sty` names several — never
+    prose — the load-order commentary in `tikz-tensor-networks.sty` names several — never
     enters the closure, and a stage commented out leaves it.
     """
 
@@ -1609,7 +1611,9 @@ def check_version(release: Release, manifest: dict) -> Report:
         re.search(r"^date-released\s*:", citation, re.M) is None,
         "the candidate citation record must omit date-released until publication",
     )
-    entry = _live_bibtex(_material_text(manifest, "tenkz.bib"), key="tenkz")
+    entry = _live_bibtex(
+        _material_text(manifest, "tikz-tensor-networks.bib"), key="tenkz"
+    )
     year, month, _ = release.date.split("-")
     # Read from the fields of the package's own entry, with comments taken out first: a
     # BibTeX comment holding the right year beside a live field holding last
@@ -1696,7 +1700,9 @@ def resolved_runtime_files(record: Path) -> list[str]:
     """
 
     return [
-        path for path in recorded_inputs(record) if Path(path).name.startswith(PACKAGE)
+        path
+        for path in recorded_inputs(record)
+        if Path(path).name.startswith((PACKAGE, "tenkz"))
     ]
 
 
@@ -1841,7 +1847,7 @@ def check_arxiv(tree: Path, closure: Closure) -> Report:
 def offline_room(archive: Path, room: Path) -> list[str]:
     """Unpack the archive flat into one directory, as a submission unpacks.
 
-    CTAN receives a `tenkz/` directory and an installation puts it on the
+    CTAN receives a `tikz-tensor-networks/` directory and an installation puts it on the
     search path. A submission has no search path to put it on: the files sit
     beside the manuscript, so this is where the archive is flattened and where
     a runtime file that only resolves through a directory would fail.
@@ -2206,7 +2212,7 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
     event = re.search(r'^version = "([0-9.]+)"', tnlog, re.MULTILINE)
     heading = changes.splitlines()[0].lstrip("# ").strip() if changes else "absent"
     return [
-        ("tex/tenkz/tenkz.sty", f"v{release.version} of {release.date}"),
+        ("tex/tenkz/tikz-tensor-networks.sty", f"v{release.version} of {release.date}"),
         (
             "docs/tenkz/manual2.tex",
             f"{'v' + manual_version.group(1) if manual_version else 'no version'} of "
@@ -2296,7 +2302,7 @@ def check_documentation(archive: Path, required: bool) -> Report:
                     raise ValueError(f"upload omits manual sources: {missing}")
                 bundle.extractall(root / "unpacked")
             package = root / "unpacked" / PACKAGE
-            release = read_release(package / "tenkz.sty")
+            release = read_release(package / "tikz-tensor-networks.sty")
             pdf, findings = manual_build.build(
                 root / "build",
                 chosen_epoch(release),
@@ -2306,8 +2312,8 @@ def check_documentation(archive: Path, required: bool) -> Report:
             )
             report.require(bool(pdf), "the uploaded manual produced no PDF")
             report.require(
-                pdf == (package / "tenkz.pdf").read_bytes(),
-                "rebuilt documentation differs from shipped tenkz.pdf; "
+                pdf == (package / "tikz-tensor-networks.pdf").read_bytes(),
+                "rebuilt documentation differs from shipped tikz-tensor-networks.pdf; "
                 "rebuild the release manual before staging",
             )
             report.notes.append(

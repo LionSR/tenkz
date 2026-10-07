@@ -15,7 +15,7 @@ class CompatibilityChecks(unittest.TestCase):
         self.addCleanup(self.room.cleanup)
         self.root = Path(self.room.name)
         for name in (
-            "tex/tenkz/tenkz.sty",
+            "tex/tenkz/tikz-tensor-networks.sty",
             policy.REGISTRY,
             policy.REFERENCE,
             "docs/tenkz/TNLOG.md",
@@ -34,9 +34,10 @@ class CompatibilityChecks(unittest.TestCase):
         policy.check(self.root)
 
     def test_duplicate_package_version(self):
-        path = self.root / "tex/tenkz/tenkz.sty"
+        path = self.root / "tex/tenkz/tikz-tensor-networks.sty"
         path.write_text(
-            path.read_text() + "\n\\ProvidesPackage{tenkz}[2026/01/01 v1.0 Test]\n"
+            path.read_text()
+            + "\n\\ProvidesPackage{tikz-tensor-networks}[2026/01/01 v1.0 Test]\n"
         )
         with self.assertRaisesRegex(SystemExit, "exactly one"):
             policy.check(self.root)
@@ -44,8 +45,8 @@ class CompatibilityChecks(unittest.TestCase):
     def test_invalid_version_and_date(self):
         for payload in ("2026/01/01 v1..0 Test", "2026/99/01 v1.0 Test"):
             with self.subTest(payload=payload):
-                (self.root / "tex/tenkz/tenkz.sty").write_text(
-                    "\\ProvidesPackage{tenkz}[" + payload + "]\n"
+                (self.root / "tex/tenkz/tikz-tensor-networks.sty").write_text(
+                    "\\ProvidesPackage{tikz-tensor-networks}[" + payload + "]\n"
                 )
                 with self.assertRaises(SystemExit):
                     policy.check(self.root)

@@ -1,6 +1,9 @@
-# tenkz — tensor-network diagrams from a description of the network
+# tikz-tensor-networks — tensor-network diagrams from a description of the network
 
-tenkz draws matrix product states, tensor trains, PEPS sheets, string
+Formerly named `tenkz`; renamed before the first CTAN release. The diagram
+environments `tenkz` and `tenkzeq` and their body commands are unchanged.
+
+tikz-tensor-networks draws matrix product states, tensor trains, PEPS sheets, string
 diagrams, and channel sandwiches from a statement of what the network is.
 An author writes down the tensors, their indices, and how the indices meet;
 the drawing measures where the ink goes. Common networks need no physical coordinates or lengths;
@@ -29,7 +32,7 @@ The two tensors are chained by `&`, the bond between them is drawn because
 their adjacent index slots meet, and the open indices are the ones the source
 names.
 
-While drawing, tenkz writes an event stream recording the structure it
+While drawing, tikz-tensor-networks writes an event stream recording the structure it
 resolved — every atom, index, closure, and region. The stream is a
 documented side surface: checking tools read it to confirm that a printed
 picture and the contraction it claims to show agree.
@@ -38,7 +41,7 @@ picture and the contraction it claims to show agree.
 
 - LaTeX2e with expl3, as distributed with TeX Live 2023 or later.
 - pgf/TikZ.
-- The `hobby` and `spath3` packages. Both provide TikZ libraries that tenkz
+- The `hobby` and `spath3` packages. Both provide TikZ libraries that tikz-tensor-networks
   loads at package load, and both are distributed separately from pgf; an
   installation missing either one fails when the package loads.
 
@@ -49,11 +52,11 @@ the project's tests.
 ## Installation
 
 Unpack the archive and put its `.sty` and `.tex` files where LaTeX looks for
-input, either in a local texmf tree under `tex/latex/tenkz/` or beside the
+input, either in a local texmf tree under `tex/latex/tikz-tensor-networks/` or beside the
 document. Then
 
 ```latex
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 ```
 
 loads the package and binds the diagram language: the `tenkz` and `tenkzeq`
@@ -61,7 +64,7 @@ environments and the body commands exist as soon as the package is loaded.
 
 ## Documentation
 
-The manual is `tenkz.pdf`. Its sources are included under `doc/`, with the
+The manual is `tikz-tensor-networks.pdf`. Its sources are included under `doc/`, with the
 chapters and style used by the repository build. To rebuild it, enter `doc/`
 and run:
 
@@ -87,7 +90,7 @@ https://github.com/LionSR/tenkz/issues/301 for the renderer follow-up.
 
 Sirui Lu <sirui.lu@mpq.mpg.de>
 
-tenkz is written for TNLean, a Lean 4 formalization of the mathematics of
+tikz-tensor-networks is written for TNLean, a Lean 4 formalization of the mathematics of
 tensor networks, and is developed at
 <https://github.com/LionSR/tenkz>. Defect reports and questions belong in
 its issue tracker: <https://github.com/LionSR/tenkz/issues>.
@@ -101,4 +104,4 @@ its header.
 ## Version
 
 Release candidate 0.8.0, package date 2026-09-05. The change record is in `CHANGES.md`, and
-`CITATION.cff` and `tenkz.bib` carry the citation metadata.
+`CITATION.cff` and `tikz-tensor-networks.bib` carry the citation metadata.

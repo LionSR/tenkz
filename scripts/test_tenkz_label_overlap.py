@@ -36,7 +36,7 @@ def finding_picture_id(message: str) -> int:
 
 SOURCE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -224,7 +224,7 @@ SOURCE = r"""
 
 AFFINE_GLYPHS = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -275,7 +275,7 @@ AFFINE_GLYPHS = r"""
 
 INVALID_CORNERS = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -293,7 +293,7 @@ INVALID_CORNERS = r"""
 
 ROUNDED_TRIANGLE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -309,7 +309,7 @@ ROUNDED_TRIANGLE = r"""
 
 OVERSIZED_OUTER_SEP = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -326,7 +326,7 @@ OVERSIZED_OUTER_SEP = r"""
 
 INACTIVE_SNAPSHOT = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -347,7 +347,7 @@ INACTIVE_SNAPSHOT = r"""
 
 TRANSFORMED_RECT = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -363,7 +363,7 @@ TRANSFORMED_RECT = r"""
 
 TRANSFORMED_CIRCLE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -379,7 +379,7 @@ TRANSFORMED_CIRCLE = r"""
 
 TRANSFORMED_TRIANGLE = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -395,7 +395,7 @@ TRANSFORMED_TRIANGLE = r"""
 
 TRANSFORMED_LABEL = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -410,7 +410,7 @@ TRANSFORMED_LABEL = r"""
 
 DRAW_ONLY_GLYPH = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -426,7 +426,7 @@ DRAW_ONLY_GLYPH = r"""
 
 NONRECTANGLE_LABEL = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -441,7 +441,7 @@ NONRECTANGLE_LABEL = r"""
 
 NONAUDITED_CUSTOMIZATION = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -458,7 +458,7 @@ NONAUDITED_CUSTOMIZATION = r"""
 
 NESTED_END_HOOK = r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -494,7 +494,7 @@ NESTED_END_HOOK = r"""
 
 ONINK_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[rows={wire}, cols=2]
   \tn[skin=dot, label pos=e]{P} & \tn[skin=dot]{}
@@ -504,7 +504,7 @@ ONINK_SOURCE = r"""
 
 STYLED_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \tikzset{bond/.append style={line width=4pt}}
 \begin{document}
 \begin{tenkz}[rows={wire}, cols=2]
@@ -515,7 +515,7 @@ STYLED_SOURCE = r"""
 
 STYLED_TRACE_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \tikzset{bond/.append style={line width=4pt}}
 \begin{document}
 \tenkzkernel
@@ -528,7 +528,7 @@ STYLED_TRACE_SOURCE = r"""
 
 PAIR_TRACE_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \tenkzkernel
 \begin{tenkz}[rows={wire,wire}, cols=2, physical=updown, trace=physical]
@@ -540,7 +540,7 @@ PAIR_TRACE_SOURCE = r"""
 
 ARCH_MARK_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \tenkzkernel
 \begin{tenkz}[rows={wire,wire}, cols=2, bonds=none]
@@ -562,7 +562,7 @@ ARCH_MARK_SOURCE = r"""
 # (its occupancy is no face lane -- the blind doctrine).
 MARK_CLAIM_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \tenkzkernel
 \begin{tenkz}[lattice={1x4}, bonds=none]
@@ -584,7 +584,7 @@ MARK_CLAIM_SOURCE = r"""
 # advisory when the author named the same word.
 MARK_ONINK_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \tenkzkernel
 \begin{tenkz}[lattice={3x1}, bonds=none]
@@ -603,7 +603,7 @@ MARK_ONINK_EXPLICIT_SOURCE = MARK_ONINK_SOURCE.replace(
 
 NESTED_CLAIM_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \newif\ifinhook
 \tikzset{tenkz audited label/.append style={execute at end node={%
   \ifinhook\else\global\inhooktrue
@@ -621,7 +621,7 @@ NESTED_CLAIM_SOURCE = r"""
 # review, direction-mark ink).
 DIR_MARK_SOURCE = r"""
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[rows={wire}, cols=1, bonds=none]
   \tn[at=(1,1), name=X, skin=dot, ports={0:physical}]{}
@@ -634,7 +634,7 @@ DIR_MARK_SOURCE = r"""
 def customized_glyph(options: str, preamble: str = "") -> str:
     return r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}
@@ -656,7 +656,7 @@ def customized_glyph(options: str, preamble: str = "") -> str:
 def customized_label(options: str, preamble: str = "") -> str:
     return r"""
 \documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \makeatletter
 \newenvironment{tenkztestcanvas}
   {\global\advance\tenkz@pictureid by 1\relax\tenkz@auditpicturetrue\def\tenkz@auditpictureid{\the\tenkz@pictureid}\tenkz@event{picture|id=\the\tenkz@pictureid|lang=kernel}\tenkz@event{atom|picture=\the\tenkz@pictureid|cell=1-1|kind=dot}\tenkz@event{kernel-boundary|picture=\the\tenkz@pictureid|signature=}\begin{tikzpicture}[tenkz every picture]}

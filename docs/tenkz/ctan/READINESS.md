@@ -1,4 +1,10 @@
-# CTAN candidate 0.8.0 — 2026-09-06
+# tikz-tensor-networks CTAN candidate 0.8.0 — 2026-09-17
+
+CTAN requested a more descriptive package name after reviewing the original
+`tenkz` submission. The resubmission uses `tikz-tensor-networks` as the package
+ID, entry point, archive root, and documentation name. The diagram language
+and the GitHub repository retain their existing names. The earlier submission
+was not accepted under the old name.
 
 The candidate uses package version 0.8.0 and package date 2026-09-05. The
 manual, READMEs, citation metadata and change record identify version 0.8.0. The package has not been
@@ -6,7 +12,7 @@ publicly released. This is the first release candidate; the documentation descri
 compatibility freeze is not claimed. The event schema stays at 1.3; the
 rendering corrections also update the geometry recorded in wire-ink events.
 
-The upload includes `tenkz.pdf` and the current manual sources under `doc/`.
+The upload includes `tikz-tensor-networks.pdf` and the current manual sources under `doc/`.
 The CTAN check rebuilds the manual from the unpacked archive, verifies the
 runtime in a clean installation and compiles eight offline examples across
 six picture classes. The inactive release campaign has been removed.
@@ -34,7 +40,7 @@ renderer limitation is tracked in [#301](https://github.com/LionSR/tenkz/issues/
 
 The complete announcement is in `../ANNOUNCEMENT.md`; the upload form values
 are in `UPLOAD-CHECKLIST.md`. After final maintainer approval, create the
-annotated `tenkz-v0.8.0` tag and submit the checked archive. Record the actual
+annotated `tikz-tensor-networks-v0.8.0` tag and submit the checked archive. Record the actual
 CTAN response and verify TeX Live/MiKTeX inclusion separately. A valid local
 archive does not establish CTAN acceptance or distribution availability.
 
