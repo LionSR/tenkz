@@ -27,9 +27,12 @@ KIND_BLOCK = re.compile(
 def check(root: Path = ROOT) -> None:
     """Raise on missing, malformed, or inconsistent product evidence."""
     # Reuse the archive parser: cardinality, version syntax, and calendar date.
-    read_release(root / "tex/tenkz/tenkz.sty")
-    commands = {e.fields[0] for e in current_reference_entries(load_registry(root / REGISTRY))
-                if e.kind == "command"}
+    read_release(root / "tex/tenkz/tikz-tensor-networks.sty")
+    commands = {
+        e.fields[0]
+        for e in current_reference_entries(load_registry(root / REGISTRY))
+        if e.kind == "command"
+    }
     if not commands:
         raise ValueError("registry contains no command declarations")
     reference = (root / REFERENCE).read_text()

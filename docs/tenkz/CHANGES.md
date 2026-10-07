@@ -1,4 +1,12 @@
-# tenkz 0.8.0 — 2026-09-05
+# tikz-tensor-networks 0.8.0 — 2026-09-05
+
+## CTAN package rename (2026-09-17)
+
+Renamed the package from `tenkz` to `tikz-tensor-networks` at the CTAN team's
+request, before the first accepted release. Documents now load
+`\usepackage{tikz-tensor-networks}`. The `tenkz` and `tenkzeq` environments,
+body commands, internal modules, and event format are unchanged. The upload
+archive, manual, and citation metadata use the new package name.
 
 ## Drawing corrections (2026-09-06)
 

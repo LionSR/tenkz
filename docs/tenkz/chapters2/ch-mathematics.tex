@@ -11,7 +11,7 @@ of the network.  In \pkg{}, we declare the mathematics, and let \TeX{} draw the 
 To begin, you need only load the package and declare your first network:
 
 \begin{Verbatim}[fontsize=\small,frame=leftline]
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{tenkz}[cols=2, physical=up] \tn{A} & \tn{B} \end{tenkz}
 \end{Verbatim}
 which immediately produces the elementary two-site chain:
@@ -22,7 +22,7 @@ which immediately produces the elementary two-site chain:
 
 For a working repository checkout, simply add \tnfile{tex/tenkz/} to
 your \texttt{TEXINPUTS} search path; for an archived article, ship
-\tnfile{tenkz.sty} and its companion files beside the document source.
+\tnfile{tikz-tensor-networks.sty} and its companion files beside the document source.
 XeLaTeX is our reference engine, both for high-quality print output and for the
 reproducible XDV-to-SVG web pipeline.
 

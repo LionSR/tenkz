@@ -22,7 +22,7 @@ REGISTRY = ROOT / "tex/tenkz/tenkz-language-registry.tex"
 REFERENCE = ROOT / "docs/tenkz/chapters2/generated-language-reference.tex"
 ALIASES = ROOT / "docs/tenkz/history/generated-language-aliases.tex"
 CONTRACT = ROOT / "docs/tenkz/LANGUAGE-1.0.md"
-# The kernel's six stages, in the order tenkz.sty loads them.  The gate reads
+# The kernel's six stages, in the order tikz-tensor-networks.sty loads them.  The gate reads
 # them as one text because that is what the loader assembles at run time; a
 # definition is a definition wherever the stage split put it.
 KERNEL_STAGES = tuple(
@@ -33,9 +33,7 @@ KERNEL_STAGES = tuple(
 
 def kernel_source() -> str:
     """Every kernel stage, concatenated in load order."""
-    return "\n".join(
-        path.read_text(encoding="utf-8") for path in KERNEL_STAGES
-    )
+    return "\n".join(path.read_text(encoding="utf-8") for path in KERNEL_STAGES)
 
 
 # The closed alphabets of LANGUAGE-1.0 section 2.8, each paired with the place
@@ -135,9 +133,7 @@ def parse_alias_payload(payload: str) -> tuple[str, str]:
     """Return an alias replacement and its supported sunset milestone."""
     match = re.fullmatch(r"(.+?)\s*;\s*sunset=([^;\s]+)", payload)
     if match is None:
-        raise ValueError(
-            "alias payload must be '<replacement>; sunset=<milestone>'"
-        )
+        raise ValueError("alias payload must be '<replacement>; sunset=<milestone>'")
     replacement, sunset = match.groups()
     if sunset not in MILESTONES:
         raise ValueError(
@@ -267,7 +263,9 @@ def load_registry(path: Path | None = None) -> list[Entry]:
     # it either; otherwise the registry means one thing to TeX and another to
     # everything that checks it.  The shared reader blanks a comment in place,
     # so every offset below is the offset in the file.
-    text = strip_comments((REGISTRY if path is None else path).read_text(encoding="utf-8"))
+    text = strip_comments(
+        (REGISTRY if path is None else path).read_text(encoding="utf-8")
+    )
     pattern = re.compile(
         r"\\__tenkz_language_registry_"
         r"(environment|command|key|alias|example|prelude|tombstone):[n]+"
@@ -309,8 +307,7 @@ def _parser_leaf_keys_from_texts(texts: Iterable[str]) -> set[tuple[str, str]]:
     """Collect public leaf-key spellings from TeX parser source texts."""
     leaves: set[tuple[str, str]] = set()
     leaf = re.compile(
-        r"/tenkz/([^/,{]+?)/([^/,{]+?)/\.(?:code|store~in|is~choice)"
-        r"(?=\s*[,=])"
+        r"/tenkz/([^/,{]+?)/([^/,{]+?)/\.(?:code|store~in|is~choice)" r"(?=\s*[,=])"
     )
     root_leaf = re.compile(
         r"/tenkz/([^/,{]+?)/\.(?:code|store~in|is~choice)(?=\s*[,=])"
@@ -354,9 +351,7 @@ _KERNEL_HELPER = re.compile(
 _KERNEL_BLOCK = re.compile(
     r"\\keys_define:nn\s*\{\s*tenkz-kernel-([a-z]+(?:-[a-z]+)*)\s*\}"
 )
-_KERNEL_LINE = re.compile(
-    r"^\s*([a-z][a-z ~-]*?)\s*\.(?:code:n|meta:n|choices:nn)\s*="
-)
+_KERNEL_LINE = re.compile(r"^\s*([a-z][a-z ~-]*?)\s*\.(?:code:n|meta:n|choices:nn)\s*=")
 
 
 def _kernel_leaf_keys_from_texts(texts) -> set[tuple[str, str]]:
@@ -364,8 +359,9 @@ def _kernel_leaf_keys_from_texts(texts) -> set[tuple[str, str]]:
     leaves: set[tuple[str, str]] = set()
     for text in texts:
         for match in _KERNEL_HELPER.finditer(text):
-            leaves.add((f"kernel-{match.group(1)}",
-                        match.group(2).replace("~", " ").strip()))
+            leaves.add(
+                (f"kernel-{match.group(1)}", match.group(2).replace("~", " ").strip())
+            )
         family = None
         depth = 0
         for line in text.splitlines():
@@ -580,9 +576,7 @@ def tombstone_errors(
                 )
             continue
         if scope not in scopes:
-            errors.append(
-                f"tombstone {scope}:{spelling} names no registered scope"
-            )
+            errors.append(f"tombstone {scope}:{spelling} names no registered scope")
             continue
         key, _separator, value = spelling.partition("=")
         key, value = key.strip(), value.strip()
@@ -595,9 +589,7 @@ def tombstone_errors(
             continue
         record = key_vocabulary.get((scope, key))
         if record is None:
-            errors.append(
-                f"tombstone {scope}:{spelling} names no registered key"
-            )
+            errors.append(f"tombstone {scope}:{spelling} names no registered key")
             continue
         enum = re.fullmatch(r"enum\(([^)]*)\)", record[1])
         if enum is not None and value in enum.group(1).split("|"):
@@ -647,9 +639,9 @@ def contract_alphabets(text: str) -> dict[str, list[str]]:
     row the contract renders and this reader ignores is the drift the gate is
     for.
     """
-    sections = list(re.finditer(
-        r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", text, re.M | re.S
-    ))
+    sections = list(
+        re.finditer(r"^### 2\.8 [^\n]*\n(.*?)(?=^#{1,3} |\Z)", text, re.M | re.S)
+    )
     if not sections:
         raise ValueError("LANGUAGE-1.0 has no section 2.8")
     if len(sections) > 1:
@@ -710,7 +702,7 @@ def macro_definitions(text: str, macro: str) -> list[int]:
         cursor = match.start()
         while cursor > 0 and text[cursor - 1].isspace():
             cursor -= 1
-        if DEFINITION_TOKEN.search(text[max(0, cursor - 64):cursor]):
+        if DEFINITION_TOKEN.search(text[max(0, cursor - 64) : cursor]):
             offsets.append(match.start())
     return offsets
 
@@ -736,9 +728,9 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
             "decide what the parser accepts"
         )
     body = macro_body(text, macro, definitions[0])
-    cases = list(re.finditer(
-        r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body
-    ))
+    cases = list(
+        re.finditer(r"\\str_case:([A-Za-z]+)\s*(?:\\[A-Za-z_]+|\{[^}]*\})\s*", body)
+    )
     if not cases:
         raise ValueError(f"parser {macro} has no \\str_case")
     signature = cases[0].group(1)
@@ -785,10 +777,16 @@ def kernel_case_words(text: str, macro: str) -> list[str]:
 
 def kernel_choice_words(text: str, scope: str, key: str) -> list[str]:
     """The words a `\\__tenkz_kernel_choice` table accepts for one key."""
-    matches = list(re.finditer(
-        r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*" + re.escape(scope)
-        + r"\s*\}\s*\{\s*" + re.escape(key) + r"\s*\}", text,
-    ))
+    matches = list(
+        re.finditer(
+            r"\\__tenkz_kernel_choice:[a-zA-Z]{4}\s*\{\s*"
+            + re.escape(scope)
+            + r"\s*\}\s*\{\s*"
+            + re.escape(key)
+            + r"\s*\}",
+            text,
+        )
+    )
     if not matches:
         raise ValueError(f"kernel installs no choice table for {scope}:{key}")
     if len(matches) > 1:
@@ -864,10 +862,14 @@ def alphabet_errors(
         accepted[alphabet] = [word for word in words if word not in recording]
     for alphabet in sorted(set(accepted) | set(contract)):
         if alphabet not in contract:
-            errors.append(f"alphabet {alphabet!r} is accepted but has no section 2.8 row")
+            errors.append(
+                f"alphabet {alphabet!r} is accepted but has no section 2.8 row"
+            )
             continue
         if alphabet not in accepted:
-            errors.append(f"alphabet {alphabet!r} has a section 2.8 row but no acceptor")
+            errors.append(
+                f"alphabet {alphabet!r} has a section 2.8 row but no acceptor"
+            )
             continue
         table, words = set(contract[alphabet]), set(accepted[alphabet])
         if table != words:
@@ -922,9 +924,7 @@ def check(
     }
     for kind, rows in by_kind.items():
         names = [
-            f"{row[0]}:{row[1]}"
-            if kind in {"key", "prelude", "tombstone"}
-            else row[0]
+            f"{row[0]}:{row[1]}" if kind in {"key", "prelude", "tombstone"} else row[0]
             for row in rows
         ]
         duplicates = sorted(name for name in set(names) if names.count(name) > 1)
@@ -935,13 +935,19 @@ def check(
     declared_commands, declared_environments = _declared_api()
     missing_commands = sorted(declared_commands - registered_commands)
     missing_environments = sorted(declared_environments - registered_environments)
-    absent_commands = sorted(registered_commands - declared_commands - {"tndeclareatom"})
+    absent_commands = sorted(
+        registered_commands - declared_commands - {"tndeclareatom"}
+    )
     if missing_commands:
         errors.append(f"accidental public commands: {', '.join(missing_commands)}")
     if missing_environments:
-        errors.append(f"accidental public environments: {', '.join(missing_environments)}")
+        errors.append(
+            f"accidental public environments: {', '.join(missing_environments)}"
+        )
     if absent_commands:
-        errors.append(f"registered commands without declarations: {', '.join(absent_commands)}")
+        errors.append(
+            f"registered commands without declarations: {', '.join(absent_commands)}"
+        )
     for declaration_class, name, descriptor in by_kind["prelude"]:
         if declaration_class != "skin":
             errors.append(
@@ -949,9 +955,7 @@ def check(
                 f"{declaration_class!r}; expected 'skin'"
             )
         if not name or not descriptor:
-            errors.append(
-                f"incomplete prelude declaration: {declaration_class}:{name}"
-            )
+            errors.append(f"incomplete prelude declaration: {declaration_class}:{name}")
     key_vocabulary: dict[tuple[str, str], tuple[str, str]] = {}
     for scope, name, value_type, default, status, meaning in by_kind["key"]:
         if not all((scope, name, value_type, default, status, meaning)):
@@ -974,9 +978,7 @@ def check(
             try:
                 expansion = parse_key_expression(payload)
             except ValueError as exc:
-                errors.append(
-                    f"sugar row {scope}:{name} has invalid expansion: {exc}"
-                )
+                errors.append(f"sugar row {scope}:{name} has invalid expansion: {exc}")
                 continue
             unknown = [
                 token
@@ -1049,9 +1051,7 @@ def check(
             continue
         value_error = _enum_value_error(target, value, target_record)
         if value_error is not None:
-            errors.append(
-                f"value alias {scope}:{spelling} {value_error}"
-            )
+            errors.append(f"value alias {scope}:{spelling} {value_error}")
     errors.extend(
         tombstone_errors(
             tombstone_rows(entries),
@@ -1074,9 +1074,7 @@ def check(
                 "Extension-gate: #NNNN citation, and either way the baseline "
                 "moves in the same commit"
             )
-    registered_keys = {
-        (row[0], row[1].replace("~", " ")) for row in by_kind["key"]
-    }
+    registered_keys = {(row[0], row[1].replace("~", " ")) for row in by_kind["key"]}
     parser_keys = _parser_registry_keys()
     if registered_keys != parser_keys:
         missing = sorted(
@@ -1086,8 +1084,10 @@ def check(
             f"{scope}:{name}" for scope, name in registered_keys - parser_keys
         )
         errors.append(
-            "parser/registry key census mismatch; missing=" + ",".join(missing)
-            + "; extra=" + ",".join(extra)
+            "parser/registry key census mismatch; missing="
+            + ",".join(missing)
+            + "; extra="
+            + ",".join(extra)
         )
     expected_leaves = 145
     if BASELINE.is_file():
@@ -1106,8 +1106,10 @@ def check(
         missing = sorted(registered_commands - set(examples))
         extra = sorted(set(examples) - registered_commands)
         errors.append(
-            "example census mismatch; missing=" + ",".join(missing)
-            + "; extra=" + ",".join(extra)
+            "example census mismatch; missing="
+            + ",".join(missing)
+            + "; extra="
+            + ",".join(extra)
         )
     for command, relative, failure in by_kind["example"]:
         example = ROOT / relative
@@ -1116,17 +1118,29 @@ def check(
             continue
         lines = example.read_text(encoding="utf-8").splitlines()
         if len(lines) > 15:
-            errors.append(f"example for {command} has {len(lines)} lines; maximum is 15")
+            errors.append(
+                f"example for {command} has {len(lines)} lines; maximum is 15"
+            )
         if f"\\{command}" not in "\n".join(lines):
             errors.append(f"example for {command} does not use \\{command}")
         if not failure.strip():
             errors.append(f"example for {command} has no representative failure")
-    contract_labels = ("% Input:", "% Output:", "% Owned state:", "% Invariants:", "% Next stage:")
-    internal_files = [ROOT / "tex/tenkz/tenkz.sty", *sorted((ROOT / "tex/tenkz").glob("*.code.tex"))]
+    contract_labels = (
+        "% Input:",
+        "% Output:",
+        "% Owned state:",
+        "% Invariants:",
+        "% Next stage:",
+    )
+    internal_files = [
+        ROOT / "tex/tenkz/tikz-tensor-networks.sty",
+        *sorted((ROOT / "tex/tenkz").glob("*.code.tex")),
+    ]
     for path in internal_files:
         first = path.read_text(encoding="utf-8").splitlines()[:5]
         if len(first) != 5 or any(
-                not line.startswith(label) for line, label in zip(first, contract_labels)):
+            not line.startswith(label) for line, label in zip(first, contract_labels)
+        ):
             errors.append(f"missing five-line stage contract: {path.relative_to(ROOT)}")
     return errors
 
@@ -1144,9 +1158,14 @@ def _tex(value: str) -> str:
 
 def current_reference_entries(entries: list[Entry]) -> list[Entry]:
     """The manual teaches active vocabulary; sunset rows remain in the registry."""
-    return [entry for entry in entries
-            if not (entry.kind in {"command", "key"}
-                    and re.search(r"\bSunset \S+\.$", entry.fields[-1]))]
+    return [
+        entry
+        for entry in entries
+        if not (
+            entry.kind in {"command", "key"}
+            and re.search(r"\bSunset \S+\.$", entry.fields[-1])
+        )
+    ]
 
 
 def reference_texts(entries: list[Entry]) -> tuple[str, str]:

@@ -1,15 +1,20 @@
-# tenkz 0.8.0 — prepared announcement
+# tikz-tensor-networks 0.8.0 — prepared announcement
 
-Prepared for the first CTAN submission, dated 2026-09-05. Publication is
+Prepared for CTAN resubmission on 2026-09-17, with package date 2026-09-05. Publication is
 pending final maintainer approval and CTAN acceptance.
 
 ## Announcement text
 
-tenkz is a LaTeX package for drawing tensor-network diagrams from a description
+tikz-tensor-networks is a LaTeX package for drawing tensor-network diagrams from a description
 of tensors, indices and connections. It supports matrix product states, PEPS
 sheets, string diagrams and channel diagrams through a common TikZ-based
 language. Common networks use declared frames and addresses; irregular figures
 may require relative placement and authored routes.
+
+Previously submitted as `tenkz`, the package has been renamed to
+`tikz-tensor-networks` at the CTAN team's request. Load it with
+`\usepackage{tikz-tensor-networks}`; the `tenkz` and `tenkzeq` environments
+and their body commands are unchanged.
 
 Version 0.8.0 is the first release candidate. It provides one vocabulary for
 atoms, wires and marks. The manual describes the current language.

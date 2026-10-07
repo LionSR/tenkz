@@ -1,6 +1,6 @@
 cff-version: "1.2.0"
-message: "If you use tenkz in published work, please cite it as below."
-title: "tenkz: tensor-network diagrams from a description of the network"
+message: "If you use tikz-tensor-networks in published work, please cite it as below."
+title: "tikz-tensor-networks: tensor-network diagrams from a description of the network"
 abstract: >-
   A LaTeX package that draws tensor networks — matrix product states, PEPS
   sheets, string diagrams, and channel sandwiches — from a statement of the

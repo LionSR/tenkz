@@ -41,7 +41,7 @@ must be disclosed; per-case verdicts are not a new full visual review.
 
 ## 3. Prepare the release
 
-The version declaration in `tex/tenkz/tenkz.sty` owns the package version and
+The version declaration in `tex/tenkz/tikz-tensor-networks.sty` owns the package version and
 date. A release-preparation change updates the manual, change record, README
 and citation metadata consistently. `TNLOG.md` states its own event version;
 only change that version when the event contract changes.
@@ -54,7 +54,7 @@ the release notes. A separate campaign manifest is unnecessary.
 ## 4. Publish after maintainer approval
 
 The maintainer explicitly approves the final commit and archive, creates its
-annotated `tenkz-vMAJOR.MINOR.PATCH` tag, and submits the archive through CTAN's
+annotated `tikz-tensor-networks-vMAJOR.MINOR.PATCH` tag, and submits the archive through CTAN's
 upload form. Never move or reuse a release tag. Follow up on CTAN's response
 and check distribution inclusion separately. Local checks do not imply CTAN
 acceptance or immediate availability in TeX Live or MiKTeX.

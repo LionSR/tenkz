@@ -170,7 +170,7 @@ SKETCHROW
 "
   { printf '%s\n' \
       '\documentclass{standalone}' \
-      '\usepackage{tenkz}' \
+      '\usepackage{tikz-tensor-networks}' \
       '\makeatletter' \
       '\ExplSyntaxOn' \
       '\file_input:n { tenkz-kernel.code.tex }' \

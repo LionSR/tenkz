@@ -25,7 +25,7 @@ implementation path already crosses the normalized model.
 
 ## Load map
 
-`tenkz.sty` is a logic-free load map.  It establishes the package identity and
+`tikz-tensor-networks.sty` is a logic-free load map.  It establishes the package identity and
 loads the stages in dependency order.  Feature code, state, key registration,
 and diagnostics belong to an owning stage.
 

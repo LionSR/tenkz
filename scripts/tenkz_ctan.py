@@ -9,7 +9,7 @@ an upload is judged on, rather than asserting them.
 What the tool refuses to guess:
 
   the runtime closure   The staged runtime is walked from
-                        `tex/tenkz/tenkz.sty`, following `\\input` through the
+                        `tex/tenkz/tikz-tensor-networks.sty`, following `\\input` through the
                         stage modules and reading `\\RequirePackage` and
                         `\\usetikzlibrary` for what the archive does not carry.
                         A pinned copy in `docs/tenkz/ctan/MANIFEST.toml` fails
@@ -17,7 +17,7 @@ What the tool refuses to guess:
                         module cannot reach an upload unnoticed.
 
   the version           One declaration owns it, the `\\ProvidesPackage` line
-                        of `tex/tenkz/tenkz.sty`. The archive name, the
+                        of `tex/tenkz/tikz-tensor-networks.sty`. The archive name, the
                         README, and the citation records are checked against
                         that line; none of them may state a version of their
                         own. This tool never edits a version.
@@ -65,22 +65,22 @@ import tenkz_manual_build as manual_build  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "tex/tenkz"
-ENTRY = SOURCE / "tenkz.sty"
+ENTRY = SOURCE / "tikz-tensor-networks.sty"
 MATERIAL = ROOT / "docs/tenkz/ctan"
 # The pinned staging tree. An environment variable may name another one, so
 # the contract tests can run the whole command against a manifest that is
 # wrong on purpose without editing a tracked file to do it.
-MANIFEST = Path(
-    os.environ.get("TENKZ_CTAN_MANIFEST") or MATERIAL / "MANIFEST.toml"
-)
+MANIFEST = Path(os.environ.get("TENKZ_CTAN_MANIFEST") or MATERIAL / "MANIFEST.toml")
 MANIFEST_LABEL = (
     str(MANIFEST.relative_to(ROOT)) if MANIFEST.is_relative_to(ROOT) else str(MANIFEST)
 )
 DEFAULT_OUT = ROOT / "build/ctan"
 
-PACKAGE = "tenkz"
+PACKAGE = "tikz-tensor-networks"
 MANIFEST_SCHEMA = 1
-DECLARATION = re.compile(r"^\\ProvidesPackage\{tenkz\}\[([^]]*)\]", re.MULTILINE)
+DECLARATION = re.compile(
+    r"^\\ProvidesPackage\{tikz-tensor-networks\}\[([^]]*)\]", re.MULTILINE
+)
 # The version spelling `RELEASE-POLICY.md` §3 fixes: major, minor, and an
 # optional patch, each a nonempty run of digits, followed by a description.
 # A typo such as `v1..0` is a malformed declaration, not a version this tool
@@ -142,9 +142,24 @@ RESERVED_NAMES = frozenset(
 # and none of it belongs in the directory the upload is walked from either.
 DEBRIS_SUFFIXES = frozenset(
     {
-        ".aux", ".bbl", ".blg", ".fdb_latexmk", ".fls", ".glo", ".gz", ".idx",
-        ".ilg", ".ind", ".log", ".nav", ".out", ".snm", ".tnlog", ".toc",
-        ".vrb", ".xdv",
+        ".aux",
+        ".bbl",
+        ".blg",
+        ".fdb_latexmk",
+        ".fls",
+        ".glo",
+        ".gz",
+        ".idx",
+        ".ilg",
+        ".ind",
+        ".log",
+        ".nav",
+        ".out",
+        ".snm",
+        ".tnlog",
+        ".toc",
+        ".vrb",
+        ".xdv",
     }
 )
 
@@ -162,7 +177,12 @@ ZIP_EPOCH_CEILING = int(
 # manifest that dropped one of these would build an archive without a licence
 # or without a change record, and every check below it would still pass.
 REQUIRED_MATERIAL = (
-    "README.md", "LICENSE", "CHANGES.md", "CITATION.cff", "tenkz.bib", "tenkz.pdf"
+    "README.md",
+    "LICENSE",
+    "CHANGES.md",
+    "CITATION.cff",
+    "tikz-tensor-networks.bib",
+    "tikz-tensor-networks.pdf",
 )
 
 # Existence is not identity: a manifest can point a staged name at the wrong
@@ -177,7 +197,7 @@ REQUIRED_MATERIAL = (
 CANONICAL_MATERIAL = {
     "LICENSE": "LICENSE",
     "CHANGES.md": "docs/tenkz/CHANGES.md",
-    "tenkz.pdf": "output/pdf/tenkz-manual.pdf",
+    "tikz-tensor-networks.pdf": "output/pdf/tenkz-manual.pdf",
 }
 
 # The tables a staging manifest is made of, and the keys each one is read for.
@@ -194,13 +214,13 @@ MANIFEST_TABLES = {
 MATERIAL_MARKS = {
     "README.md": "## Requirements",
     "CITATION.cff": "cff-version:",
-    "tenkz.bib": "@manual{tenkz",
+    "tikz-tensor-networks.bib": "@manual{tenkz",
 }
 
 # Binary material is enumerated here rather than in a second list: its file
 # signature is both the content check and the UTF-8 exemption.
 BINARY_MATERIAL_MARKS = {
-    "tenkz.pdf": b"%PDF-",
+    "tikz-tensor-networks.pdf": b"%PDF-",
 }
 
 # The one licence marker every runtime file carries, and the sentence beside
@@ -209,7 +229,7 @@ LICENSE_MARKER = "% SPDX-License-Identifier: Apache-2.0"
 LICENSE_SENTENCE = "% Copyright the TNLean project; see LICENSE for the full terms."
 
 SMOKE_DOCUMENT = r"""\documentclass{article}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \begin{tenkz}[cols=2]
   \tn[ports={180:virtual:$\alpha$, 90:physical:$i_1$}]{A} &
@@ -229,7 +249,7 @@ DEPENDENCY_CLASSES = ("placement", "ink", "unconsumed")
 
 # Front ends the package once carried, and the load each of them brought with
 # it. They are checked by absence: the closure walk blanks comments before it
-# reads a load, so the sentence in `tenkz.sty` that says commutative diagrams
+# reads a load, so the sentence in `tikz-tensor-networks.sty` that says commutative diagrams
 # belong to tikz-cd is prose and not a dependency, and a real load would be the
 # only way any of these names could reach the closure.
 RETIRED_DEPENDENCIES = ("tikz-cd", "tikzcd", "quantikz")
@@ -260,6 +280,7 @@ def load_names(name: str) -> set[str]:
     if library is not None:
         names.add(library["library"])
     return names
+
 
 # What arXiv will not do for a source submission, expressed as the file kinds
 # whose presence would mean it has to. A `.dtx` or `.ins` pair is the usual
@@ -328,9 +349,7 @@ REDEFINED_NAME = re.compile(
 # hexadecimal after a double quote, octal after a single quote, or a
 # character code after a backtick.  A quote left unread here would be
 # taken for the head of a quoted file name and the call would go unread.
-STREAM_OPERAND = (
-    r"(?:\\[A-Za-z@_:]+|\"[0-9A-Fa-f]+|'[0-7]+|`\\?.|[0-9]+)?\s*=?\s*"
-)
+STREAM_OPERAND = r"(?:\\[A-Za-z@_:]+|\"[0-9A-Fa-f]+|'[0-7]+|`\\?.|[0-9]+)?\s*=?\s*"
 # Only the primitives that open a file are read. `\write` and `\read` take a
 # stream that is already open and a token list that is data, so a token list
 # beginning with a bar is text and refusing it would refuse a valid release.
@@ -361,8 +380,7 @@ _BLANK_EXPANSIONS = (
 _NAME_SCAN_SKIPS = r"(?:\\[A-Za-z@_:]+\s*)*"
 PIPE_FILENAME = re.compile(
     r"\\open(?:in|out)\s*" + STREAM_OPERAND + r"(?:\{\s*)?\"?\s*\|"
-    r"|\\input\s*" + _NAME_SCAN_SKIPS
-    + r"(?:\{\s*" + _BLANK_EXPANSIONS + r")?\"?\s*\|"
+    r"|\\input\s*" + _NAME_SCAN_SKIPS + r"(?:\{\s*" + _BLANK_EXPANSIONS + r")?\"?\s*\|"
     r"|\\include\s*\{\s*\"?\s*\|"
 )
 # A file a stream primitive opens for reading is a load: the engine resolves
@@ -471,23 +489,26 @@ def shell_escape_call(text: str) -> str:
     piped = PIPE_FILENAME.search(scanned)
     if piped is not None:
         return (
-            f'{text[piped.start():piped.end()]}, a file name opening a pipe, '
+            f"{text[piped.start():piped.end()]}, a file name opening a pipe, "
             "which the engine runs as a command"
         )
     allocated = set(ALLOCATED_STREAM.findall(scanned)) - set(
         REDEFINED_NAME.findall(scanned)
     )
     for found in WRITE_CALL.finditer(scanned):
-        call = text[found.start():found.end()]
+        call = text[found.start() : found.end()]
         if found["name"] is not None:
             if found["name"] in allocated:
                 continue
             return f"{call.strip()}, a stream this file does not allocate"
         digits, base = (
-            (found["hex"], 16) if found["hex"]
-            else (found["oct"], 8) if found["oct"]
-            else (found["dec"], 10) if found["dec"]
-            else (None, 10)
+            (found["hex"], 16)
+            if found["hex"]
+            else (
+                (found["oct"], 8)
+                if found["oct"]
+                else (found["dec"], 10) if found["dec"] else (None, 10)
+            )
         )
         if digits is None:
             return (
@@ -577,50 +598,75 @@ class OfflineCase:
 # preamble is the one an author writes rather than one this tool supplies.
 OFFLINE_CASES = (
     OfflineCase(
-        "flat", "flat",
+        "flat",
+        "flat",
         "tests/tenkz/rmp/section-ii/cases/rmp-ii-mps-marginal.tex",
-        False, r"\begin{tenkz}", r"atom\|", absent=r"(?m)^frame\|",
+        False,
+        r"\begin{tenkz}",
+        r"atom\|",
+        absent=r"(?m)^frame\|",
     ),
     OfflineCase(
-        "plane", "plane",
+        "plane",
+        "plane",
         "tests/tenkz/rmp/section-ii/cases/rmp-ii-peps-marginal.tex",
-        False, "frame=plane", r"(?m)^frame\|.*map=plane",
+        False,
+        "frame=plane",
+        r"(?m)^frame\|.*map=plane",
     ),
     OfflineCase(
-        "circle", "circle",
+        "circle",
+        "circle",
         "tests/tenkz/rmp/section-ii/cases/rmp-ii-triangle-network.tex",
         # A circle frame transports each port along its station's outward
         # radius, so the boundary signature carries a numeric compass face. A
         # flat or plane placement writes a named one, so the digit is the
         # reading that tells the two apart.
-        False, "frame=circle", r"kernel-boundary\|signature=phys:[0-9]",
+        False,
+        "frame=circle",
+        r"kernel-boundary\|signature=phys:[0-9]",
     ),
     OfflineCase(
-        "crossing", "string/crossing",
+        "crossing",
+        "string/crossing",
         "tests/tenkz/rmp/section-iii-b/cases/rmp-iii-b-braid-two.tex",
         # `\tnwire` alone would not tell this case from the flat one, which
         # draws wires too. A string-kind wire is what a crossing is made of.
-        False, "kind=string", r"(?m)^stringcross\|",
+        False,
+        "kind=string",
+        r"(?m)^stringcross\|",
     ),
     OfflineCase(
-        "enclosure", "enclosure",
+        "enclosure",
+        "enclosure",
         "tests/tenkz/rmp/section-ii/cases/rmp-ii-peps-projection.tex",
-        False, "form=enclosure", r"(?m)^mark\|.*form=enclosure",
+        False,
+        "form=enclosure",
+        r"(?m)^mark\|.*form=enclosure",
     ),
     OfflineCase(
-        "equation", "equation",
+        "equation",
+        "equation",
         "tests/tenkz/rmp/section-ii/cases/rmp-ii-mpu-brickwork.tex",
-        False, r"\begin{tenkzeq}", r"(?m)^check\|.*result=equal",
+        False,
+        r"\begin{tenkzeq}",
+        r"(?m)^check\|.*result=equal",
     ),
     OfflineCase(
-        "probe-plane", "plane",
+        "probe-plane",
+        "plane",
         "tests/tenkz/kernel/k_plane.tex",
-        True, "frame=plane", r"(?m)^frame\|.*map=plane",
+        True,
+        "frame=plane",
+        r"(?m)^frame\|.*map=plane",
     ),
     OfflineCase(
-        "probe-crossing", "string/crossing",
+        "probe-crossing",
+        "string/crossing",
         "tests/tenkz/kernel/k_braid.tex",
-        True, "cross=", r"(?m)^stringcross\|",
+        True,
+        "cross=",
+        r"(?m)^stringcross\|",
     ),
 )
 
@@ -633,7 +679,7 @@ OFFLINE_CASES = (
 # installation rather than on the archive.
 OFFLINE_WRAPPER = r"""\documentclass{article}
 \usepackage{amsmath,amssymb}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \begin{document}
 \input{%s}
 \end{document}
@@ -646,10 +692,22 @@ OFFLINE_WRAPPER = r"""\documentclass{article}
 # font or a format on the fly, which is the other way a run can quietly repair
 # an incomplete environment.
 INTERPOSED_TOOLS = (
-    "tlmgr", "curl", "wget", "git", "ftp", "scp", "ssh", "rsync",
-    "mktextfm", "mktexpk", "mktexmf", "mktexlsr", "updmap", "fmtutil",
+    "tlmgr",
+    "curl",
+    "wget",
+    "git",
+    "ftp",
+    "scp",
+    "ssh",
+    "rsync",
+    "mktextfm",
+    "mktexpk",
+    "mktexmf",
+    "mktexlsr",
+    "updmap",
+    "fmtutil",
 )
-TRIPWIRE = "#!/bin/sh\nprintf '%s\\n' \"$0\" >> \"$TENKZ_OFFLINE_TRIPWIRE\"\nexit 127\n"
+TRIPWIRE = '#!/bin/sh\nprintf \'%s\\n\' "$0" >> "$TENKZ_OFFLINE_TRIPWIRE"\nexit 127\n'
 
 
 # --------------------------------------------------------------------------
@@ -680,14 +738,18 @@ def read_release(entry: Path = ENTRY) -> Release:
     try:
         text = entry.read_bytes().decode("utf-8")
     except FileNotFoundError:
-        raise SystemExit(f"{entry.name} is missing; there is no package to stage") from None
+        raise SystemExit(
+            f"{entry.name} is missing; there is no package to stage"
+        ) from None
     except UnicodeDecodeError as error:
-        raise SystemExit(f"{entry.name} is not UTF-8 and cannot be read: {error}") from None
+        raise SystemExit(
+            f"{entry.name} is not UTF-8 and cannot be read: {error}"
+        ) from None
     declarations = DECLARATION.findall(text)
     if len(declarations) != 1:
         raise SystemExit(
             f"{entry.name} must carry exactly one "
-            f"\\ProvidesPackage{{tenkz}} line; found {len(declarations)}"
+            f"\\ProvidesPackage{{{PACKAGE}}} line; found {len(declarations)}"
         )
     match = PAYLOAD.fullmatch(declarations[0])
     if match is None:
@@ -719,7 +781,7 @@ def walk_closure(source: Path = SOURCE, entry: str = ENTRY.name) -> Closure:
     """Follow the load graph from the entry point, in load order.
 
     Comments are blanked before the graph is read, so a stage named only in
-    prose — the load-order commentary in `tenkz.sty` names several — never
+    prose — the load-order commentary in `tikz-tensor-networks.sty` names several — never
     enters the closure, and a stage commented out leaves it.
     """
 
@@ -751,7 +813,9 @@ def walk_closure(source: Path = SOURCE, entry: str = ENTRY.name) -> Closure:
             # recording one would refuse a release over a definition.
             text = uncontrolled(strip_comments(path.read_bytes().decode("utf-8")))
         except UnicodeDecodeError as error:
-            raise SystemExit(f"{name} is not UTF-8 and cannot be read: {error}") from None
+            raise SystemExit(
+                f"{name} is not UTF-8 and cannot be read: {error}"
+            ) from None
         macro_named = MACRO_STREAM_OPEN.search(text)
         if macro_named is not None:
             raise SystemExit(
@@ -775,9 +839,7 @@ def walk_closure(source: Path = SOURCE, entry: str = ENTRY.name) -> Closure:
         ]
         loads.sort(key=lambda load: load[0].start())
         for match, kind in loads:
-            found = next(
-                group for group in match.groups() if group is not None
-            ).strip()
+            found = next(group for group in match.groups() if group is not None).strip()
             if kind == "write":
                 written.add(found)
             elif kind == "stream":
@@ -829,9 +891,7 @@ def read_manifest() -> dict:
             )
         for key in keys:
             if key not in section:
-                raise SystemExit(
-                    f"{MANIFEST_LABEL} declares [{table}] without {key!r}"
-                )
+                raise SystemExit(f"{MANIFEST_LABEL} declares [{table}] without {key!r}")
     requires = manifest["runtime"]["requires"]
     if not isinstance(requires, dict) or not {"packages", "libraries"} <= set(requires):
         raise SystemExit(
@@ -905,8 +965,9 @@ def staged_content(manifest: dict, closure: Closure) -> dict[str, Path]:
     return content
 
 
-def require_writable_names(manifest: dict, closure: Closure,
-                           content: dict[str, Path]) -> None:
+def require_writable_names(
+    manifest: dict, closure: Closure, content: dict[str, Path]
+) -> None:
     """The name check, as a refusal rather than a report.
 
     The reporting command says what is wrong with a staged name and keeps
@@ -1013,8 +1074,9 @@ def stage(
     return tree
 
 
-def write_archive(destination: Path, release: Release, epoch: int,
-                  content: dict[str, Path]) -> Path:
+def write_archive(
+    destination: Path, release: Release, epoch: int, content: dict[str, Path]
+) -> Path:
     """Write the upload archive, with every varying field fixed.
 
     Four fields of a zip entry are otherwise written from the machine that
@@ -1211,7 +1273,9 @@ def check_dependencies(closure: Closure, manifest: dict) -> Report:
         if not isinstance(members, list) or any(
             not isinstance(member, str) for member in members
         ):
-            report.failures.append(f"[runtime.requires.ownership] {name} is not a list of names")
+            report.failures.append(
+                f"[runtime.requires.ownership] {name} is not a list of names"
+            )
             return report
         repeated = sorted({member for member in members if members.count(member) > 1})
         report.require(
@@ -1255,9 +1319,7 @@ def check_dependencies(closure: Closure, manifest: dict) -> Report:
     # reporting one, is worse than no line at all.
     if not report.failures:
         report.notes.append(
-            "; ".join(
-                f"{name}: {len(classified[name])}" for name in DEPENDENCY_CLASSES
-            )
+            "; ".join(f"{name}: {len(classified[name])}" for name in DEPENDENCY_CLASSES)
             + f"; no load of {', '.join(RETIRED_DEPENDENCIES)}"
         )
     if not report.failures and classified["unconsumed"]:
@@ -1268,7 +1330,9 @@ def check_dependencies(closure: Closure, manifest: dict) -> Report:
     return report
 
 
-def check_source_tree(closure: Closure, manifest: dict, source: Path = SOURCE) -> Report:
+def check_source_tree(
+    closure: Closure, manifest: dict, source: Path = SOURCE
+) -> Report:
     """Nothing in the source directory is unaccounted for, and none of it is debris."""
 
     report = Report("sources")
@@ -1300,8 +1364,7 @@ def check_material(manifest: dict) -> Report:
     for name in REQUIRED_MATERIAL:
         report.require(
             name in declared,
-            f"{MANIFEST_LABEL} stages no {name}, which every upload "
-            "must carry",
+            f"{MANIFEST_LABEL} stages no {name}, which every upload " "must carry",
         )
     for name, path in documentation_sources().items():
         report.require(path.is_file(), f"documentation source {name} is missing")
@@ -1344,9 +1407,7 @@ def check_material(manifest: dict) -> Report:
         report.require(
             heading in text, f"the CTAN README carries no {heading[3:]!r} section"
         )
-    report.require(
-        "@" in text, "the CTAN README states no contact address"
-    )
+    report.require("@" in text, "the CTAN README states no contact address")
     return report
 
 
@@ -1372,8 +1433,11 @@ def check_encoding(content: dict[str, Path]) -> Report:
     return report
 
 
-def check_names(content: dict[str, Path], manifest: dict | None = None,
-                closure: Closure | None = None) -> Report:
+def check_names(
+    content: dict[str, Path],
+    manifest: dict | None = None,
+    closure: Closure | None = None,
+) -> Report:
     """Names an unpacking tool cannot misread, on any file system.
 
     Given the manifest and the closure, the check also answers whether the
@@ -1384,8 +1448,10 @@ def check_names(content: dict[str, Path], manifest: dict | None = None,
 
     report = Report("names")
     if manifest is not None and closure is not None:
-        collisions = sorted(set(manifest["material"]) &
-                            (set(closure.files) | set(documentation_sources())))
+        collisions = sorted(
+            set(manifest["material"])
+            & (set(closure.files) | set(documentation_sources()))
+        )
         report.require(
             not collisions,
             f"{MANIFEST_LABEL} stages material under a runtime or documentation "
@@ -1393,14 +1459,21 @@ def check_names(content: dict[str, Path], manifest: dict | None = None,
             "and header checks never read",
         )
     if closure is not None:
-        report.require(all("/" not in name for name in closure.files),
-                       "runtime files must remain at the archive root")
+        report.require(
+            all("/" not in name for name in closure.files),
+            "runtime files must remain at the archive root",
+        )
     names = {name.lower() for name in content}
     for name in content:
-        parents = [parent.as_posix().lower() for parent in Path(name).parents
-                   if parent != Path(".")]
-        report.require(not any(parent in names for parent in parents),
-                       f"{name!r} has a parent staged as a file")
+        parents = [
+            parent.as_posix().lower()
+            for parent in Path(name).parents
+            if parent != Path(".")
+        ]
+        report.require(
+            not any(parent in names for parent in parents),
+            f"{name!r} has a parent staged as a file",
+        )
     seen: dict[str, str] = {}
     for name in content:
         report.require(
@@ -1413,8 +1486,10 @@ def check_names(content: dict[str, Path], manifest: dict | None = None,
             f"{name!r} ends in a dot, which Windows drops when it unpacks",
         )
         report.require(
-            all(part.split(".")[0].upper() not in RESERVED_NAMES
-                for part in name.split("/")),
+            all(
+                part.split(".")[0].upper() not in RESERVED_NAMES
+                for part in name.split("/")
+            ),
             f"{name!r} is a reserved device name on Windows, whatever its suffix",
         )
         collision = seen.get(name.lower())
@@ -1502,7 +1577,9 @@ def _live_bibtex(bibliography: str, key: str | None = None) -> str:
 
     uncommented = re.sub(r"(?m)^\s*%.*$", "", bibliography)
     if key is not None:
-        match = re.search(rf"@\w+\s*\{{\s*{re.escape(key)}\s*,.*?\n\}}", uncommented, re.DOTALL)
+        match = re.search(
+            rf"@\w+\s*\{{\s*{re.escape(key)}\s*,.*?\n\}}", uncommented, re.DOTALL
+        )
         return match.group(0) if match else ""
     return "\n".join(re.findall(r"@\w+\s*\{.*?\n\}", uncommented, re.DOTALL))
 
@@ -1523,9 +1600,7 @@ def check_version(release: Release, manifest: dict) -> Report:
     # right string beside a stale live value would otherwise satisfy this. A
     # top-level field is stated once, so a second one — the stale line a
     # release edit left behind — is a finding and not a second chance.
-    for field_name, value in (
-        ("version", release.version),
-    ):
+    for field_name, value in (("version", release.version),):
         stated = re.findall(rf'^{field_name}: "([^"]*)"\s*$', citation, re.M)
         report.require(
             stated == [value],
@@ -1536,15 +1611,17 @@ def check_version(release: Release, manifest: dict) -> Report:
         re.search(r"^date-released\s*:", citation, re.M) is None,
         "the candidate citation record must omit date-released until publication",
     )
-    entry = _live_bibtex(_material_text(manifest, "tenkz.bib"), key="tenkz")
+    entry = _live_bibtex(
+        _material_text(manifest, "tikz-tensor-networks.bib"), key="tenkz"
+    )
     year, month, _ = release.date.split("-")
     # Read from the fields of the package's own entry, with comments taken out first: a
     # BibTeX comment holding the right year beside a live field holding last
     # year's is a stale record, and searching the whole bibliography would allow
     # cited literature from the same year to mask a stale package entry.
     report.require(
-        re.search(rf"note\s*=\s*\{{[^}}]*version\s+{re.escape(release.version)}",
-                  entry) is not None,
+        re.search(rf"note\s*=\s*\{{[^}}]*version\s+{re.escape(release.version)}", entry)
+        is not None,
         f"the BibTeX record must state version {release.version} in its note field",
     )
     report.require(
@@ -1555,7 +1632,9 @@ def check_version(release: Release, manifest: dict) -> Report:
         re.search(rf"month\s*=\s*\{{\s*{int(month)}\s*\}}", entry) is not None,
         f"the BibTeX record must state month {int(month)}",
     )
-    report.notes.append(f"{release.archive_stem}.zip from v{release.version} of {release.date}")
+    report.notes.append(
+        f"{release.archive_stem}.zip from v{release.version} of {release.date}"
+    )
     return report
 
 
@@ -1568,7 +1647,9 @@ def check_determinism(release: Release) -> Report:
     for label, mask in (("first", 0o022), ("second", 0o077)):
         previous = os.umask(mask)
         try:
-            with tempfile.TemporaryDirectory(prefix=f"tenkz-ctan-{label}-") as directory:
+            with tempfile.TemporaryDirectory(
+                prefix=f"tenkz-ctan-{label}-"
+            ) as directory:
                 archive, _, digest = build(Path(directory) / "out")
                 digests.append(digest)
                 tree = archive.parent / PACKAGE
@@ -1600,7 +1681,7 @@ def recorded_inputs(record: Path) -> list[str]:
     """Every file the engine opened, from its input record."""
 
     return [
-        line[len("INPUT "):].strip()
+        line[len("INPUT ") :].strip()
         for line in record.read_text(encoding="utf-8", errors="replace").splitlines()
         if line.startswith("INPUT ")
     ]
@@ -1621,7 +1702,7 @@ def resolved_runtime_files(record: Path) -> list[str]:
     return [
         path
         for path in recorded_inputs(record)
-        if Path(path).name.startswith(PACKAGE)
+        if Path(path).name.startswith((PACKAGE, "tenkz"))
     ]
 
 
@@ -1679,9 +1760,7 @@ def check_smoke(archive: Path, required: bool) -> Report:
             )
             return report
         if finished.returncode != 0:
-            tail = "\n".join(
-                (finished.stdout + finished.stderr).splitlines()[-25:]
-            )
+            tail = "\n".join((finished.stdout + finished.stderr).splitlines()[-25:])
             report.failures.append(
                 "a document using only the unpacked archive failed to compile, "
                 f"exit {finished.returncode}:\n{tail}"
@@ -1693,9 +1772,7 @@ def check_smoke(archive: Path, required: bool) -> Report:
             return report
         opened = resolved_runtime_files(record)
         strangers = foreign_runtime_files(opened, room, unpacked)
-        report.require(
-            opened, "the run opened no tenkz file, so it proved nothing"
-        )
+        report.require(opened, "the run opened no tenkz file, so it proved nothing")
         report.require(
             not strangers,
             "the run resolved runtime files outside the unpacked archive, so an "
@@ -1770,7 +1847,7 @@ def check_arxiv(tree: Path, closure: Closure) -> Report:
 def offline_room(archive: Path, room: Path) -> list[str]:
     """Unpack the archive flat into one directory, as a submission unpacks.
 
-    CTAN receives a `tenkz/` directory and an installation puts it on the
+    CTAN receives a `tikz-tensor-networks/` directory and an installation puts it on the
     search path. A submission has no search path to put it on: the files sit
     beside the manuscript, so this is where the archive is flattened and where
     a runtime file that only resolves through a directory would fail.
@@ -1786,7 +1863,9 @@ def offline_room(archive: Path, room: Path) -> list[str]:
             with zipfile.ZipFile(archive) as bundle:
                 bundle.extractall(unpacking)
         except (zipfile.BadZipFile, OSError) as error:
-            raise SystemExit(f"{archive.name} does not open as an archive: {error}") from None
+            raise SystemExit(
+                f"{archive.name} does not open as an archive: {error}"
+            ) from None
         unpacked = Path(unpacking) / PACKAGE
         if not unpacked.is_dir():
             raise SystemExit(
@@ -1813,7 +1892,9 @@ def offline_room(archive: Path, room: Path) -> list[str]:
     return staged
 
 
-def offline_environment(room: Path, shims: Path, tripwire: Path, home: Path) -> dict[str, str]:
+def offline_environment(
+    room: Path, shims: Path, tripwire: Path, home: Path
+) -> dict[str, str]:
     """The environment a run gets, built rather than inherited.
 
     Nothing of the caller's environment reaches the engine except the search
@@ -1826,7 +1907,9 @@ def offline_environment(room: Path, shims: Path, tripwire: Path, home: Path) -> 
     """
 
     return {
-        "PATH": os.pathsep.join([str(shims), "/usr/bin", "/bin", os.environ.get("PATH", "")]),
+        "PATH": os.pathsep.join(
+            [str(shims), "/usr/bin", "/bin", os.environ.get("PATH", "")]
+        ),
         "HOME": str(home),
         "TEXMFHOME": str(home / "texmf"),
         "TEXMFVAR": str(home / "texmf-var"),
@@ -1918,7 +2001,9 @@ def check_offline(archive: Path, required: bool) -> Report:
         return report
     audit = ROOT / "scripts/tenkz_audit.py"
     if not audit.is_file():
-        report.failures.append(f"{audit.relative_to(ROOT)} is missing; nothing would read the runs")
+        report.failures.append(
+            f"{audit.relative_to(ROOT)} is missing; nothing would read the runs"
+        )
         return report
     with tempfile.TemporaryDirectory(prefix="tenkz-offline-") as directory:
         base = Path(directory)
@@ -1941,7 +2026,9 @@ def check_offline(archive: Path, required: bool) -> Report:
         if tripwire.exists():
             report.failures.append(
                 "the runs reached for an installer or a fetcher: "
-                + tripwire.read_text(encoding="utf-8", errors="replace").replace("\n", " ")
+                + tripwire.read_text(encoding="utf-8", errors="replace").replace(
+                    "\n", " "
+                )
             )
     if not report.failures:
         report.notes.append(
@@ -1953,9 +2040,15 @@ def check_offline(archive: Path, required: bool) -> Report:
     return report
 
 
-def _offline_case(case: OfflineCase, room: Path, engine: str,
-                  environment: dict[str, str], audit: Path, carried: set[str],
-                  report: Report) -> None:
+def _offline_case(
+    case: OfflineCase,
+    room: Path,
+    engine: str,
+    environment: dict[str, str],
+    audit: Path,
+    carried: set[str],
+    report: Report,
+) -> None:
     """Compile one case in the flat room and read what it wrote.
 
     `carried` is the runtime the archive holds, by name, and it is what a
@@ -1964,7 +2057,9 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
 
     source = ROOT / case.source
     if not source.is_file():
-        report.failures.append(f"{case.source} is missing; the {case.picture_class} case has moved")
+        report.failures.append(
+            f"{case.source} is missing; the {case.picture_class} case has moved"
+        )
         return
     text = source.read_text(encoding="utf-8")
     if case.declares not in text:
@@ -1983,12 +2078,24 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
         (room / f"{job}.tex").write_text(OFFLINE_WRAPPER % read, encoding="utf-8")
     try:
         finished = subprocess.run(
-            [engine, "-no-shell-escape", "-interaction=nonstopmode",
-             "-halt-on-error", "-recorder", f"{job}.tex"],
-            cwd=room, env=environment, capture_output=True, text=True, timeout=300,
+            [
+                engine,
+                "-no-shell-escape",
+                "-interaction=nonstopmode",
+                "-halt-on-error",
+                "-recorder",
+                f"{job}.tex",
+            ],
+            cwd=room,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=300,
         )
     except subprocess.TimeoutExpired:
-        report.failures.append(f"{case.name} did not finish compiling within 300 seconds")
+        report.failures.append(
+            f"{case.name} did not finish compiling within 300 seconds"
+        )
         return
     if finished.returncode != 0:
         tail = "\n".join((finished.stdout + finished.stderr).splitlines()[-20:])
@@ -1997,12 +2104,18 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
             f"archive, exit {finished.returncode}:\n{tail}"
         )
         return
-    pdf, stream, record = (room / f"{job}.pdf", room / f"{job}.tnlog", room / f"{job}.fls")
+    pdf, stream, record = (
+        room / f"{job}.pdf",
+        room / f"{job}.tnlog",
+        room / f"{job}.fls",
+    )
     if not pdf.is_file() or pdf.stat().st_size == 0:
         report.failures.append(f"{case.name} produced no PDF")
         return
     if not stream.is_file() or not stream.read_text(encoding="utf-8").strip():
-        report.failures.append(f"{case.name} produced no event stream, so it drew nothing to read")
+        report.failures.append(
+            f"{case.name} produced no event stream, so it drew nothing to read"
+        )
         return
     if not record.is_file():
         report.failures.append(f"{case.name} wrote no input record to read")
@@ -2041,7 +2154,10 @@ def _offline_case(case: OfflineCase, room: Path, engine: str,
     try:
         read_back = subprocess.run(
             [sys.executable, str(audit), str(stream), str(room / read)],
-            cwd=room, capture_output=True, text=True, timeout=300,
+            cwd=room,
+            capture_output=True,
+            text=True,
+            timeout=300,
         )
     except subprocess.TimeoutExpired:
         report.failures.append(
@@ -2072,7 +2188,9 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
         # The report is the last thing the command prints, after the findings
         # it exists to report. A missing artifact must not replace them.
         path = ROOT / relative
-        return path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
+        return (
+            path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
+        )
 
     # Inert source blanked, exactly as `tenkz_manual_build.py` does it: a line
     # that is commented, or in a branch TeX never takes, reaches no page and is
@@ -2087,19 +2205,24 @@ def release_sync(release: Release) -> list[tuple[str, str]]:
     )
     # prefix match would report `0.7-beta` as agreeing with `v0.7`.
     manual_version = re.search(r"manual for \\pkg\{\} version ([^\\}]*)", manual)
-    if manual_version and not re.fullmatch(r"[0-9]+(?:\.[0-9]+)*", manual_version.group(1).strip()):
+    if manual_version and not re.fullmatch(
+        r"[0-9]+(?:\.[0-9]+)*", manual_version.group(1).strip()
+    ):
         manual_version = None
     event = re.search(r'^version = "([0-9.]+)"', tnlog, re.MULTILINE)
     heading = changes.splitlines()[0].lstrip("# ").strip() if changes else "absent"
     return [
-        ("tex/tenkz/tenkz.sty", f"v{release.version} of {release.date}"),
+        ("tex/tenkz/tikz-tensor-networks.sty", f"v{release.version} of {release.date}"),
         (
             "docs/tenkz/manual2.tex",
             f"{'v' + manual_version.group(1) if manual_version else 'no version'} of "
             f"{dateline.group(1).strip() if dateline else 'no date line'}",
         ),
         ("docs/tenkz/CHANGES.md", heading),
-        ("docs/tenkz/TNLOG.md", f"event format {event.group(1)}" if event else "no version"),
+        (
+            "docs/tenkz/TNLOG.md",
+            f"event format {event.group(1)}" if event else "no version",
+        ),
     ]
 
 
@@ -2170,29 +2293,41 @@ def check_documentation(archive: Path, required: bool) -> Report:
         with tempfile.TemporaryDirectory(prefix="tenkz-upload-manual-") as room:
             root = Path(room)
             with zipfile.ZipFile(archive) as bundle:
-                missing = sorted(f"{PACKAGE}/{name}" for name in documentation_sources()
-                                 if f"{PACKAGE}/{name}" not in bundle.namelist())
+                missing = sorted(
+                    f"{PACKAGE}/{name}"
+                    for name in documentation_sources()
+                    if f"{PACKAGE}/{name}" not in bundle.namelist()
+                )
                 if missing:
                     raise ValueError(f"upload omits manual sources: {missing}")
                 bundle.extractall(root / "unpacked")
             package = root / "unpacked" / PACKAGE
-            release = read_release(package / "tenkz.sty")
+            release = read_release(package / "tikz-tensor-networks.sty")
             pdf, findings = manual_build.build(
-                root / "build", chosen_epoch(release), engine,
-                manual_dir=package / "doc", package_tree=package,
+                root / "build",
+                chosen_epoch(release),
+                engine,
+                manual_dir=package / "doc",
+                package_tree=package,
             )
             report.require(bool(pdf), "the uploaded manual produced no PDF")
             report.require(
-                pdf == (package / "tenkz.pdf").read_bytes(),
-                "rebuilt documentation differs from shipped tenkz.pdf; "
+                pdf == (package / "tikz-tensor-networks.pdf").read_bytes(),
+                "rebuilt documentation differs from shipped tikz-tensor-networks.pdf; "
                 "rebuild the release manual before staging",
             )
             report.notes.append(
                 f"manual rebuilt from unpacked sources; {len(pdf)} PDF bytes, "
                 f"{len(findings)} audit advisories"
             )
-    except (OSError, ValueError, RuntimeError, SystemExit, zipfile.BadZipFile,
-            subprocess.TimeoutExpired) as error:
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        SystemExit,
+        zipfile.BadZipFile,
+        subprocess.TimeoutExpired,
+    ) as error:
         report.failures.append(str(error))
     return report
 
@@ -2229,9 +2364,19 @@ def command_check(require_smoke: bool, keep: Path | None) -> int:
     blocked = material.failures + encoding.failures + names.failures
     digest = ""
     if blocked:
-        for name in ("permissions", "debris", "arxiv", "determinism", "clean-install", "offline", "documentation"):
+        for name in (
+            "permissions",
+            "debris",
+            "arxiv",
+            "determinism",
+            "clean-install",
+            "offline",
+            "documentation",
+        ):
             skipped = Report(name)
-            skipped.skipped = f"the staged material is not complete ({len(blocked)} finding(s))"
+            skipped.skipped = (
+                f"the staged material is not complete ({len(blocked)} finding(s))"
+            )
             reports.append(skipped)
     else:
         with tempfile.TemporaryDirectory(prefix="tenkz-ctan-check-") as directory:
