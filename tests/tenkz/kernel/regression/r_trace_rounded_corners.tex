@@ -1,0 +1,53 @@
+% Regression: periodic row returns round all four turns, above and below.
+% Formula: tr(A B C); periodic sugar and its west/east expansion agree.
+\documentclass{standalone}
+\usepackage{tenkz}
+\ExplSyntaxOn
+\file_input:n { tenkz-kernel.code.tex }
+\cs_new_eq:NN \__tenkz_test_corner_stroke:nn
+  \__tenkz_kernel_r_wire_stroke:nn
+\tl_new:N \l__tenkz_test_corner_path_tl
+\tl_new:N \l__tenkz_test_corner_segment_tl
+\tl_new:N \l__tenkz_test_corner_action_tl
+\seq_new:N \l__tenkz_test_corner_segments_seq
+\int_new:N \l__tenkz_test_corner_count_int
+\int_new:N \g__tenkz_test_corner_returns_int
+\cs_set_protected:Npn \__tenkz_kernel_r_wire_stroke:nn #1#2
+  {
+    \__tenkz_test_corner_stroke:nn {#1} {#2}
+    \__tenkz_model_get:nnN
+      { \l__tenkz_kernel_r_wire_record_tl } {side} \l__tenkz_test_corner_action_tl
+    \str_if_eq:VnT \l__tenkz_test_corner_action_tl {west-east}
+      {
+        \tl_set_eq:Nc \l__tenkz_test_corner_path_tl
+          { \l__tikzspath_prefix_tl \l__tenkz_kernel_r_sid_tl }
+        \spath_segments_to_seq:NV \l__tenkz_test_corner_segments_seq
+          \l__tenkz_test_corner_path_tl
+        \int_zero:N \l__tenkz_test_corner_count_int
+        \seq_map_inline:Nn \l__tenkz_test_corner_segments_seq
+          {
+            \tl_set:Nn \l__tenkz_test_corner_segment_tl {##1}
+            \spath_finalaction:NV \l__tenkz_test_corner_action_tl
+              \l__tenkz_test_corner_segment_tl
+            \tl_if_eq:NNT \l__tenkz_test_corner_action_tl \c_spath_curveto_tl
+              { \int_incr:N \l__tenkz_test_corner_count_int }
+          }
+        \int_compare:nNnF { \l__tenkz_test_corner_count_int } = {4}
+          { \errmessage{Periodic~return~must~have~four~curved~turns} }
+        \int_gincr:N \g__tenkz_test_corner_returns_int
+      }
+  }
+\ExplSyntaxOff
+\begin{document}
+\begin{tenkz}[rows={wire}, cols=3, boundary=periodic]
+  \tn{A} & \tn{B} & \tn{C}
+\end{tenkz}
+\begin{tenkz}[rows={wire,wire}, cols=3, west=trace, east=trace]
+  \tn[skin=box]{A} & \tn[skin=box]{B} & \tn[skin=box]{C} \\
+  \tn[skin=box]{A} & \tn[skin=box]{B} & \tn[skin=box]{C}
+\end{tenkz}
+\ExplSyntaxOn
+\int_compare:nNnF { \g__tenkz_test_corner_returns_int } = {3}
+  { \errmessage{Expected~three~periodic~returns~to~be~checked} }
+\ExplSyntaxOff
+\end{document}

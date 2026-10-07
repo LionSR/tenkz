@@ -2530,8 +2530,8 @@
 % contour so that gate has something exact to read: the row's two virtual
 % ends, and the polyline the stroke laid between them, in scaled points on
 % the picture's own axes -- the units the measured label and glyph boxes
-% already use.  Each rounded corner enters as its two tangent points and the
-% arc's mid-point, so the reported contour lies inside the ink and claims no
+% already use.  Each rounded corner enters as its tangent points and sampled
+% arc points, so the reported contour lies inside the ink and claims no
 % clearance the drawing does not have.  The record carries the stroke it is
 % drawn with -- half the wire width, the half-stroke reach a measured glyph
 % already publishes -- because the polyline is the centreline of a wire that
@@ -2569,10 +2569,66 @@
 % drawn ink to the clearance the metric table declares, which is the reading
 % a wire's own ink cannot supply: a wire carries no measured box.
 \tl_new:N \l__tenkz_kernel_r_rail_clear_tl
+% Round the lead-to-descent turns without asking PGF to round the
+% already-curved lower bends.  Clamp the radius to the available segments;
+% a missing lead has no upper turn, and a nonhorizontal lead keeps its route.
+\fp_new:N \l__tenkz_kernel_rail_left_radius_fp
+\fp_new:N \l__tenkz_kernel_rail_right_radius_fp
+\cs_new_protected:Npn \__tenkz_kernel_r_rail_upper_radii:
+  {
+    \fp_zero:N \l__tenkz_kernel_rail_left_radius_fp
+    \fp_zero:N \l__tenkz_kernel_rail_right_radius_fp
+    \bool_if:NT \l__tenkz_kernel_r_wrap_llead_bool
+      {
+        \fp_compare:nNnT { \l__tenkz_kernel_r_wrap_ly_fp }
+          = { \l__tenkz_kernel_r_y_fp }
+          {
+            \fp_set:Nn \l__tenkz_kernel_rail_left_radius_fp
+              {
+                max(0, min( \__tenkz_metric_ratio:n {corner},
+                  ( \l__tenkz_kernel_r_wrap_lx_fp
+                    - \l__tenkz_kernel_r_wrap_wx_fp ) / 2,
+                  ( \l__tenkz_kernel_r_reach_fp
+                    - \__tenkz_metric_ratio:n {pairtracereach} / 2 ) / 2 ))
+              }
+          }
+      }
+    \bool_if:NT \l__tenkz_kernel_r_wrap_rlead_bool
+      {
+        \fp_compare:nNnT { \l__tenkz_kernel_r_wrap_ry_fp }
+          = { \l__tenkz_kernel_r_yb_fp }
+          {
+            \fp_set:Nn \l__tenkz_kernel_rail_right_radius_fp
+              {
+                max(0, min( \__tenkz_metric_ratio:n {corner},
+                  ( \l__tenkz_kernel_r_wrap_ex_fp
+                    - \l__tenkz_kernel_r_wrap_rx_fp ) / 2,
+                  ( \l__tenkz_kernel_r_reach_fp
+                    - \__tenkz_metric_ratio:n {pairtracereach} / 2 ) / 2 ))
+              }
+          }
+      }
+  }
+% Saved-path sampling stays in native TeX dimensions; rail records use sp.
+\tl_new:N \l__tenkz_kernel_rail_path_tl
+\tl_new:N \l__tenkz_kernel_rail_segment_tl
+\tl_new:N \l__tenkz_kernel_rail_action_tl
+\tl_new:N \l__tenkz_kernel_rail_point_tl
+\seq_new:N \l__tenkz_kernel_rail_segments_seq
+\cs_new_protected:Npn \__tenkz_kernel_r_rail_saved_pt:
+  {
+    \tl_if_empty:NF \l__tenkz_kernel_r_rail_tl
+      { \tl_put_right:Nn \l__tenkz_kernel_r_rail_tl { ; } }
+    \tl_put_right:Ne \l__tenkz_kernel_r_rail_tl
+      {
+        \dim_to_decimal_in_sp:n { \tl_item:Nn \l__tenkz_kernel_rail_point_tl {1} }
+        , \dim_to_decimal_in_sp:n { \tl_item:Nn \l__tenkz_kernel_rail_point_tl {2} }
+      }
+  }
 % The flat rail, read from the registers the stroke itself read, in the order
 % the stroke laid them: the leads, the two descents, and the run between the
-% corners.  Half a trace reach is the corner radius, and one minus the cosine
-% of 45 degrees places the mid-point of a quarter turn.
+% corners.  Sample the actual saved route so rounded turns and transformed
+% leads have the same geometry in the rendering and the audit.
 \cs_new_protected:Npn \__tenkz_kernel_r_rail_flat:
   {
     \tl_set:Ne \l__tenkz_kernel_r_rail_clear_tl
@@ -2586,80 +2642,38 @@
               }
           }
       }
+    % Read the saved path that the stroke uses.  In particular, the upper
+    % turns now round as well as the lower ones; reconstructing the old
+    % square lead here would give the auditor a different contour.
     \tl_clear:N \l__tenkz_kernel_r_rail_tl
-    \bool_if:NT \l__tenkz_kernel_r_wrap_llead_bool
+    \tl_set_eq:Nc \l__tenkz_kernel_rail_path_tl
+      { \l__tikzspath_prefix_tl \l__tenkz_kernel_r_sid_tl }
+    \spath_segments_to_seq:NV \l__tenkz_kernel_rail_segments_seq
+      \l__tenkz_kernel_rail_path_tl
+    \seq_map_inline:Nn \l__tenkz_kernel_rail_segments_seq
       {
-        \__tenkz_kernel_r_rail_pt:nn
-          { \l__tenkz_kernel_r_wrap_lx_fp } { \l__tenkz_kernel_r_wrap_ly_fp }
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_x_fp } { \l__tenkz_kernel_r_y_fp }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_wrap_wx_fp } { \l__tenkz_kernel_r_y_fp }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_wrap_wx_fp }
-      {
-        \l__tenkz_kernel_r_y_fp
-        + \l__tenkz_kernel_r_yc_fp
-          * ( \l__tenkz_kernel_r_reach_fp
-              - \__tenkz_metric_ratio:n {pairtracereach} / 2 )
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      {
-        \l__tenkz_kernel_r_wrap_wx_fp
-        + ( 1 - cosd(45) ) * \__tenkz_metric_ratio:n {pairtracereach} / 2
-      }
-      {
-        \l__tenkz_kernel_r_y_fp
-        + \l__tenkz_kernel_r_yc_fp
-          * ( \l__tenkz_kernel_r_reach_fp
-              - ( 1 - cosd(45) ) * \__tenkz_metric_ratio:n {pairtracereach} / 2 )
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      {
-        \l__tenkz_kernel_r_wrap_wx_fp
-        + \__tenkz_metric_ratio:n {pairtracereach} / 2
-      }
-      {
-        \l__tenkz_kernel_r_y_fp
-        + \l__tenkz_kernel_r_yc_fp * \l__tenkz_kernel_r_reach_fp
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      {
-        \l__tenkz_kernel_r_wrap_ex_fp
-        - \__tenkz_metric_ratio:n {pairtracereach} / 2
-      }
-      {
-        \l__tenkz_kernel_r_yb_fp
-        + \l__tenkz_kernel_r_yc_fp * \l__tenkz_kernel_r_reach_fp
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      {
-        \l__tenkz_kernel_r_wrap_ex_fp
-        - ( 1 - cosd(45) ) * \__tenkz_metric_ratio:n {pairtracereach} / 2
-      }
-      {
-        \l__tenkz_kernel_r_yb_fp
-        + \l__tenkz_kernel_r_yc_fp
-          * ( \l__tenkz_kernel_r_reach_fp
-              - ( 1 - cosd(45) ) * \__tenkz_metric_ratio:n {pairtracereach} / 2 )
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_wrap_ex_fp }
-      {
-        \l__tenkz_kernel_r_yb_fp
-        + \l__tenkz_kernel_r_yc_fp
-          * ( \l__tenkz_kernel_r_reach_fp
-              - \__tenkz_metric_ratio:n {pairtracereach} / 2 )
-      }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_wrap_ex_fp } { \l__tenkz_kernel_r_yb_fp }
-    \__tenkz_kernel_r_rail_pt:nn
-      { \l__tenkz_kernel_r_xb_fp } { \l__tenkz_kernel_r_yb_fp }
-    \bool_if:NT \l__tenkz_kernel_r_wrap_rlead_bool
-      {
-        \__tenkz_kernel_r_rail_pt:nn
-          { \l__tenkz_kernel_r_wrap_rx_fp } { \l__tenkz_kernel_r_wrap_ry_fp }
+        \tl_set:Nn \l__tenkz_kernel_rail_segment_tl {##1}
+        \spath_finalaction:NV \l__tenkz_kernel_rail_action_tl
+          \l__tenkz_kernel_rail_segment_tl
+        \spath_initialpoint:NV \l__tenkz_kernel_rail_point_tl
+          \l__tenkz_kernel_rail_segment_tl
+        \__tenkz_kernel_r_rail_saved_pt:
+        \tl_if_eq:NNTF \l__tenkz_kernel_rail_action_tl \c_spath_curveto_tl
+          {
+            % Sixteenths resolve the small corner arcs more closely than
+            % the previous tangent/midpoint approximation.
+            \int_step_inline:nn {16}
+              {
+                \spath_point_at:NVn \l__tenkz_kernel_rail_point_tl
+                  \l__tenkz_kernel_rail_segment_tl { ####1 / 16 }
+                \__tenkz_kernel_r_rail_saved_pt:
+              }
+          }
+          {
+            \spath_finalpoint:NV \l__tenkz_kernel_rail_point_tl
+              \l__tenkz_kernel_rail_segment_tl
+            \__tenkz_kernel_r_rail_saved_pt:
+          }
       }
   }
 % The ring sector, sampled at sixteenths of its own extent: a chord of a
@@ -2870,27 +2884,47 @@
                     \l__tenkz_kernel_r_xc_fp
                     * \__tenkz_metric_ratio:n {pairtracereach}
                   }
+                \__tenkz_kernel_r_rail_upper_radii:
                 \__tenkz_kernel_r_wire_stroke:nn { bond }
                   {
-                    \bool_if:NT \l__tenkz_kernel_r_wrap_llead_bool
+                    \fp_compare:nNnTF
+                      { \l__tenkz_kernel_rail_left_radius_fp } > {0}
                       {
                         \__tenkz_kernel_r_pair:nn
                           { \l__tenkz_kernel_r_wrap_lx_fp }
                           { \l__tenkz_kernel_r_wrap_ly_fp }
-                        --
-                      }
-                    \__tenkz_kernel_r_pair:nn
-                      { \l__tenkz_kernel_r_x_fp }
-                      { \l__tenkz_kernel_r_y_fp }
-                    \fp_compare:nNnF
-                      { \l__tenkz_kernel_r_wrap_wx_fp }
-                      =
-                      { \l__tenkz_kernel_r_x_fp }
-                      {
-                        --
-                        \__tenkz_kernel_r_pair:nn
-                          { \l__tenkz_kernel_r_wrap_wx_fp }
+                        -- \__tenkz_kernel_r_pair:nn
+                          { \l__tenkz_kernel_r_wrap_wx_fp
+                            + \l__tenkz_kernel_rail_left_radius_fp }
                           { \l__tenkz_kernel_r_y_fp }
+                        arc [ start~angle =
+                                \fp_eval:n { -90 * \l__tenkz_kernel_r_yc_fp },
+                              end~angle =
+                                \fp_eval:n { -180 * \l__tenkz_kernel_r_yc_fp },
+                              radius = \__tenkz_kernel_r_pt:n
+                                { \l__tenkz_kernel_rail_left_radius_fp } ]
+                      }
+                      {
+                        \bool_if:NT \l__tenkz_kernel_r_wrap_llead_bool
+                          {
+                            \__tenkz_kernel_r_pair:nn
+                              { \l__tenkz_kernel_r_wrap_lx_fp }
+                              { \l__tenkz_kernel_r_wrap_ly_fp }
+                            --
+                          }
+                        \__tenkz_kernel_r_pair:nn
+                          { \l__tenkz_kernel_r_x_fp }
+                          { \l__tenkz_kernel_r_y_fp }
+                        \fp_compare:nNnF
+                          { \l__tenkz_kernel_r_wrap_wx_fp }
+                          =
+                          { \l__tenkz_kernel_r_x_fp }
+                          {
+                            --
+                            \__tenkz_kernel_r_pair:nn
+                              { \l__tenkz_kernel_r_wrap_wx_fp }
+                              { \l__tenkz_kernel_r_y_fp }
+                          }
                       }
                     --
                     \__tenkz_kernel_r_pair:nn
@@ -2937,26 +2971,45 @@
                               / 2
                             }
                       ]
-                    \fp_compare:nNnF
-                      { \l__tenkz_kernel_r_wrap_ex_fp }
-                      =
-                      { \l__tenkz_kernel_r_xb_fp }
+                    \fp_compare:nNnTF
+                      { \l__tenkz_kernel_rail_right_radius_fp } > {0}
                       {
-                        --
-                        \__tenkz_kernel_r_pair:nn
+                        -- \__tenkz_kernel_r_pair:nn
                           { \l__tenkz_kernel_r_wrap_ex_fp }
-                          { \l__tenkz_kernel_r_yb_fp }
-                      }
-                    --
-                    \__tenkz_kernel_r_pair:nn
-                      { \l__tenkz_kernel_r_xb_fp }
-                      { \l__tenkz_kernel_r_yb_fp }
-                    \bool_if:NT \l__tenkz_kernel_r_wrap_rlead_bool
-                      {
-                        --
-                        \__tenkz_kernel_r_pair:nn
+                          { \l__tenkz_kernel_r_yb_fp
+                            + \l__tenkz_kernel_r_yc_fp
+                              * \l__tenkz_kernel_rail_right_radius_fp }
+                        arc [ start~angle = 0,
+                              end~angle =
+                                \fp_eval:n { -90 * \l__tenkz_kernel_r_yc_fp },
+                              radius = \__tenkz_kernel_r_pt:n
+                                { \l__tenkz_kernel_rail_right_radius_fp } ]
+                        -- \__tenkz_kernel_r_pair:nn
                           { \l__tenkz_kernel_r_wrap_rx_fp }
                           { \l__tenkz_kernel_r_wrap_ry_fp }
+                      }
+                      {
+                        \fp_compare:nNnF
+                          { \l__tenkz_kernel_r_wrap_ex_fp }
+                          =
+                          { \l__tenkz_kernel_r_xb_fp }
+                          {
+                            --
+                            \__tenkz_kernel_r_pair:nn
+                              { \l__tenkz_kernel_r_wrap_ex_fp }
+                              { \l__tenkz_kernel_r_yb_fp }
+                          }
+                        --
+                        \__tenkz_kernel_r_pair:nn
+                          { \l__tenkz_kernel_r_xb_fp }
+                          { \l__tenkz_kernel_r_yb_fp }
+                        \bool_if:NT \l__tenkz_kernel_r_wrap_rlead_bool
+                          {
+                            --
+                            \__tenkz_kernel_r_pair:nn
+                              { \l__tenkz_kernel_r_wrap_rx_fp }
+                              { \l__tenkz_kernel_r_wrap_ry_fp }
+                          }
                       }
                   }
                 \__tenkz_kernel_r_rail_flat:

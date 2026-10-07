@@ -1441,6 +1441,17 @@
     \draw [ spath/use = #1 , #2 ] ;
   }
 
+
+% PGF's decoration-time search may measure a chord only a few sp long.
+% Its fixed-point veclen normalizes by a reciprocal that can exceed TeX's
+% dimension range at that size.  Use expl3 arithmetic only for those tiny
+% chords; retain PGF's usual arithmetic for all ordinary path measurements.
+\cs_new_protected:Npn \tenkz@string@beadveclen #1#2
+  {
+    \fp_compare:nNnTF { max(abs(#1), abs(#2)) } < { 1 / 1000 }
+      { \edef\pgfmathresult { \fp_to_decimal:n { sqrt((#1)^2 + (#2)^2) } } }
+      { \tenkz@string@baseveclen {#1} {#2} }
+  }
 \ExplSyntaxOff
 
 % Markings positions are arclength fractions.  Keep this helper outside expl3
@@ -1488,6 +1499,9 @@
   \fi%
 }
 \def\tenkz@string@beadframe#1#2#3{%
+  \begingroup
+  \let\tenkz@string@baseveclen\pgfmathveclen@
+  \let\pgfmathveclen@\tenkz@string@beadveclen
   \gdef\tenkz@string@beadx{0}%
   \gdef\tenkz@string@beady{0}%
   \path[
@@ -1498,6 +1512,7 @@
     }},
     decorate
   ];%
+  \endgroup
 }
 
 \endinput
