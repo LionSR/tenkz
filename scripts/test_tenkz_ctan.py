@@ -106,11 +106,13 @@ def test_closure_reads_the_unbraced_input() -> None:
         assert closure.packages == ["tikz-cd"], closure.packages
         # Web2C's quoted form, which may follow the control word with no
         # space, and expl3's own file input.
-        for spelling in ('\\input"tenkz-stage.code.tex"',
-                         '\\input {"tenkz-stage.code.tex"}',
-                         '\\file_input:n {tenkz-stage.code.tex}',
-                         '\\InputIfFileExists{tenkz-stage.code.tex}{}{}',
-                         '\\file_if_exist_input:n {tenkz-stage.code.tex}'):
+        for spelling in (
+            '\\input"tenkz-stage.code.tex"',
+            '\\input {"tenkz-stage.code.tex"}',
+            "\\file_input:n {tenkz-stage.code.tex}",
+            "\\InputIfFileExists{tenkz-stage.code.tex}{}{}",
+            "\\file_if_exist_input:n {tenkz-stage.code.tex}",
+        ):
             (source / "tenkz.sty").write_text(
                 STAGE_CONTRACT + spelling + "\n", encoding="utf-8"
             )
@@ -127,21 +129,23 @@ def test_closure_reads_the_stream_opened_file() -> None:
         source = Path(directory) / "tex"
         source.mkdir()
         (source / "local.cfg").write_text("data\n", encoding="utf-8")
-        for spelling in ("\\openin\\src=local.cfg",
-                         "\\openin\\src = local.cfg",
-                         "\\openin1 local.cfg",
-                         '\\openin\\src="local.cfg"',
-                         # The stream number in TeX's other integer
-                         # syntaxes: a quote left unread would be taken
-                         # for the head of a quoted file name and the
-                         # call would go unread.
-                         '\\openin"1=local.cfg',
-                         "\\openin'17=local.cfg",
-                         "\\openin`\\s=local.cfg",
-                         '\\openin"A="local.cfg"',
-                         "\\ior_open:Nn \\g_src_ior {local.cfg}",
-                         "\\ior_open:NnF \\g_src_ior {local.cfg} {}",
-                         '\\ior_open:Nn \\g_src_ior {"local.cfg"}'):
+        for spelling in (
+            "\\openin\\src=local.cfg",
+            "\\openin\\src = local.cfg",
+            "\\openin1 local.cfg",
+            '\\openin\\src="local.cfg"',
+            # The stream number in TeX's other integer
+            # syntaxes: a quote left unread would be taken
+            # for the head of a quoted file name and the
+            # call would go unread.
+            '\\openin"1=local.cfg',
+            "\\openin'17=local.cfg",
+            "\\openin`\\s=local.cfg",
+            '\\openin"A="local.cfg"',
+            "\\ior_open:Nn \\g_src_ior {local.cfg}",
+            "\\ior_open:NnF \\g_src_ior {local.cfg} {}",
+            '\\ior_open:Nn \\g_src_ior {"local.cfg"}',
+        ):
             (source / "tenkz.sty").write_text(
                 STAGE_CONTRACT + spelling + "\n", encoding="utf-8"
             )
@@ -149,16 +153,18 @@ def test_closure_reads_the_stream_opened_file() -> None:
             assert closure.files == ["tenkz.sty", "local.cfg"], spelling
         # The write side creates its file, so there is nothing for the
         # archive to carry, and a comment is not a load.
-        for innocent in ("\\openout\\log=run.log",
-                         "\\iow_open:Nn \\g_log_iow {run.log}",
-                         "% \\openin\\src=ghost.cfg",
-                         # A control word is read whole: a longer name that
-                         # merely opens with the primitive's letters is not
-                         # the primitive plus a file name, and expl3 words
-                         # continue through underscores and colons.
-                         "\\opening{Dear Reader}",
-                         "\\openinside{note}",
-                         "\\openin_aux:w stop;"):
+        for innocent in (
+            "\\openout\\log=run.log",
+            "\\iow_open:Nn \\g_log_iow {run.log}",
+            "% \\openin\\src=ghost.cfg",
+            # A control word is read whole: a longer name that
+            # merely opens with the primitive's letters is not
+            # the primitive plus a file name, and expl3 words
+            # continue through underscores and colons.
+            "\\opening{Dear Reader}",
+            "\\openinside{note}",
+            "\\openin_aux:w stop;",
+        ):
             (source / "tenkz.sty").write_text(
                 STAGE_CONTRACT + innocent + "\n", encoding="utf-8"
             )
@@ -184,9 +190,11 @@ def test_closure_reads_the_stream_opened_file() -> None:
         (source / "local.cfg").write_text("data\n", encoding="utf-8")
         # A file the runtime writes and later reopens is the run's own
         # product, not an archive input.
-        for product in ("\\openout\\log=run.log\n\\openin\\src=run.log\n",
-                        "\\iow_open:Nn \\g_out_iow {scratch.dat}\n"
-                        "\\ior_open:Nn \\g_in_ior {scratch.dat}\n"):
+        for product in (
+            "\\openout\\log=run.log\n\\openin\\src=run.log\n",
+            "\\iow_open:Nn \\g_out_iow {scratch.dat}\n"
+            "\\ior_open:Nn \\g_in_ior {scratch.dat}\n",
+        ):
             (source / "tenkz.sty").write_text(
                 STAGE_CONTRACT + product, encoding="utf-8"
             )
@@ -196,8 +204,7 @@ def test_closure_reads_the_stream_opened_file() -> None:
         # static walk cannot perform: the walk fails closed rather than
         # certifying a closure it could not see.
         (source / "tenkz.sty").write_text(
-            STAGE_CONTRACT
-            + "\\def\\filename{local.cfg}\n\\openin\\src\\filename\n",
+            STAGE_CONTRACT + "\\def\\filename{local.cfg}\n\\openin\\src\\filename\n",
             encoding="utf-8",
         )
         try:
@@ -225,8 +232,7 @@ def test_closure_reads_tex_spacing_before_arguments() -> None:
         source = Path(directory) / "tex"
         source.mkdir()
         (source / "tenkz.sty").write_text(
-            STAGE_CONTRACT
-            + "\\RequirePackage [draft] {tikz}\n"
+            STAGE_CONTRACT + "\\RequirePackage [draft] {tikz}\n"
             "\\usetikzlibrary\n  {calc}\n"
             "\\input % the stage below\n  {tenkz-stage.code.tex}\n",
             encoding="utf-8",
@@ -383,7 +389,9 @@ def test_absent_material_is_reported_rather_than_raised() -> None:
 
     material = tenkz_ctan.check_material(manifest)
     assert any("LICENSE" in reason for reason in material.failures), material.failures
-    assert any("CHANGES.md" in reason for reason in material.failures), material.failures
+    assert any(
+        "CHANGES.md" in reason for reason in material.failures
+    ), material.failures
     assert any("tenkz.pdf" in reason for reason in material.failures), material.failures
 
     encoding = tenkz_ctan.check_encoding(
@@ -404,9 +412,7 @@ def test_the_manual_is_canonical_binary_material() -> None:
         room = Path(directory)
         binary = room / "manual.pdf"
         binary.write_bytes(b"%PDF-1.7\n\xff\x00\n")
-        report = tenkz_ctan.check_encoding(
-            {"tenkz.pdf": binary, "README.md": binary}
-        )
+        report = tenkz_ctan.check_encoding({"tenkz.pdf": binary, "README.md": binary})
     assert len(report.failures) == 1, report.failures
     assert "README.md is not UTF-8" in report.failures[0], report.failures
 
@@ -436,7 +442,9 @@ def test_a_non_pdf_manual_is_refused() -> None:
             ).failures
     finally:
         tenkz_ctan.ROOT = root
-    assert any("tenkz.pdf does not begin with" in reason for reason in failures), failures
+    assert any(
+        "tenkz.pdf does not begin with" in reason for reason in failures
+    ), failures
 
 
 def test_the_whole_check_reports_a_missing_file_rather_than_raising() -> None:
@@ -460,7 +468,9 @@ def test_the_whole_check_reports_a_missing_file_rather_than_raising() -> None:
         )
     assert finished.returncode == 1, finished.stdout + finished.stderr
     assert "Traceback" not in finished.stderr, finished.stderr
-    assert "nothing-here.cff is declared and missing" in finished.stdout, finished.stdout
+    assert (
+        "nothing-here.cff is declared and missing" in finished.stdout
+    ), finished.stdout
     assert "SKIP clean-install" in finished.stdout, finished.stdout
 
 
@@ -750,10 +760,14 @@ def test_candidate_citation_rejects_premature_release_date() -> None:
     citation = ROOT / manifest["material"]["CITATION.cff"]
     original = citation.read_text(encoding="utf-8")
     try:
-        for value in ('"2026-09-05"', '1999-01-01'):
-            citation.write_text(original + f"date-released: {value}\n", encoding="utf-8")
+        for value in ('"2026-09-05"', "1999-01-01"):
+            citation.write_text(
+                original + f"date-released: {value}\n", encoding="utf-8"
+            )
             failures = tenkz_ctan.check_version(release, manifest).failures
-            assert any("must omit date-released" in reason for reason in failures), failures
+            assert any(
+                "must omit date-released" in reason for reason in failures
+            ), failures
     finally:
         citation.write_text(original, encoding="utf-8")
 
@@ -869,7 +883,9 @@ def test_material_from_outside_the_repository_is_refused() -> None:
 def test_the_write_path_refuses_incomplete_material() -> None:
     manifest = tenkz_ctan.read_manifest()
     tenkz_ctan.require_sound_material(manifest)
-    thinned = {"material": {k: v for k, v in manifest["material"].items() if k != "LICENSE"}}
+    thinned = {
+        "material": {k: v for k, v in manifest["material"].items() if k != "LICENSE"}
+    }
     try:
         tenkz_ctan.require_sound_material(thinned)
     except SystemExit as refusal:
@@ -924,7 +940,9 @@ def test_the_clean_install_failure_paths_report_what_went_wrong() -> None:
     assert any(
         "the engine's own complaint" in reason for reason in failed.failures
     ), failed.failures
-    assert any("120 seconds" in reason for reason in timed_out.failures), timed_out.failures
+    assert any(
+        "120 seconds" in reason for reason in timed_out.failures
+    ), timed_out.failures
 
 
 def test_the_manifest_declares_the_schema_and_the_package() -> None:
@@ -954,9 +972,10 @@ def test_a_runtime_source_outside_the_repository_is_refused() -> None:
         assert "outside the repository" in str(refusal), str(refusal)
     else:
         raise AssertionError("a source outside the tree was staged")
-    assert tenkz_ctan.inside_repository(
-        "tenkz.sty", ROOT / "tex/tenkz/tenkz.sty"
-    ) == (ROOT / "tex/tenkz/tenkz.sty").resolve()
+    assert (
+        tenkz_ctan.inside_repository("tenkz.sty", ROOT / "tex/tenkz/tenkz.sty")
+        == (ROOT / "tex/tenkz/tenkz.sty").resolve()
+    )
 
 
 def test_the_release_report_survives_an_absent_artifact() -> None:
@@ -1003,9 +1022,7 @@ def test_a_loaded_library_without_a_consumer_class_is_caught() -> None:
     it fails here, which is what stops the report from going stale."""
 
     closure = tenkz_ctan.Closure(libraries=["calc", "hobby"], packages=["tikz"])
-    missing = tenkz_ctan.check_dependencies(
-        closure, _ownership(["calc"], [], [])
-    )
+    missing = tenkz_ctan.check_dependencies(closure, _ownership(["calc"], [], []))
     assert any("loads" in reason for reason in missing.failures), missing.failures
     invented = tenkz_ctan.check_dependencies(
         closure, _ownership(["calc", "hobby"], ["spath3"], [])
@@ -1037,7 +1054,9 @@ def test_a_class_left_out_or_stated_twice_is_caught() -> None:
     del dropped["runtime"]["requires"]["ownership"]["unconsumed"]
     missing = tenkz_ctan.check_dependencies(closure, dropped)
     assert any("unconsumed" in reason for reason in missing.failures), missing.failures
-    repeated = tenkz_ctan.check_dependencies(closure, _ownership(["calc", "calc"], [], []))
+    repeated = tenkz_ctan.check_dependencies(
+        closure, _ownership(["calc", "calc"], [], [])
+    )
     assert any(
         "more than once" in reason for reason in repeated.failures
     ), repeated.failures
@@ -1059,7 +1078,10 @@ def test_a_package_load_is_read_in_both_of_its_spellings() -> None:
             closure = tenkz_ctan.walk_closure(source, "tenkz.sty")
             assert closure.packages == ["tikz-cd"], (spelling, closure.packages)
             report = tenkz_ctan.check_dependencies(closure, _ownership([], [], []))
-            assert any("tikz-cd" in r for r in report.failures), (spelling, report.failures)
+            assert any("tikz-cd" in r for r in report.failures), (
+                spelling,
+                report.failures,
+            )
 
 
 def test_a_retired_front_end_vendored_as_a_file_is_caught() -> None:
@@ -1091,7 +1113,9 @@ def test_a_retired_front_end_vendored_as_a_file_is_caught() -> None:
         (source / "tenkz.sty").write_text(
             STAGE_CONTRACT + "\\input{tikzlibrarytikzcd.code.tex}\n", encoding="utf-8"
         )
-        (source / "tikzlibrarytikzcd.code.tex").write_text(STAGE_CONTRACT, encoding="utf-8")
+        (source / "tikzlibrarytikzcd.code.tex").write_text(
+            STAGE_CONTRACT, encoding="utf-8"
+        )
         vendored = tenkz_ctan.walk_closure(source, "tenkz.sty")
     library = tenkz_ctan.check_dependencies(vendored, _ownership([], [], []))
     assert any("tikzcd" in reason for reason in library.failures), library.failures
@@ -1134,7 +1158,9 @@ def test_a_tree_arxiv_would_have_to_build_or_shell_out_for_fails() -> None:
         # Upper case is the same docstrip run: a file system that preserves
         # case hands the suffix back as it was typed.
         (tree / "tenkz.INS").write_text("% a docstrip run\n", encoding="utf-8")
-        (tree / "loud.sty").write_text("\\immediate \\write 18{rm -rf /}\n", encoding="utf-8")
+        (tree / "loud.sty").write_text(
+            "\\immediate \\write 18{rm -rf /}\n", encoding="utf-8"
+        )
         (tree / "elsewhere.sty").write_text(
             "\\input{/Users/somebody/tenkz-core.code.tex}\n", encoding="utf-8"
         )
@@ -1155,15 +1181,22 @@ def test_every_spelling_of_stream_eighteen_is_the_shell_escape_stream() -> None:
     `'` prefixes for hexadecimal and octal all reach stream 18. The constant is
     evaluated rather than matched against one way of writing it."""
 
-    for call in (r"\write18{x}", r"\write 18{x}", r"\immediate \write 18{x}",
-                 r"\write018{x}", '\\write"12{x}', r"\write'22{x}",
-                 r"\write+18{x}", r"\write--18{x}", r"\ShellEscape{x}"):
+    for call in (
+        r"\write18{x}",
+        r"\write 18{x}",
+        r"\immediate \write 18{x}",
+        r"\write018{x}",
+        '\\write"12{x}',
+        r"\write'22{x}",
+        r"\write+18{x}",
+        r"\write--18{x}",
+        r"\ShellEscape{x}",
+    ):
         assert tenkz_ctan.shell_escape_call(call), call
     # The gate fails closed, so a stream the reading cannot evaluate is a
     # finding on its own: a character constant, an integer expression, a
     # stream the file never allocated.
-    for unread in (r"\write`^^R{x}", r"\write\numexpr18\relax{x}",
-                   r"\write \myout{x}"):
+    for unread in (r"\write`^^R{x}", r"\write\numexpr18\relax{x}", r"\write \myout{x}"):
         assert tenkz_ctan.shell_escape_call(unread), unread
     # A stream the same file allocated is a file stream by construction, which
     # is how the package writes its event stream.
@@ -1189,8 +1222,13 @@ def test_every_spelling_of_stream_eighteen_is_the_shell_escape_stream() -> None:
     # one: two characters in a macro body or in prose execute nothing.
     # The stream operand is a control sequence or a number, and the equals
     # sign is optional: that is TeX's syntax, not a house spelling.
-    for piped in ('\\openin\\stream="|uname -a"', r"\input{|cmd}", r'\input "|cmd"',
-                  '\\openout1="|cmd"', '\\openin1="|cmd"'):
+    for piped in (
+        '\\openin\\stream="|uname -a"',
+        r"\input{|cmd}",
+        r'\input "|cmd"',
+        '\\openout1="|cmd"',
+        '\\openin1="|cmd"',
+    ):
         assert tenkz_ctan.shell_escape_call(piped), piped
     # Only the primitives that open a file are read: `\\write` and `\\read` take
     # a stream already open and a token list that is data, so a token list
@@ -1203,16 +1241,28 @@ def test_every_spelling_of_stream_eighteen_is_the_shell_escape_stream() -> None:
     # engine-shared rows ran under pdflatex and lualatex too.  The scan
     # passes over spaces, \relax, and the expandable blanks on its way
     # to the name, and a pipe fires bare, braced, or quoted.
-    for piped in (r"\input |cmd", r"\input\space |cmd", r"\input\space|cmd",
-                  r"\input\relax |cmd", r"\input\relax {|cmd}",
-                  '\\input\\relax "|cmd"', r"\input|" + '"cmd"',
-                  r"\input{|cmd}", '\\input "|cmd"',
-                  r"\input{\space |cmd}", r"\input\empty {|cmd}",
-                  '\\input\\empty "|cmd"', r"\input\space {|cmd}",
-                  r"\makeatletter\input\@empty{|cmd}",
-                  r"\makeatletter\input\@spaces|cmd",
-                  r"\input\c_space_tl{|cmd}", '\\input\\c_empty_tl "|cmd"',
-                  r"\include{|cmd}", r"\openin1=|cmd", r"\openin\src=|cmd"):
+    for piped in (
+        r"\input |cmd",
+        r"\input\space |cmd",
+        r"\input\space|cmd",
+        r"\input\relax |cmd",
+        r"\input\relax {|cmd}",
+        '\\input\\relax "|cmd"',
+        r"\input|" + '"cmd"',
+        r"\input{|cmd}",
+        '\\input "|cmd"',
+        r"\input{\space |cmd}",
+        r"\input\empty {|cmd}",
+        '\\input\\empty "|cmd"',
+        r"\input\space {|cmd}",
+        r"\makeatletter\input\@empty{|cmd}",
+        r"\makeatletter\input\@spaces|cmd",
+        r"\input\c_space_tl{|cmd}",
+        '\\input\\c_empty_tl "|cmd"',
+        r"\include{|cmd}",
+        r"\openin1=|cmd",
+        r"\openin\src=|cmd",
+    ):
         assert tenkz_ctan.shell_escape_call(piped), piped
     # The set of blank expansions is open, so a pipe behind any run of
     # control words fails closed: \c_space_token compiled inert, and the
@@ -1222,45 +1272,70 @@ def test_every_spelling_of_stream_eighteen_is_the_shell_escape_stream() -> None:
     # ends the scan; \relax inside a braced name ends the name; \include
     # absorbs one undelimited argument, so a quote or an expansion there
     # is the argument itself and its pipe never opens a name.
-    for inert in (r"\input 1 {|literal}", r"\input{\relax |cmd}",
-                  "\\input\\ {|cmd}", "\\input\\ |cmd",
-                  '\\include "|cmd"',
-                  r"\include\empty {|literal}", r"\include\space {|literal}"):
+    for inert in (
+        r"\input 1 {|literal}",
+        r"\input{\relax |cmd}",
+        "\\input\\ {|cmd}",
+        "\\input\\ |cmd",
+        '\\include "|cmd"',
+        r"\include\empty {|literal}",
+        r"\include\space {|literal}",
+    ):
         assert not tenkz_ctan.shell_escape_call(inert), inert
-    for plain in ('\\openin\\stream="plain.tex"', r'\def\separator{"|}',
-                  'the sequence "| in prose',
-                  r"\input 1 {|literal}", r"\include 12 {|literal}",
-                  "\\newwrite\\out\n\\write\\out{|literal}\n"):
+    for plain in (
+        '\\openin\\stream="plain.tex"',
+        r'\def\separator{"|}',
+        'the sequence "| in prose',
+        r"\input 1 {|literal}",
+        r"\include 12 {|literal}",
+        "\\newwrite\\out\n\\write\\out{|literal}\n",
+    ):
         assert not tenkz_ctan.shell_escape_call(plain), plain
     # A name the same file redefines is no longer the stream it was allocated
     # as, so the allocation ground does not carry it.
     assert not tenkz_ctan.shell_escape_call(
         "\\newwrite\\out\n\\immediate\\write\\out{x}\n"
     )
-    for overwritten in ("\\newwrite\\out\n\\def\\out{18}\n\\write\\out{x}\n",
-                        "\\newwrite\\out\n\\chardef\\out=18\n\\write\\out{x}\n",
-                        "\\newwrite\\out\n\\cs_gset:Npn \\out {18}\n\\write\\out{x}\n"):
+    for overwritten in (
+        "\\newwrite\\out\n\\def\\out{18}\n\\write\\out{x}\n",
+        "\\newwrite\\out\n\\chardef\\out=18\n\\write\\out{x}\n",
+        "\\newwrite\\out\n\\cs_gset:Npn \\out {18}\n\\write\\out{x}\n",
+    ):
         assert tenkz_ctan.shell_escape_call(overwritten), overwritten
     # Asking about a name is not rebinding it: taking the allocation ground
     # away for a question would refuse a release for looking.
-    for asked in (r"\cs_if_exist:NTF \out {y}{n}", r"\cs_show:N \out",
-                  r"\cs_use:N \out"):
+    for asked in (
+        r"\cs_if_exist:NTF \out {y}{n}",
+        r"\cs_show:N \out",
+        r"\cs_use:N \out",
+    ):
         assert not tenkz_ctan.shell_escape_call(
             "\\newwrite\\out\n" + asked + "\n\\immediate\\write\\out{x}\n"
         ), asked
-    for named in (r"\sys_shell_now:n {ls}", r"\sys_shell_shipout:x {ls}",
-                  r"\sys_get_shell:nnN {x}{y}\z", r"\ior_shell_open:Nn \x {ls}",
-                  r"\iow_shell_open:Nn \x {ls}", r"\DelayedShellEscape{ls}"):
+    for named in (
+        r"\sys_shell_now:n {ls}",
+        r"\sys_shell_shipout:x {ls}",
+        r"\sys_get_shell:nnN {x}{y}\z",
+        r"\ior_shell_open:Nn \x {ls}",
+        r"\iow_shell_open:Nn \x {ls}",
+        r"\DelayedShellEscape{ls}",
+    ):
         assert tenkz_ctan.shell_escape_call(named), named
     # Asking whether the engine has a shell runs nothing. Reading these as
     # calls would refuse a file for putting the question.
-    for asks in (r"\tex_shellescape:D", r"\sys_if_shell:TF {y}{n}",
-                 r"\sys_shell_open:Nn \x {ls}"):
+    for asks in (
+        r"\tex_shellescape:D",
+        r"\sys_if_shell:TF {y}{n}",
+        r"\sys_shell_open:Nn \x {ls}",
+    ):
         assert not tenkz_ctan.shell_escape_call(asks), asks
     # A longer control word that merely starts with an executor's letters is a
     # different macro, on the same boundary rule the write gate uses.
-    for longer in (r"\ShellEscape@status", r"\ShellEscaped{x}",
-                   r"\sys_shell_now:n_aux {x}"):
+    for longer in (
+        r"\ShellEscape@status",
+        r"\ShellEscaped{x}",
+        r"\sys_shell_now:n_aux {x}",
+    ):
         assert not tenkz_ctan.shell_escape_call(longer), longer
     # A backslash preceded by a backslash does not start a control sequence:
     # `\\write18` is the control symbol and then ordinary characters, and a
@@ -1275,9 +1350,15 @@ def test_every_spelling_of_stream_eighteen_is_the_shell_escape_stream() -> None:
     # Numbers that are not 18 in the base their prefix names, an odd run of
     # minus signs, and a control sequence that merely starts with the same
     # letters.
-    for quiet in (r"\write17{x}", r"\write180{x}", '\\write"18{x}',
-                  r"\write-18{x}", r"\write+-18{x}", r"\writer{x}",
-                  r"\iow_now:Nn \g_out {x}"):
+    for quiet in (
+        r"\write17{x}",
+        r"\write180{x}",
+        '\\write"18{x}',
+        r"\write-18{x}",
+        r"\write+-18{x}",
+        r"\writer{x}",
+        r"\iow_now:Nn \g_out {x}",
+    ):
         assert not tenkz_ctan.shell_escape_call(quiet), quiet
 
 
@@ -1340,66 +1421,75 @@ def test_an_unbraced_absolute_input_is_an_absolute_path() -> None:
         # and LaTeX's star test skips a space before it. A conditional loader
         # is a loader: a runtime whose behaviour depends on a machine-local
         # file is not submittable even when the file's absence is handled.
-        for load in (r"\includegraphics*{/Users/somebody/figure.pdf}",
-                     r"\includegraphics *{/Users/somebody/figure.pdf}",
-                     r"\InputIfFileExists{/Users/somebody/local.cfg}{}{}",
-                     r"\IfFileExists{/Users/somebody/local.cfg}{}{}",
-                     r"\file_input:n { /Users/somebody/local.tex }",
-                     r"\openin\src=/Users/somebody/data.tex",
-                     r"\openin1 /Users/somebody/data.tex",
-                     r"\openout\log=/Users/somebody/run.log",
-                     r"\graphicspath{{/Users/somebody/figures/}}",
-                     # Every directory in the list, not only the first.
-                     r"\graphicspath{{figures/}{/Users/somebody/more/}}",
-                     r"\file_get:nnN {/Users/somebody/data} {} \l_tmpa_tl",
-                     r"\ior_open:Nn \stream {/Users/somebody/data}",
-                     # The argument signature is part of an expl3 name, so the
-                     # conditional variants have to be reached too.
-                     r"\file_if_exist_input:nF {/Users/somebody/data}{}",
-                     # The existence conditional is a family: every signature
-                     # variant asks the same machine-local question, and the
-                     # predicate form spells an underscore-p before its colon.
-                     r"\file_if_exist:nTF {/Users/somebody/data} {} {}",
-                     r"\file_if_exist:nT {/Users/somebody/data} {}",
-                     r"\file_if_exist:nF {/Users/somebody/data} {}",
-                     r"\file_if_exist:oTF {/Users/somebody/data} {} {}",
-                     r"\file_if_exist_p:n {/Users/somebody/data}",
-                     # A generated N wrapper consumes one brace group before
-                     # the n base, so a doubled group delivers the literal path.
-                     r"\file_if_exist:NTF {{/Users/somebody/data}} {} {}",
-                     '\\font\\tenkzfont="/Users/somebody/foo.otf"',
-                     # A path holding a space is written quoted, braced or not.
-                     '\\input{"/Users/somebody/My Documents/f.tex"}'):
+        for load in (
+            r"\includegraphics*{/Users/somebody/figure.pdf}",
+            r"\includegraphics *{/Users/somebody/figure.pdf}",
+            r"\InputIfFileExists{/Users/somebody/local.cfg}{}{}",
+            r"\IfFileExists{/Users/somebody/local.cfg}{}{}",
+            r"\file_input:n { /Users/somebody/local.tex }",
+            r"\openin\src=/Users/somebody/data.tex",
+            r"\openin1 /Users/somebody/data.tex",
+            r"\openout\log=/Users/somebody/run.log",
+            r"\graphicspath{{/Users/somebody/figures/}}",
+            # Every directory in the list, not only the first.
+            r"\graphicspath{{figures/}{/Users/somebody/more/}}",
+            r"\file_get:nnN {/Users/somebody/data} {} \l_tmpa_tl",
+            r"\ior_open:Nn \stream {/Users/somebody/data}",
+            # The argument signature is part of an expl3 name, so the
+            # conditional variants have to be reached too.
+            r"\file_if_exist_input:nF {/Users/somebody/data}{}",
+            # The existence conditional is a family: every signature
+            # variant asks the same machine-local question, and the
+            # predicate form spells an underscore-p before its colon.
+            r"\file_if_exist:nTF {/Users/somebody/data} {} {}",
+            r"\file_if_exist:nT {/Users/somebody/data} {}",
+            r"\file_if_exist:nF {/Users/somebody/data} {}",
+            r"\file_if_exist:oTF {/Users/somebody/data} {} {}",
+            r"\file_if_exist_p:n {/Users/somebody/data}",
+            # A generated N wrapper consumes one brace group before
+            # the n base, so a doubled group delivers the literal path.
+            r"\file_if_exist:NTF {{/Users/somebody/data}} {} {}",
+            '\\font\\tenkzfont="/Users/somebody/foo.otf"',
+            # A path holding a space is written quoted, braced or not.
+            '\\input{"/Users/somebody/My Documents/f.tex"}',
+        ):
             (tree / "tenkz.sty").write_text(load + "\n", encoding="utf-8")
             found = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
-            assert any("absolute path" in r for r in found.failures), (load, found.failures)
-        for innocent in ("\\input tenkz-core.code.tex\n",
-                         "\\file_if_exist:nT {tenkz-stage.code.tex} {}\n",
-                         "\\file_if_exist_p:n {tenkz-stage.code.tex}\n",
-                         # A longer name that merely opens with the
-                         # conditional's letters is not the conditional,
-                         # and neither is a different macro whose suffix
-                         # reuses them in an order expl3 cannot define.
-                         "\\file_if_exist:nTFaux {/Users/somebody/data}\n",
-                         "\\file_if_exist:nTT {/Users/somebody/data}\n",
-                         # expl3 names take no star: after one, the brace
-                         # group is a code branch, not a file name.
-                         "\\file_if_exist:nT*{/Users/somebody/data}\n",
-                         # An indirect specifier names a variable whose
-                         # value is the real argument: a literal there is
-                         # a name, not a path.
-                         "\\file_if_exist:vTF {/Users/somebody/data} {} {}\n",
-                         # One group is removed by the generated N wrapper,
-                         # leaving the n base to read only the first path token.
-                         "\\file_if_exist:NTF {/Users/somebody/data} {} {}\n",
-                         # A direct n argument retains the inner group as part
-                         # of the name, rather than stripping a second layer.
-                         "\\file_if_exist:nTF {{/Users/somebody/data}} {} {}\n",
-                         "\\file_input:n {{/Users/somebody/data}}\n"):
+            assert any("absolute path" in r for r in found.failures), (
+                load,
+                found.failures,
+            )
+        for innocent in (
+            "\\input tenkz-core.code.tex\n",
+            "\\file_if_exist:nT {tenkz-stage.code.tex} {}\n",
+            "\\file_if_exist_p:n {tenkz-stage.code.tex}\n",
+            # A longer name that merely opens with the
+            # conditional's letters is not the conditional,
+            # and neither is a different macro whose suffix
+            # reuses them in an order expl3 cannot define.
+            "\\file_if_exist:nTFaux {/Users/somebody/data}\n",
+            "\\file_if_exist:nTT {/Users/somebody/data}\n",
+            # expl3 names take no star: after one, the brace
+            # group is a code branch, not a file name.
+            "\\file_if_exist:nT*{/Users/somebody/data}\n",
+            # An indirect specifier names a variable whose
+            # value is the real argument: a literal there is
+            # a name, not a path.
+            "\\file_if_exist:vTF {/Users/somebody/data} {} {}\n",
+            # One group is removed by the generated N wrapper,
+            # leaving the n base to read only the first path token.
+            "\\file_if_exist:NTF {/Users/somebody/data} {} {}\n",
+            # A direct n argument retains the inner group as part
+            # of the name, rather than stripping a second layer.
+            "\\file_if_exist:nTF {{/Users/somebody/data}} {} {}\n",
+            "\\file_input:n {{/Users/somebody/data}}\n",
+        ):
             (tree / "tenkz.sty").write_text(innocent, encoding="utf-8")
             relative = tenkz_ctan.check_arxiv(tree, _loaded("tenkz.sty"))
             assert not relative.failures, (innocent, relative.failures)
-    assert any("absolute path" in reason for reason in unbraced.failures), unbraced.failures
+    assert any(
+        "absolute path" in reason for reason in unbraced.failures
+    ), unbraced.failures
 
 
 def test_an_archive_that_does_not_open_is_a_report_line() -> None:
@@ -1516,7 +1606,12 @@ def test_the_offline_cases_are_the_picture_classes_and_still_say_so() -> None:
 
     classes = {case.picture_class for case in tenkz_ctan.OFFLINE_CASES}
     assert classes == {
-        "flat", "plane", "circle", "string/crossing", "enclosure", "equation"
+        "flat",
+        "plane",
+        "circle",
+        "string/crossing",
+        "enclosure",
+        "equation",
     }, sorted(classes)
     assert any(
         case.source.startswith("tests/tenkz/kernel/")
@@ -1569,12 +1664,20 @@ def test_the_offline_check_reports_a_case_that_cannot_be_read() -> None:
     saved = tenkz_ctan.OFFLINE_CASES
     flat = next(case for case in saved if case.name == "flat")
     moved = tenkz_ctan.OfflineCase(
-        flat.name, flat.picture_class, "tests/tenkz/rmp/gone.tex", False,
-        flat.declares, flat.emits,
+        flat.name,
+        flat.picture_class,
+        "tests/tenkz/rmp/gone.tex",
+        False,
+        flat.declares,
+        flat.emits,
     )
     renamed = tenkz_ctan.OfflineCase(
-        flat.name, flat.picture_class, flat.source, False,
-        r"\begin{something-else}", flat.emits,
+        flat.name,
+        flat.picture_class,
+        flat.source,
+        False,
+        r"\begin{something-else}",
+        flat.emits,
     )
     with tempfile.TemporaryDirectory() as directory:
         archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
@@ -1587,8 +1690,12 @@ def test_the_offline_check_reports_a_case_that_cannot_be_read() -> None:
         finally:
             tenkz_ctan.shutil.which = engine
             tenkz_ctan.OFFLINE_CASES = saved
-    assert any("gone.tex is missing" in reason for reason in gone.failures), gone.failures
-    assert any("no longer spells" in reason for reason in drifted.failures), drifted.failures
+    assert any(
+        "gone.tex is missing" in reason for reason in gone.failures
+    ), gone.failures
+    assert any(
+        "no longer spells" in reason for reason in drifted.failures
+    ), drifted.failures
 
 
 def test_the_offline_check_reports_an_archive_it_cannot_read() -> None:
@@ -1616,13 +1723,15 @@ def test_the_offline_check_reports_an_archive_it_cannot_read() -> None:
             }
         finally:
             tenkz_ctan.shutil.which = engine
-    assert any("does not open" in r for r in reports["torn"].failures), reports["torn"].failures
+    assert any("does not open" in r for r in reports["torn"].failures), reports[
+        "torn"
+    ].failures
     assert any(
         "does not unpack into a single" in r for r in reports["loose"].failures
     ), reports["loose"].failures
-    assert any(
-        "is not a file" in r for r in reports["nested"].failures
-    ), reports["nested"].failures
+    assert any("is not a file" in r for r in reports["nested"].failures), reports[
+        "nested"
+    ].failures
     assert any(
         "beside ['READ-ME-FIRST.txt']" in r for r in reports["extra"].failures
     ), reports["extra"].failures
@@ -1639,7 +1748,9 @@ def test_an_installer_that_fired_is_read_as_a_finding() -> None:
 
     def firing(shims: Path) -> None:
         original(shims)
-        (shims.parent / "reached-for.txt").write_text("/shims/tlmgr\n", encoding="utf-8")
+        (shims.parent / "reached-for.txt").write_text(
+            "/shims/tlmgr\n", encoding="utf-8"
+        )
 
     with tempfile.TemporaryDirectory() as directory:
         archive, _, _ = tenkz_ctan.build(Path(directory) / "out")
@@ -1694,12 +1805,20 @@ def test_documentation_uses_the_manual_build_inventory() -> None:
 def test_documentation_paths_do_not_allow_traversal_or_file_parents() -> None:
     good = tenkz_ctan.check_names({"doc/chapters2/ch-tutorial.tex": Path("unused")})
     assert not good.failures, good.failures
-    for name in ("doc/../outside.tex", "doc/./chapter.tex", "doc/CON.tex",
-                 "doc/dir./chapter.tex", "elsewhere/chapter.tex"):
+    for name in (
+        "doc/../outside.tex",
+        "doc/./chapter.tex",
+        "doc/CON.tex",
+        "doc/dir./chapter.tex",
+        "elsewhere/chapter.tex",
+    ):
         assert tenkz_ctan.check_names({name: Path("unused")}).failures, name
-    conflict = tenkz_ctan.check_names({
-        "doc": Path("unused"), "doc/manual2.tex": Path("unused"),
-    })
+    conflict = tenkz_ctan.check_names(
+        {
+            "doc": Path("unused"),
+            "doc/manual2.tex": Path("unused"),
+        }
+    )
     assert any("parent staged as a file" in error for error in conflict.failures)
 
 
@@ -1723,7 +1842,10 @@ def test_uploaded_manual_recorder_rejects_repository_fallback() -> None:
         foreign = tenkz_ctan.ROOT / "tex/tenkz/tenkz.sty"
         (work / "manual2.fls").write_text(f"INPUT {foreign}\n")
         findings = tenkz_ctan.manual_build.foreign_inputs(
-            work, "xelatex", manual_dir=manual, package_tree=package,
+            work,
+            "xelatex",
+            manual_dir=manual,
+            package_tree=package,
         )
         assert str(foreign) in findings, findings
 
@@ -1734,18 +1856,30 @@ def test_uploaded_manual_must_match_the_shipped_pdf() -> None:
         with zipfile.ZipFile(archive) as bundle:
             shipped = bundle.read("tenkz/tenkz.pdf")
         with patch.object(tenkz_ctan.shutil, "which", return_value="xelatex"):
-            with patch.object(tenkz_ctan.manual_build, "build", return_value=(shipped, [])):
-                assert not tenkz_ctan.check_documentation(archive, required=True).failures
-            with patch.object(tenkz_ctan.manual_build, "build", return_value=(b"%PDF-stale", [])):
-                failures = tenkz_ctan.check_documentation(archive, required=True).failures
-                assert any("differs from shipped" in failure for failure in failures), failures
+            with patch.object(
+                tenkz_ctan.manual_build, "build", return_value=(shipped, [])
+            ):
+                assert not tenkz_ctan.check_documentation(
+                    archive, required=True
+                ).failures
+            with patch.object(
+                tenkz_ctan.manual_build, "build", return_value=(b"%PDF-stale", [])
+            ):
+                failures = tenkz_ctan.check_documentation(
+                    archive, required=True
+                ).failures
+                assert any(
+                    "differs from shipped" in failure for failure in failures
+                ), failures
 
 
 def test_uploaded_manual_missing_its_entry_point_fails() -> None:
     with tempfile.TemporaryDirectory() as directory:
         original, _, _ = tenkz_ctan.build(Path(directory) / "out")
         broken = Path(directory) / "broken.zip"
-        with zipfile.ZipFile(original) as source, zipfile.ZipFile(broken, "w") as target:
+        with zipfile.ZipFile(original) as source, zipfile.ZipFile(
+            broken, "w"
+        ) as target:
             for entry in source.infolist():
                 if entry.filename != "tenkz/doc/manual2.tex":
                     target.writestr(entry, source.read(entry))

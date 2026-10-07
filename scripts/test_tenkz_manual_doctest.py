@@ -48,8 +48,7 @@ QUIET_TNLOG = (
 def _label_on_ink_tnlog(claim: str) -> str:
     """One label band crossing one horizontal wire, with a chosen claim."""
     return (
-        QUIET_TNLOG
-        + "wire-ink|picture=1|name=bond-1|origin=bond|stroke=18023|"
+        QUIET_TNLOG + "wire-ink|picture=1|name=bond-1|origin=bond|stroke=18023|"
         "points=0,0;2000000,0\n"
         "label-use|picture=1\n"
         "bbox|picture=1|class=label|id=1|owner=0|"
@@ -273,16 +272,21 @@ shell command % \tntree{commented}
     if multiline_package.index("]{graphicx}") > multiline_package.index(
         r"\begin{document}"
     ):
-        raise AssertionError("a multiline package declaration was split across the body")
+        raise AssertionError(
+            "a multiline package declaration was split across the body"
+        )
     if r"\tn{inactive-file-declaration}" not in extracted[5].document:
         raise AssertionError("an inactive file branch declared a conditional")
     if r"\tn{declaration-order}" not in extracted[6].document:
-        raise AssertionError("a later newif declaration changed an earlier false branch")
+        raise AssertionError(
+            "a later newif declaration changed an earlier false branch"
+        )
     complete = extracted[7].document
     if complete.count(r"\documentclass") != 1 or r"\tn{commented}" in complete:
         raise AssertionError("complete or commented Verbatim documents were mishandled")
 
     captured: dict[str, object] = {}
+
     def capture_run(*args: object, **kwargs: object) -> SimpleNamespace:
         captured.update(kwargs)
         (Path(str(kwargs["cwd"])) / "example.tnlog").write_text(
@@ -296,9 +300,13 @@ shell command % \tntree{commented}
                 DOCTEST.compile_example(reference[0], "xelatex", Path(tmp))
     texinputs = str(captured["env"]["TEXINPUTS"])
     if not texinputs.startswith(f"{reference[0].source.parent}//:"):
-        raise AssertionError("a reference example cannot resolve files beside its source")
+        raise AssertionError(
+            "a reference example cannot resolve files beside its source"
+        )
     if f":{DOCTEST.MANUAL_DIR}//:" not in texinputs:
-        raise AssertionError("a manual example cannot resolve files from the manual root")
+        raise AssertionError(
+            "a manual example cannot resolve files from the manual root"
+        )
 
     with tempfile.TemporaryDirectory(prefix="tenkz-doctest-audit-") as tmp:
         work = Path(tmp)
@@ -337,14 +345,10 @@ shell command % \tntree{commented}
             expected_error: str | None = None,
             expected_output: str = "",
         ) -> None:
-            def fake_xelatex(
-                *args: object, **kwargs: object
-            ) -> SimpleNamespace:
+            def fake_xelatex(*args: object, **kwargs: object) -> SimpleNamespace:
                 case_dir = Path(str(kwargs["cwd"]))
                 if stream is not None:
-                    (case_dir / "example.tnlog").write_text(
-                        stream, encoding="utf-8"
-                    )
+                    (case_dir / "example.tnlog").write_text(stream, encoding="utf-8")
                 return SimpleNamespace(returncode=returncode, stdout=stdout)
 
             output = io.StringIO()
@@ -372,15 +376,13 @@ shell command % \tntree{commented}
             "tex: example.tex (linked) ==\n"
         )
         expected_explicit = (
-            header
-            + "  ADV  [label-on-ink] example.tnlog:6: picture 1 label bbox "
+            header + "  ADV  [label-on-ink] example.tnlog:6: picture 1 label bbox "
             "id=1 intersects the bond route bond-1 on the author's chosen "
             "station\n"
             "  ok: no hard errors (1 advisory(ies))\n"
         )
         expected_automatic = (
-            header
-            + "  HARD [label-on-ink] example.tnlog:6: picture 1 label bbox "
+            header + "  HARD [label-on-ink] example.tnlog:6: picture 1 label bbox "
             "id=1 intersects the bond route bond-1 on the station the kernel "
             "chose (s)\n"
             "  FAIL: 1 hard error(s), 0 advisory(ies)\n"
@@ -452,11 +454,13 @@ shell command % \tntree{commented}
     if r"\tnarrow" not in DOCTEST._strip_tex_comments(r"\% \tnarrow"):
         raise AssertionError("an escaped percent incorrectly started a TeX comment")
     if DOCTEST._has_executable_command(r"\verb|\tn| \string\tn \\tn", "tn"):
-        raise AssertionError("a non-executed command spelling satisfied reference coverage")
-    if DOCTEST._is_tenkz_verbatim(
-        r"\verb|\tn| \string\tn \\tn", Path.cwd()
-    ):
-        raise AssertionError("a non-executed command spelling classified a Verbatim block")
+        raise AssertionError(
+            "a non-executed command spelling satisfied reference coverage"
+        )
+    if DOCTEST._is_tenkz_verbatim(r"\verb|\tn| \string\tn \\tn", Path.cwd()):
+        raise AssertionError(
+            "a non-executed command spelling classified a Verbatim block"
+        )
     if DOCTEST._is_tenkz_verbatim(
         r"% \begin{tenkz} \tn{commented} \end{tenkz}", Path.cwd()
     ):
@@ -478,7 +482,9 @@ shell command % \tntree{commented}
         repeated_package, "tn", Path.cwd()
     )
     if instrumented.index(marker) < instrumented.rindex("\\usepackage{tenkz}"):
-        raise AssertionError("runtime instrumentation used a commented package spelling")
+        raise AssertionError(
+            "runtime instrumentation used a commented package spelling"
+        )
     inert_invocations = (
         "\\usepackage{tenkz}\n"
         "\\iffalse\n\\tn{dead}\\fi\n"
@@ -524,7 +530,9 @@ shell command % \tntree{commented}
 \end{Verbatim}
 """
     if r"\input" in DOCTEST._mask_display_environments(displayed_input):
-        raise AssertionError("a displayed input spelling remained in the structural graph")
+        raise AssertionError(
+            "a displayed input spelling remained in the structural graph"
+        )
     with tempfile.TemporaryDirectory(prefix="tenkz-doctest-graph-") as tmp:
         manual_dir = Path(tmp) / "manual"
         manual_dir.mkdir()

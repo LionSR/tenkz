@@ -26,9 +26,26 @@ REGISTRY = ROOT / "tex" / "tenkz" / "tenkz-language-registry.tex"
 REFERENCE = CHAPTERS / "generated-language-reference.tex"
 DISPLAY_ENVIRONMENTS = ("tnexample", "tnmultiples", "tnrefusal", "Verbatim")
 TEX_PRIMITIVE_CONDITIONALS = (
-    "if", "ifcat", "ifnum", "ifdim", "ifodd", "ifvmode", "ifhmode",
-    "ifmmode", "ifinner", "ifvoid", "ifhbox", "ifvbox", "ifx", "ifeof",
-    "iftrue", "iffalse", "ifcase", "ifdefined", "ifcsname", "iffontchar",
+    "if",
+    "ifcat",
+    "ifnum",
+    "ifdim",
+    "ifodd",
+    "ifvmode",
+    "ifhmode",
+    "ifmmode",
+    "ifinner",
+    "ifvoid",
+    "ifhbox",
+    "ifvbox",
+    "ifx",
+    "ifeof",
+    "iftrue",
+    "iffalse",
+    "ifcase",
+    "ifdefined",
+    "ifcsname",
+    "iffontchar",
     "ifincsname",
 )
 LATEX_CORE_CONDITIONAL_FALLBACK = ("if@twocolumn",)
@@ -187,14 +204,10 @@ def _refusal_diagnostic(options: str | None) -> str:
             braced_value = value
             end, value = _read_braced(braced_value, 0)
             if braced_value[end:].strip():
-                raise ValueError(
-                    "unexpected text after tnrefusal diagnostic brace"
-                )
+                raise ValueError("unexpected text after tnrefusal diagnostic brace")
         code = re.search(r"\[TKZ-[A-Z0-9-]+\]", value)
         if code is None:
-            raise ValueError(
-                "tnrefusal diagnostic quotes no bracketed [TKZ-*] code"
-            )
+            raise ValueError("tnrefusal diagnostic quotes no bracketed [TKZ-*] code")
         return code.group(0)
     raise ValueError("tnrefusal requires a diagnostic option")
 
@@ -240,12 +253,12 @@ def _registry_vocabulary() -> tuple[list[str], list[str]]:
 
 def _is_tenkz_verbatim(body: str, source_dir: Path) -> bool:
     commands, environments = _registry_vocabulary()
-    environment_pattern = "|".join(re.escape(environment) for environment in environments)
+    environment_pattern = "|".join(
+        re.escape(environment) for environment in environments
+    )
     packages, _ = _extract_usepackages(body, source_dir)
     scan = _mask_nonexecuted_tokens(strip_comments(body))
-    environment_matches = re.finditer(
-        rf"\\begin\{{(?:{environment_pattern})\}}", scan
-    )
+    environment_matches = re.finditer(rf"\\begin\{{(?:{environment_pattern})\}}", scan)
     return bool(
         any("tenkz" in _package_names(package) for package in packages)
         or any(_has_executable_command(body, command) for command in commands)
@@ -352,7 +365,9 @@ def _package_names(declaration: str) -> list[str]:
     return [name.strip() for name in strip_comments(names).split(",")]
 
 
-def _find_environment_end(text: str, environment: str, offset: int) -> re.Match[str] | None:
+def _find_environment_end(
+    text: str, environment: str, offset: int
+) -> re.Match[str] | None:
     pattern = re.compile(
         rf"^[ \t]*\\end\{{{re.escape(environment)}\}}[ \t]*$",
         re.MULTILINE,
@@ -395,16 +410,11 @@ def _mask_false_branches(
 ) -> str:
     masked = list(text)
     scan = _display_comment_scan(text)
-    start_scan = _display_comment_scan(
-        _mask_macro_definitions(text, strict=False)
-    )
-    newif_pattern = re.compile(
-        r"\\newif\s*\\(if[A-Za-z@]+)(?![A-Za-z@])"
-    )
+    start_scan = _display_comment_scan(_mask_macro_definitions(text, strict=False))
+    newif_pattern = re.compile(r"\\newif\s*\\(if[A-Za-z@]+)(?![A-Za-z@])")
     newif_matches = list(newif_pattern.finditer(start_scan))
     let_pattern = re.compile(
-        r"\\let\s*\\(if[A-Za-z@]+)\s*=?\s*\\(if[A-Za-z@]*)"
-        r"(?![A-Za-z@])"
+        r"\\let\s*\\(if[A-Za-z@]+)\s*=?\s*\\(if[A-Za-z@]*)" r"(?![A-Za-z@])"
     )
     let_matches = list(let_pattern.finditer(start_scan))
     declaration_operands = {
@@ -462,17 +472,12 @@ def _mask_false_branches(
         while cursor < len(tokens) and depth:
             nested = tokens[cursor]
             nested_start = token.start() + nested.start()
-            if (
-                nested_start not in declaration_operands
-                and not _is_escaped(scan, nested_start)
+            if nested_start not in declaration_operands and not _is_escaped(
+                scan, nested_start
             ):
                 depth += -1 if nested.group(0) == r"\fi" else 1
             cursor += 1
-        end = (
-            token.start() + tokens[cursor - 1].end()
-            if depth == 0
-            else len(text)
-        )
+        end = token.start() + tokens[cursor - 1].end() if depth == 0 else len(text)
         _blank_range(masked, token.start(), end)
     return "".join(masked)
 
@@ -502,11 +507,7 @@ def _resolve_tex_file(relative: Path, source_dir: Path) -> Path | None:
             return (root / relative).resolve()
         if recursive:
             candidate = next(
-                (
-                    path
-                    for path in root.rglob(relative.as_posix())
-                    if path.is_file()
-                ),
+                (path for path in root.rglob(relative.as_posix()) if path.is_file()),
                 None,
             )
             if candidate is not None:
@@ -567,19 +568,15 @@ def _mask_inactive_file_branches(
             _blank_range(masked, match.start(), false_start + 1)
             _blank_range(masked, false_end - 1, false_end)
         active = current[active_start + 1 : active_end - 1]
-        masked[active_start + 1 : active_end - 1] = (
-            _mask_inactive_file_branches(
-                active, source_dir, inherited_conditionals
-            )
+        masked[active_start + 1 : active_end - 1] = _mask_inactive_file_branches(
+            active, source_dir, inherited_conditionals
         )
         offset = false_end
     return "".join(masked)
 
 
 def _display_comment_scan(text: str) -> str:
-    return strip_comments(
-        _mask_inline_verbatim(_mask_display_environments(text))
-    )
+    return strip_comments(_mask_inline_verbatim(_mask_display_environments(text)))
 
 
 def _mask_macro_definitions(text: str, *, strict: bool = True) -> str:
@@ -710,10 +707,7 @@ def _instrument_command(
         ]
     )
     return (
-        document[:invocation]
-        + instrumentation
-        + "\n"
-        + document[invocation:],
+        document[:invocation] + instrumentation + "\n" + document[invocation:],
         marker,
     )
 
@@ -780,9 +774,7 @@ def extract_displayed_examples(
     path: Path, inherited_conditionals: tuple[str, ...] = ()
 ) -> list[Example]:
     text = path.read_text(encoding="utf-8")
-    scan_text = _mask_inert_tex(
-        text, path.parent, inherited_conditionals
-    )
+    scan_text = _mask_inert_tex(text, path.parent, inherited_conditionals)
     begin_pattern = re.compile(
         r"^[ \t]*\\begin\{(" + "|".join(DISPLAY_ENVIRONMENTS) + r")\}",
         re.MULTILINE,
@@ -804,9 +796,7 @@ def extract_displayed_examples(
         body_end = end_match.start()
         body = text[body_start:body_end].strip()
         offset = end_match.end()
-        if environment == "Verbatim" and not _is_tenkz_verbatim(
-            body, path.parent
-        ):
+        if environment == "Verbatim" and not _is_tenkz_verbatim(body, path.parent):
             continue
         line = text.count("\n", 0, match.start()) + 1
         expected_failure = (
@@ -825,9 +815,7 @@ def extract_displayed_examples(
                     label=f"manual-{_source_label(path)}-{ordinal}{suffix}",
                     source=path,
                     line=line,
-                    document=_standalone_document(
-                        body, path.parent, variant_style
-                    ),
+                    document=_standalone_document(body, path.parent, variant_style),
                     expected_failure=expected_failure,
                 )
             )
@@ -852,21 +840,16 @@ def _conditionals_before(
     )
     executable = _display_comment_scan(
         _mask_macro_definitions(
-            _mask_false_branches(
-                selected_file_branches, inherited_conditionals
-            ),
+            _mask_false_branches(selected_file_branches, inherited_conditionals),
             strict=False,
         )
     )
     newif_pattern = re.compile(r"\\newif\s*\\(if[A-Za-z@]+)(?![A-Za-z@])")
     let_pattern = re.compile(
-        r"\\let\s*\\(if[A-Za-z@]+)\s*=?\s*\\(if[A-Za-z@]*)"
-        r"(?![A-Za-z@])"
+        r"\\let\s*\\(if[A-Za-z@]+)\s*=?\s*\\(if[A-Za-z@]*)" r"(?![A-Za-z@])"
     )
     newifs = [
-        match
-        for match in newif_pattern.finditer(executable)
-        if match.start() < offset
+        match for match in newif_pattern.finditer(executable) if match.start() < offset
     ]
     lets = [
         match for match in let_pattern.finditer(executable) if match.start() < offset
@@ -902,9 +885,7 @@ def _manual_source_contexts() -> list[tuple[Path, tuple[str, ...]]]:
         text = strip_comments(
             _mask_inline_verbatim(
                 _mask_display_environments(
-                    _mask_inert_tex(
-                        raw, source.parent, inherited_conditionals
-                    )
+                    _mask_inert_tex(raw, source.parent, inherited_conditionals)
                 )
             )
         )
@@ -949,8 +930,7 @@ def reference_examples() -> list[Example]:
     registry = strip_comments(REGISTRY.read_text(encoding="utf-8"))
     commands, _ = _registry_vocabulary()
     mappings = re.findall(
-        r"\\__tenkz_language_registry_example:nnn\s*"
-        r"\{([^{}]+)\}\s*\{([^{}]+)\}",
+        r"\\__tenkz_language_registry_example:nnn\s*" r"\{([^{}]+)\}\s*\{([^{}]+)\}",
         registry,
     )
     mapping_by_command = dict(mappings)
@@ -969,10 +949,14 @@ def reference_examples() -> list[Example]:
     )
     # Keep compiling every runtime API example, including compatibility probes,
     # while the reader-facing reference includes only active vocabulary.
-    published = {e.fields[0] for e in current_reference_entries(load_registry(REGISTRY))
-                 if e.kind == "command"}
-    registry_paths = [mapping_by_command[command] for command in commands
-                      if command in published]
+    published = {
+        e.fields[0]
+        for e in current_reference_entries(load_registry(REGISTRY))
+        if e.kind == "command"
+    }
+    registry_paths = [
+        mapping_by_command[command] for command in commands if command in published
+    ]
     if len(set(registry_paths)) != len(registry_paths):
         raise ValueError(f"{REGISTRY}: command example paths must be distinct")
     if generated_paths != registry_paths:
@@ -985,15 +969,15 @@ def reference_examples() -> list[Example]:
         relative = Path(mapping_by_command[command])
         source = ROOT / relative
         if not source.is_file():
-            raise ValueError(f"{REGISTRY}: example for \\{command} is missing: {relative}")
+            raise ValueError(
+                f"{REGISTRY}: example for \\{command} is missing: {relative}"
+            )
         document = source.read_text(encoding="utf-8")
         if not _has_executable_command(document, command):
             raise ValueError(
                 f"{source}: example mapped to \\{command} does not invoke that command"
             )
-        instrumented, marker = _instrument_command(
-            document, command, source.parent
-        )
+        instrumented, marker = _instrument_command(document, command, source.parent)
         examples.append(
             Example(
                 label=f"reference-{command}",
@@ -1085,7 +1069,9 @@ def compile_example(example: Example, engine: str, work: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--engine", default="xelatex", help="TeX engine (default: xelatex)")
+    parser.add_argument(
+        "--engine", default="xelatex", help="TeX engine (default: xelatex)"
+    )
     parser.add_argument(
         "--list",
         action="store_true",

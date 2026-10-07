@@ -597,7 +597,8 @@ MARK_ONINK_SOURCE = r"""
 """
 
 MARK_ONINK_EXPLICIT_SOURCE = MARK_ONINK_SOURCE.replace(
-    "form=label]", "form=label, label pos=n]")
+    "form=label]", "form=label, label pos=n]"
+)
 
 
 NESTED_CLAIM_SOURCE = r"""
@@ -646,7 +647,10 @@ def customized_glyph(options: str, preamble: str = "") -> str:
   \node[box tensor] (bad) at (0,0) {};
 \end{tenkztestcanvas}
 \end{document}
-""" % (preamble, options)
+""" % (
+        preamble,
+        options,
+    )
 
 
 def customized_label(options: str, preamble: str = "") -> str:
@@ -664,7 +668,10 @@ def customized_label(options: str, preamble: str = "") -> str:
   \node[tn label, %s] at (0,0) {$f$};
 \end{tenkztestcanvas}
 \end{document}
-""" % (preamble, options)
+""" % (
+        preamble,
+        options,
+    )
 
 
 def audit_status(path: Path) -> tuple[int, Audit]:
@@ -675,9 +682,10 @@ def audit_status(path: Path) -> tuple[int, Audit]:
 
 
 def main() -> int:
-    if (finding_picture_id("picture 1 label bbox id=1 intersects rect glyph") != 1
-            or finding_picture_id(
-                "picture 12 label bbox id=1 intersects rect glyph") != 12):
+    if (
+        finding_picture_id("picture 1 label bbox id=1 intersects rect glyph") != 1
+        or finding_picture_id("picture 12 label bbox id=1 intersects rect glyph") != 12
+    ):
         raise AssertionError("picture-id parser aliases picture 1 and picture 12")
     engine = shutil.which("xelatex")
     if engine is None:
@@ -715,13 +723,15 @@ def main() -> int:
         if status != 1:
             raise AssertionError("audit accepted the deliberately overlapping fixture")
 
-        overlaps = [finding for finding in audit.findings
-                    if finding.rule == "label-overlap"]
-        label_events = [event for event in audit.events()
-                        if event.kind == "bbox"
-                        and event.attrs.get("class") == "label"]
-        if any(not {"shape", "radius"} <= event.attrs.keys()
-               for event in label_events):
+        overlaps = [
+            finding for finding in audit.findings if finding.rule == "label-overlap"
+        ]
+        label_events = [
+            event
+            for event in audit.events()
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
+        if any(not {"shape", "radius"} <= event.attrs.keys() for event in label_events):
             raise AssertionError("a measured label omitted exact shape fields")
         overlap_pictures = {finding_picture_id(finding.msg) for finding in overlaps}
         if overlap_pictures != {2, 5}:
@@ -733,26 +743,32 @@ def main() -> int:
         for picture_id in (1, "k1"):
             events = audit.events(picture_id)
             uses = sum(event.kind == "label-use" for event in events)
-            labels = sum(event.kind == "bbox"
-                         and event.attrs.get("class") == "label"
-                         for event in events)
+            labels = sum(
+                event.kind == "bbox" and event.attrs.get("class") == "label"
+                for event in events
+            )
             if uses == 0 or uses != labels:
                 raise AssertionError(
                     f"picture {picture_id} did not capture label coverage: "
                     f"uses={uses}, labels={labels}"
                 )
-        free_labels = [event for event in audit.events(1)
-                       if event.kind == "bbox"
-                       and event.attrs.get("class") == "label"]
+        free_labels = [
+            event
+            for event in audit.events(1)
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
         free_shapes = {event.attrs.get("shape") for event in free_labels}
         if free_shapes != {"rect", "roundrect"}:
             raise AssertionError(
                 f"drawn/default labels emitted stale shapes: {free_shapes}"
             )
-        drawn_labels = [event for event in free_labels
-                        if event.attrs.get("shape") == "roundrect"]
-        if (len(drawn_labels) != 1
-                or abs(int(drawn_labels[0].attrs["radius"]) - 65536) > 1):
+        drawn_labels = [
+            event for event in free_labels if event.attrs.get("shape") == "roundrect"
+        ]
+        if (
+            len(drawn_labels) != 1
+            or abs(int(drawn_labels[0].attrs["radius"]) - 65536) > 1
+        ):
             raise AssertionError(
                 "drawn sharp label did not emit its half-stroke radius"
             )
@@ -767,29 +783,33 @@ def main() -> int:
         )
         missing_status, missing_audit = audit_status(missing)
         if missing_status != 1 or not any(
-                finding.rule == "bbox-coverage"
-                for finding in missing_audit.findings):
+            finding.rule == "bbox-coverage" for finding in missing_audit.findings
+        ):
             raise AssertionError("audit accepted an unmeasured library label use")
 
         shapes = {
-            event.attrs.get("shape") for event in audit.events("k2")
+            event.attrs.get("shape")
+            for event in audit.events("k2")
             if event.kind == "glyph-geometry"
         }
         if shapes != {"circle", "roundrect", "triangle"}:
             raise AssertionError(f"core shape fixture emitted {shapes}")
         triangle_geometry = [
-            event for event in audit.events("k2")
-            if event.kind == "glyph-geometry"
-            and event.attrs.get("shape") == "triangle"
+            event
+            for event in audit.events("k2")
+            if event.kind == "glyph-geometry" and event.attrs.get("shape") == "triangle"
         ]
-        if (len(triangle_geometry) != 1
-                or int(triangle_geometry[0].attrs["stroke"]) <= 0):
+        if (
+            len(triangle_geometry) != 1
+            or int(triangle_geometry[0].attrs["stroke"]) <= 0
+        ):
             raise AssertionError(
                 "live triangle fixture lost its nonzero visible stroke"
             )
 
         reshaped = {
-            event.attrs.get("shape") for event in audit.events(2)
+            event.attrs.get("shape")
+            for event in audit.events(2)
             if event.kind == "glyph-geometry"
         }
         if reshaped != {"roundrect"}:
@@ -798,39 +818,45 @@ def main() -> int:
             )
 
         corner_events = [
-            event for event in audit.events(3)
-            if event.kind == "glyph-geometry"
+            event for event in audit.events(3) if event.kind == "glyph-geometry"
         ]
         corner_shapes = [event.attrs.get("shape") for event in corner_events]
         if corner_shapes != ["roundrect", "roundrect"]:
             raise AssertionError(
                 f"final corner overrides emitted stale geometry: {corner_shapes}"
             )
-        if abs(int(corner_events[0].attrs["radius"])
-               - round(0.275 * 65536)) > 1:
+        if abs(int(corner_events[0].attrs["radius"]) - round(0.275 * 65536)) > 1:
             raise AssertionError("sharp pill omitted its visible stroke radius")
-        if abs(int(corner_events[1].attrs["radius"])
-               - round(1.775 * 65536)) > 1:
+        if abs(int(corner_events[1].attrs["radius"]) - round(1.775 * 65536)) > 1:
             raise AssertionError("rounded box did not emit its live corner radius")
 
-        outer_gap = [event for event in audit.events(4)
-                     if event.kind == "glyph-geometry"]
+        outer_gap = [
+            event for event in audit.events(4) if event.kind == "glyph-geometry"
+        ]
         if len(outer_gap) != 1:
             raise AssertionError("outer-separation fixture lost glyph geometry")
-        if (int(outer_gap[0].attrs["xmax"])
-                - int(outer_gap[0].attrs["xmin"])) >= round(10 * 65536):
+        if (int(outer_gap[0].attrs["xmax"]) - int(outer_gap[0].attrs["xmin"])) >= round(
+            10 * 65536
+        ):
             raise AssertionError("glyph geometry retained invisible outer separation")
 
         expected_widths = {
-            5: 8, 6: 8, 7: 4, 9: 8, 10: 8, 12: 8, 13: 4,
+            5: 8,
+            6: 8,
+            7: 4,
+            9: 8,
+            10: 8,
+            12: 8,
+            13: 4,
         }
         for picture_id, expected_pt in expected_widths.items():
-            geometry = [event for event in audit.events(picture_id)
-                        if event.kind == "glyph-geometry"]
+            geometry = [
+                event
+                for event in audit.events(picture_id)
+                if event.kind == "glyph-geometry"
+            ]
             if len(geometry) != 1:
-                raise AssertionError(
-                    f"picture {picture_id} lost exact glyph geometry"
-                )
+                raise AssertionError(f"picture {picture_id} lost exact glyph geometry")
             width = int(geometry[0].attrs["xmax"]) - int(geometry[0].attrs["xmin"])
             if abs(width - round(expected_pt * 65536)) > 2:
                 raise AssertionError(
@@ -838,20 +864,26 @@ def main() -> int:
                     f"expected {expected_pt}pt: {geometry[0].attrs}"
                 )
 
-        label_boxes = [event for event in audit.events(8)
-                       if event.kind == "bbox"
-                       and event.attrs.get("class") == "label"]
+        label_boxes = [
+            event
+            for event in audit.events(8)
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
         if len(label_boxes) != 1:
             raise AssertionError("label outer-separation fixture lost its bbox")
-        label_width = (int(label_boxes[0].attrs["xmax"])
-                       - int(label_boxes[0].attrs["xmin"]))
+        label_width = int(label_boxes[0].attrs["xmax"]) - int(
+            label_boxes[0].attrs["xmin"]
+        )
         if label_width >= round(2 * 65536):
             raise AssertionError("label bbox retained invisible outer separation")
 
-        rotate_control = [event for event in audit.events(11)
-                          if event.kind == "glyph-geometry"]
-        if (len(rotate_control) != 1
-                or rotate_control[0].attrs.get("shape") != "roundrect"):
+        rotate_control = [
+            event for event in audit.events(11) if event.kind == "glyph-geometry"
+        ]
+        if (
+            len(rotate_control) != 1
+            or rotate_control[0].attrs.get("shape") != "roundrect"
+        ):
             raise AssertionError("ordinary node rotation was rejected as transformed")
 
         affine = work / "affine-glyphs.tex"
@@ -875,26 +907,30 @@ def main() -> int:
                 + "; ".join(finding.msg for finding in affine_audit.findings)
             )
         affine_geometry = [
-            event for event in affine_audit.events()
-            if event.kind == "glyph-geometry"
+            event for event in affine_audit.events() if event.kind == "glyph-geometry"
         ]
         if len(affine_geometry) != 6:
             raise AssertionError(
                 f"affine fixture emitted {len(affine_geometry)} glyphs"
             )
         if any(
-                event.attrs.get("shape") != "rect"
-                or event.attrs.get("radius") != "0"
-                or any(event.attrs.get(field) != "0"
-                       for field in ("x1", "y1", "x2", "y2", "x3", "y3"))
-                for event in affine_geometry):
+            event.attrs.get("shape") != "rect"
+            or event.attrs.get("radius") != "0"
+            or any(
+                event.attrs.get(field) != "0"
+                for field in ("x1", "y1", "x2", "y2", "x3", "y3")
+            )
+            for event in affine_geometry
+        ):
             raise AssertionError(
                 "affine glyphs did not use conservative rectangular hulls: "
                 + repr([event.attrs for event in affine_geometry])
             )
         extents = [
-            (int(event.attrs["xmax"]) - int(event.attrs["xmin"]),
-             int(event.attrs["ymax"]) - int(event.attrs["ymin"]))
+            (
+                int(event.attrs["xmax"]) - int(event.attrs["xmin"]),
+                int(event.attrs["ymax"]) - int(event.attrs["ymin"]),
+            )
             for event in affine_geometry
         ]
         if extents[-3] != extents[-2]:
@@ -915,70 +951,104 @@ def main() -> int:
             stderr=subprocess.STDOUT,
             timeout=120,
         )
-        if invalid_run.returncode == 0 or "unequal corner radii" not in invalid_run.stdout:
+        if (
+            invalid_run.returncode == 0
+            or "unequal corner radii" not in invalid_run.stdout
+        ):
             raise AssertionError("audit accepted a non-isotropic rounded rectangle")
 
         for filename, source, diagnostic in (
             ("rounded-triangle.tex", ROUNDED_TRIANGLE, "has rounded corners"),
-            ("oversized-outer-sep.tex", OVERSIZED_OUTER_SEP,
-             "radius exceeds half its"),
-            ("transformed-rect.tex", TRANSFORMED_RECT,
-             "unsupported affine"),
-            ("transformed-circle.tex", TRANSFORMED_CIRCLE,
-             "unsupported affine"),
-            ("transformed-triangle.tex", TRANSFORMED_TRIANGLE,
-             "unsupported affine"),
-            ("transformed-label.tex", TRANSFORMED_LABEL,
-             "unsupported affine"),
+            ("oversized-outer-sep.tex", OVERSIZED_OUTER_SEP, "radius exceeds half its"),
+            ("transformed-rect.tex", TRANSFORMED_RECT, "unsupported affine"),
+            ("transformed-circle.tex", TRANSFORMED_CIRCLE, "unsupported affine"),
+            ("transformed-triangle.tex", TRANSFORMED_TRIANGLE, "unsupported affine"),
+            ("transformed-label.tex", TRANSFORMED_LABEL, "unsupported affine"),
             ("draw-only-glyph.tex", DRAW_ONLY_GLYPH, "has no filled shape"),
-            ("pathless-glyph.tex", customized_glyph("coordinate"),
-             "has no captured path state"),
-            ("nonrectangle-label.tex", NONRECTANGLE_LABEL,
-             "unsupported live shape"),
-            ("rounded-label.tex", customized_label(
-                "fill=tenkzPaper, rounded corners=1pt"),
-             "has rounded corners"),
-            ("miter-glyph.tex", customized_glyph("line join=miter"),
-             "non-round line join"),
-            ("bevel-glyph.tex", customized_glyph("line join=bevel"),
-             "non-round line join"),
-            ("miter-label.tex", customized_label(
-                "fill=tenkzPaper, draw, line join=miter"),
-             "non-round line join"),
-            ("double-glyph.tex", customized_glyph("double"),
-             "double stroke"),
-            ("double-distance-glyph.tex",
-             customized_glyph("double distance=2pt"), "double stroke"),
-            ("double-label.tex", customized_label(
-                "fill=tenkzPaper, draw, double"),
-             "double stroke"),
-            ("dashed-glyph.tex", customized_glyph("dashed"),
-             "dashed stroke"),
-            ("dashed-label.tex", customized_label(
-                "fill=tenkzPaper, draw, dashed"),
-             "dashed stroke"),
-            ("zero-draw-glyph.tex", customized_glyph("draw opacity=0"),
-             "zero draw opacity"),
-            ("zero-draw-label.tex",
-             customized_label("fill=tenkzPaper, draw, draw opacity=0"),
-             "zero draw opacity"),
-            ("zero-fill-glyph.tex", customized_glyph("fill opacity=0"),
-             "zero fill opacity"),
-            ("zero-fill-label.tex", customized_label(
-                "fill=tenkzPaper, fill opacity=0"),
-             "zero fill opacity"),
-            ("outline-label.tex", customized_label("fill=none, draw"),
-             "has an outline"),
-            ("zero-text-label.tex", customized_label("text opacity=0"),
-             "zero text opacity"),
-            ("shade-glyph.tex", customized_glyph("shade"),
-             "uses shading"),
-            ("fading-glyph.tex",
-             customized_glyph("path fading=west", "\\usetikzlibrary{fadings}"),
-             "uses fading"),
-            ("path-picture-glyph.tex",
-             customized_glyph("path picture={\\fill (0,0) circle[radius=1pt];}"),
-             "uses a path picture"),
+            (
+                "pathless-glyph.tex",
+                customized_glyph("coordinate"),
+                "has no captured path state",
+            ),
+            ("nonrectangle-label.tex", NONRECTANGLE_LABEL, "unsupported live shape"),
+            (
+                "rounded-label.tex",
+                customized_label("fill=tenkzPaper, rounded corners=1pt"),
+                "has rounded corners",
+            ),
+            (
+                "miter-glyph.tex",
+                customized_glyph("line join=miter"),
+                "non-round line join",
+            ),
+            (
+                "bevel-glyph.tex",
+                customized_glyph("line join=bevel"),
+                "non-round line join",
+            ),
+            (
+                "miter-label.tex",
+                customized_label("fill=tenkzPaper, draw, line join=miter"),
+                "non-round line join",
+            ),
+            ("double-glyph.tex", customized_glyph("double"), "double stroke"),
+            (
+                "double-distance-glyph.tex",
+                customized_glyph("double distance=2pt"),
+                "double stroke",
+            ),
+            (
+                "double-label.tex",
+                customized_label("fill=tenkzPaper, draw, double"),
+                "double stroke",
+            ),
+            ("dashed-glyph.tex", customized_glyph("dashed"), "dashed stroke"),
+            (
+                "dashed-label.tex",
+                customized_label("fill=tenkzPaper, draw, dashed"),
+                "dashed stroke",
+            ),
+            (
+                "zero-draw-glyph.tex",
+                customized_glyph("draw opacity=0"),
+                "zero draw opacity",
+            ),
+            (
+                "zero-draw-label.tex",
+                customized_label("fill=tenkzPaper, draw, draw opacity=0"),
+                "zero draw opacity",
+            ),
+            (
+                "zero-fill-glyph.tex",
+                customized_glyph("fill opacity=0"),
+                "zero fill opacity",
+            ),
+            (
+                "zero-fill-label.tex",
+                customized_label("fill=tenkzPaper, fill opacity=0"),
+                "zero fill opacity",
+            ),
+            (
+                "outline-label.tex",
+                customized_label("fill=none, draw"),
+                "has an outline",
+            ),
+            (
+                "zero-text-label.tex",
+                customized_label("text opacity=0"),
+                "zero text opacity",
+            ),
+            ("shade-glyph.tex", customized_glyph("shade"), "uses shading"),
+            (
+                "fading-glyph.tex",
+                customized_glyph("path fading=west", "\\usetikzlibrary{fadings}"),
+                "uses fading",
+            ),
+            (
+                "path-picture-glyph.tex",
+                customized_glyph("path picture={\\fill (0,0) circle[radius=1pt];}"),
+                "uses a path picture",
+            ),
         ):
             failure = work / filename
             failure.write_text(source, encoding="utf-8")
@@ -1016,8 +1086,7 @@ def main() -> int:
         nonaudited = work / "nonaudited-customization.tex"
         nonaudited.write_text(NONAUDITED_CUSTOMIZATION, encoding="utf-8")
         nonaudited_run = subprocess.run(
-            [engine, "-interaction=nonstopmode", "-halt-on-error",
-             nonaudited.name],
+            [engine, "-interaction=nonstopmode", "-halt-on-error", nonaudited.name],
             cwd=work,
             env=env,
             text=True,
@@ -1048,9 +1117,11 @@ def main() -> int:
                 + nested_run.stdout[-1000:]
             )
         nested_log = (work / "nested-end-hook.tnlog").read_text(encoding="utf-8")
-        if (nested_log.count("label-use|") != 1
-                or nested_log.count("class=label|") != 1
-                or nested_log.count("glyph-geometry|") != 1):
+        if (
+            nested_log.count("label-use|") != 1
+            or nested_log.count("class=label|") != 1
+            or nested_log.count("glyph-geometry|") != 1
+        ):
             raise AssertionError(
                 "nested audited execute-end hook lost or duplicated geometry: "
                 + nested_log
@@ -1086,7 +1157,8 @@ def main() -> int:
             )
 
         def write_triangle_stroke_fixture(
-                name: str, bounds: tuple[int, int, int, int]) -> Path:
+            name: str, bounds: tuple[int, int, int, int]
+        ) -> Path:
             fixture = work / name
             xmin, xmax, ymin, ymax = bounds
             fixture.write_text(
@@ -1112,8 +1184,8 @@ def main() -> int:
                 write_triangle_stroke_fixture(name, bounds)
             )
             if triangle_status != 1 or not any(
-                    finding.rule == "label-overlap"
-                    for finding in triangle_audit.findings):
+                finding.rule == "label-overlap" for finding in triangle_audit.findings
+            ):
                 raise AssertionError(
                     f"audit missed exact triangle stroke overlap in {name}"
                 )
@@ -1159,8 +1231,8 @@ def main() -> int:
             write_round_label_glyph_fixture("round-label-overlap.tnlog", 12)
         )
         if inward_status != 1 or not any(
-                finding.rule == "label-overlap"
-                for finding in inward_audit.findings):
+            finding.rule == "label-overlap" for finding in inward_audit.findings
+        ):
             raise AssertionError("audit missed round-label corner overlap")
 
         round_branches = work / "round-label-glyph-branches.tnlog"
@@ -1188,19 +1260,24 @@ def main() -> int:
         )
         branches_status, branches_audit = audit_status(round_branches)
         branch_shapes = {
-            shape for shape in ("circle", "roundrect", "triangle")
-            if any(f"intersects {shape} glyph" in finding.msg
-                   for finding in branches_audit.findings)
+            shape
+            for shape in ("circle", "roundrect", "triangle")
+            if any(
+                f"intersects {shape} glyph" in finding.msg
+                for finding in branches_audit.findings
+            )
         }
-        if branches_status != 1 or branch_shapes != {
-                "circle", "roundrect", "triangle"}:
+        if branches_status != 1 or branch_shapes != {"circle", "roundrect", "triangle"}:
             raise AssertionError(
                 f"round-label glyph branches were not exercised: {branch_shapes}"
             )
 
         def write_cut_wire_fixture(
-                name: str, query: tuple[int, int, int, int], inner: int = 0,
-                y: int = 10, outer: int = 20,
+            name: str,
+            query: tuple[int, int, int, int],
+            inner: int = 0,
+            y: int = 10,
+            outer: int = 20,
         ) -> Path:
             fixture = work / name
             qxmin, qxmax, qymin, qymax = query
@@ -1229,17 +1306,24 @@ def main() -> int:
             write_cut_wire_fixture("wire-corner-crescent.tnlog", (21, 25, 1, 5))
         )
         if crescent_status != 1 or not any(
-                "visible typed-map wire" in finding.msg
-                for finding in crescent_audit.findings):
+            "visible typed-map wire" in finding.msg
+            for finding in crescent_audit.findings
+        ):
             raise AssertionError("audit missed visible rounded-corner wire ink")
         covered_status, covered_audit = audit_status(
             write_cut_wire_fixture("wire-covered-by-label.tnlog", (35, 45, 5, 15))
         )
-        covered_overlaps = [finding for finding in covered_audit.findings
-                            if finding.rule == "label-overlap"]
-        if (covered_status != 1 or len(covered_overlaps) != 1
-                or "intersects label bbox" not in covered_overlaps[0].msg
-                or "visible typed-map wire" in covered_overlaps[0].msg):
+        covered_overlaps = [
+            finding
+            for finding in covered_audit.findings
+            if finding.rule == "label-overlap"
+        ]
+        if (
+            covered_status != 1
+            or len(covered_overlaps) != 1
+            or "intersects label bbox" not in covered_overlaps[0].msg
+            or "visible typed-map wire" in covered_overlaps[0].msg
+        ):
             raise AssertionError(
                 "covered query did not suppress cascading wire diagnostics"
             )
@@ -1253,31 +1337,32 @@ def main() -> int:
             )
         odd_overlap_status, odd_overlap_audit = audit_status(
             write_cut_wire_fixture(
-                "odd-sp-wire-overlap.tnlog", (5, 10, 18022, 18023),
-                y=0, outer=36045,
+                "odd-sp-wire-overlap.tnlog",
+                (5, 10, 18022, 18023),
+                y=0,
+                outer=36045,
             )
         )
         if odd_overlap_status != 1 or not any(
-                "visible typed-map wire" in finding.msg
-                for finding in odd_overlap_audit.findings):
+            "visible typed-map wire" in finding.msg
+            for finding in odd_overlap_audit.findings
+        ):
             raise AssertionError("audit lost an odd-width half-sp overlap")
         odd_disjoint_status, odd_disjoint_audit = audit_status(
             write_cut_wire_fixture(
-                "odd-sp-wire-disjoint.tnlog", (5, 10, 18023, 18024),
-                y=0, outer=36045,
+                "odd-sp-wire-disjoint.tnlog",
+                (5, 10, 18023, 18024),
+                y=0,
+                outer=36045,
             )
         )
         if odd_disjoint_status != 0:
             raise AssertionError(
                 "audit invented overlap beyond an odd-width half-sp boundary: "
-                + "; ".join(
-                    finding.msg for finding in odd_disjoint_audit.findings
-                )
+                + "; ".join(finding.msg for finding in odd_disjoint_audit.findings)
             )
         gap_status, gap_audit = audit_status(
-            write_cut_wire_fixture(
-                "fused-wire-gap.tnlog", (5, 10, 6, 14), inner=10
-            )
+            write_cut_wire_fixture("fused-wire-gap.tnlog", (5, 10, 6, 14), inner=10)
         )
         if gap_status != 0:
             raise AssertionError(
@@ -1290,19 +1375,18 @@ def main() -> int:
             )
         )
         if solid_center_status != 1 or not any(
-                "visible typed-map wire" in finding.msg
-                for finding in solid_center_audit.findings):
+            "visible typed-map wire" in finding.msg
+            for finding in solid_center_audit.findings
+        ):
             raise AssertionError(
                 "audit treated a visible inner band as an empty fused gap"
             )
         rail_status, rail_audit = audit_status(
-            write_cut_wire_fixture(
-                "fused-wire-rail.tnlog", (5, 10, 1, 4), inner=10
-            )
+            write_cut_wire_fixture("fused-wire-rail.tnlog", (5, 10, 1, 4), inner=10)
         )
         if rail_status != 1 or not any(
-                "visible typed-map wire" in finding.msg
-                for finding in rail_audit.findings):
+            "visible typed-map wire" in finding.msg for finding in rail_audit.findings
+        ):
             raise AssertionError("audit missed a fused typed-map rail overlap")
 
         malformed_wire_prefix = (
@@ -1322,20 +1406,17 @@ def main() -> int:
             "cut-ymin=0|cut-ymax=60|cut-radius=20"
         )
 
-        def assert_malformed_wire(
-                filename: str, body: str, diagnostic: str) -> None:
+        def assert_malformed_wire(filename: str, body: str, diagnostic: str) -> None:
             fixture = work / filename
             fixture.write_text(body, encoding="utf-8")
             status, malformed_audit = audit_status(fixture)
             if status != 1 or not any(
-                    finding.rule == "malformed-event"
-                    and diagnostic in finding.msg
-                    for finding in malformed_audit.findings):
+                finding.rule == "malformed-event" and diagnostic in finding.msg
+                for finding in malformed_audit.findings
+            ):
                 raise AssertionError(
                     f"audit missed malformed wire case {filename}: "
-                    + "; ".join(
-                        finding.msg for finding in malformed_audit.findings
-                    )
+                    + "; ".join(finding.msg for finding in malformed_audit.findings)
                 )
 
         assert_malformed_wire(
@@ -1350,7 +1431,8 @@ def main() -> int:
             + "bbox|picture=1|class=label|id=1|owner=0|"
             + "xmin=20|xmax=80|ymin=0|ymax=60|"
             + "shape=roundrect|radius=20\n"
-            + malformed_wire_event + "|cut-id=1\n",
+            + malformed_wire_event
+            + "|cut-id=1\n",
             "references non-unique cut label bbox id=1",
         )
         assert_malformed_wire(
@@ -1391,9 +1473,9 @@ def main() -> int:
         )
         oversized_status, oversized_audit = audit_status(oversized_roundrect)
         if oversized_status != 1 or not any(
-                finding.rule == "malformed-event"
-                and "exceeds half" in finding.msg
-                for finding in oversized_audit.findings):
+            finding.rule == "malformed-event" and "exceeds half" in finding.msg
+            for finding in oversized_audit.findings
+        ):
             raise AssertionError("audit clamped malformed roundrect geometry")
 
         nonsquare_circle = work / "nonsquare-circle.tnlog"
@@ -1409,9 +1491,10 @@ def main() -> int:
         )
         circle_status, circle_audit = audit_status(nonsquare_circle)
         if circle_status != 1 or not any(
-                finding.rule == "malformed-event"
-                and "ellipses are unsupported" in finding.msg
-                for finding in circle_audit.findings):
+            finding.rule == "malformed-event"
+            and "ellipses are unsupported" in finding.msg
+            for finding in circle_audit.findings
+        ):
             raise AssertionError("audit accepted a nonsquare circle geometry")
 
         missing_ink = work / "missing-ink-geometry.tnlog"
@@ -1424,9 +1507,14 @@ def main() -> int:
             encoding="utf-8",
         )
         missing_ink_status, missing_ink_audit = audit_status(missing_ink)
-        if missing_ink_status != 1 or sum(
+        if (
+            missing_ink_status != 1
+            or sum(
                 finding.rule == "bbox-coverage"
-                for finding in missing_ink_audit.findings) != 2:
+                for finding in missing_ink_audit.findings
+            )
+            != 2
+        ):
             raise AssertionError("audit accepted unmeasured glyph/wire owners")
 
         duplicate_geometry = work / "duplicate-ink-geometry.tnlog"
@@ -1445,9 +1533,10 @@ def main() -> int:
         )
         duplicate_status, duplicate_audit = audit_status(duplicate_geometry)
         if duplicate_status != 1 or not any(
-                finding.rule == "bbox-coverage"
-                and "produced 2 matching geometries" in finding.msg
-                for finding in duplicate_audit.findings):
+            finding.rule == "bbox-coverage"
+            and "produced 2 matching geometries" in finding.msg
+            for finding in duplicate_audit.findings
+        ):
             raise AssertionError("audit accepted duplicate owner geometry")
 
         missing_class = work / "missing-ink-class.tnlog"
@@ -1462,8 +1551,9 @@ def main() -> int:
         )
         missing_class_status, missing_class_audit = audit_status(missing_class)
         if missing_class_status != 1 or not any(
-                finding.rule == "malformed-event"
-                for finding in missing_class_audit.findings):
+            finding.rule == "malformed-event"
+            for finding in missing_class_audit.findings
+        ):
             raise AssertionError("audit accepted an ink-use without class")
 
         # A traced row's closure publishes its own contour (#5719).  The
@@ -1476,8 +1566,7 @@ def main() -> int:
             path.write_text(
                 "picture|id=1|lang=kernel\n"
                 "atom|picture=1|cell=1-1|kind=dot\n"
-                "kernel-boundary|picture=1|signature=\n"
-                + rail + labels,
+                "kernel-boundary|picture=1|signature=\n" + rail + labels,
                 encoding="utf-8",
             )
             return path
@@ -1489,14 +1578,16 @@ def main() -> int:
             "points=-600000,0;-600000,-800000;2600000,-800000;2600000,0\n",
         )
         detached_status, detached_audit = audit_status(detached)
-        detached_findings = [finding for finding in detached_audit.findings
-                             if finding.rule == "closure-detached"]
+        detached_findings = [
+            finding
+            for finding in detached_audit.findings
+            if finding.rule == "closure-detached"
+        ]
         if detached_status != 1 or len(detached_findings) != 2:
             raise AssertionError(
                 "audit accepted a closure drawn clear of the row it closes"
             )
-        if not all("9.16pt short" in finding.msg
-                   for finding in detached_findings):
+        if not all("9.16pt short" in finding.msg for finding in detached_findings):
             raise AssertionError(
                 "the detached closure finding did not measure the gap: "
                 + "; ".join(finding.msg for finding in detached_findings)
@@ -1529,16 +1620,21 @@ def main() -> int:
             "2600000,0;2000000,0\n",
         )
         crossed_status, crossed_audit = audit_status(crossed)
-        crossed_findings = [finding for finding in crossed_audit.findings
-                            if finding.rule == "closure-crossed"]
+        crossed_findings = [
+            finding
+            for finding in crossed_audit.findings
+            if finding.rule == "closure-crossed"
+        ]
         if crossed_status != 1 or len(crossed_findings) != 1:
             raise AssertionError(
                 "audit accepted a closure passing inside the open indices of "
                 "the row it closes"
             )
         crossed_msg = crossed_findings[0].msg
-        if ("12.21pt outside row 1 over part of it" not in crossed_msg
-                or "need 25.94pt" not in crossed_msg):
+        if (
+            "12.21pt outside row 1 over part of it" not in crossed_msg
+            or "need 25.94pt" not in crossed_msg
+        ):
             raise AssertionError(
                 "the crossed-closure finding did not measure both distances: "
                 + crossed_findings[0].msg
@@ -1557,21 +1653,23 @@ def main() -> int:
         )
         dipped_status, dipped_audit = audit_status(dipped)
         if dipped_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in dipped_audit.findings):
+            finding.rule == "closure-crossed" for finding in dipped_audit.findings
+        ):
             raise AssertionError(
                 "audit read a closure's farthest corner as its clearance"
             )
 
         # A rail exactly at its standoff is clear: the daylight the standoff
         # already carries is what separates the indices from the return.
-        flush_status, flush_audit = audit_status(closure_log(
-            "closure-flush.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
-            "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
-            "2600000,0;2000000,0\n",
-        ))
+        flush_status, flush_audit = audit_status(
+            closure_log(
+                "closure-flush.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
+                "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
+                "2600000,0;2000000,0\n",
+            )
+        )
         if flush_status != 0 or flush_audit.findings:
             raise AssertionError(
                 "audit rejected a closure standing exactly at its standoff"
@@ -1581,16 +1679,18 @@ def main() -> int:
         # routed the whole distance on the wrong side is not clear of
         # anything -- in a multi-row picture it has gone through the row it
         # should have stood outside.
-        flipped_status, flipped_audit = audit_status(closure_log(
-            "closure-flipped.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
-            "points=0,0;-600000,0;-600000,800000;2600000,800000;"
-            "2600000,0;2000000,0\n",
-        ))
+        flipped_status, flipped_audit = audit_status(
+            closure_log(
+                "closure-flipped.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
+                "points=0,0;-600000,0;-600000,800000;2600000,800000;"
+                "2600000,0;2000000,0\n",
+            )
+        )
         if flipped_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in flipped_audit.findings):
+            finding.rule == "closure-crossed" for finding in flipped_audit.findings
+        ):
             raise AssertionError(
                 "audit read a return routed on the wrong side as clear"
             )
@@ -1618,8 +1718,8 @@ def main() -> int:
             single_column("closure-one-column-shallow.tnlog", -100000)
         )
         if shallow_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in shallow_audit.findings):
+            finding.rule == "closure-crossed" for finding in shallow_audit.findings
+        ):
             raise AssertionError(
                 "audit passed over a one-column closure inside its standoff"
             )
@@ -1627,50 +1727,53 @@ def main() -> int:
         # A zero standoff carries no side and no distance, so it is not a
         # standoff either.  It reads as a malformed value rather than as a
         # rail with nothing to clear.
-        zero_status, zero_audit = audit_status(closure_log(
-            "closure-zero-standoff.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=0|"
-            "points=0,0;2000000,0\n",
-        ))
-        if zero_status != 1 or not any(
-                finding.rule == "malformed-event"
-                for finding in zero_audit.findings):
-            raise AssertionError(
-                "audit accepted a closure whose standoff was zero"
+        zero_status, zero_audit = audit_status(
+            closure_log(
+                "closure-zero-standoff.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=0|"
+                "points=0,0;2000000,0\n",
             )
+        )
+        if zero_status != 1 or not any(
+            finding.rule == "malformed-event" for finding in zero_audit.findings
+        ):
+            raise AssertionError("audit accepted a closure whose standoff was zero")
 
         # A rail that runs the row at its standoff and then doubles back
         # inside it has put ink across the indices on the way home.
-        back_status, back_audit = audit_status(closure_log(
-            "closure-doubled-back.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
-            "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
-            "2600000,-100000;-600000,-100000;-600000,0;2000000,0\n",
-        ))
+        back_status, back_audit = audit_status(
+            closure_log(
+                "closure-doubled-back.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
+                "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
+                "2600000,-100000;-600000,-100000;-600000,0;2000000,0\n",
+            )
+        )
         if back_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in back_audit.findings):
+            finding.rule == "closure-crossed" for finding in back_audit.findings
+        ):
             raise AssertionError(
-                "audit read a rail that doubled back inside its standoff "
-                "as clear"
+                "audit read a rail that doubled back inside its standoff " "as clear"
             )
 
         # A vertical detour toward the row at an interior column meets the
         # span at one x, like a lead does, but it is ink across the indices
         # rather than a wire leaving a virtual end.
-        notch_status, notch_audit = audit_status(closure_log(
-            "closure-interior-notch.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
-            "points=0,0;-600000,0;-600000,-800000;1000000,-800000;"
-            "1000000,-100000;1000000,-800000;2600000,-800000;"
-            "2600000,0;2000000,0\n",
-        ))
+        notch_status, notch_audit = audit_status(
+            closure_log(
+                "closure-interior-notch.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=-800000|"
+                "points=0,0;-600000,0;-600000,-800000;1000000,-800000;"
+                "1000000,-100000;1000000,-800000;2600000,-800000;"
+                "2600000,0;2000000,0\n",
+            )
+        )
         if notch_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in notch_audit.findings):
+            finding.rule == "closure-crossed" for finding in notch_audit.findings
+        ):
             raise AssertionError(
                 "audit exempted a vertical detour inside the row's own span"
             )
@@ -1678,47 +1781,51 @@ def main() -> int:
         # A one-column row's every stretch meets its span at that column, so
         # only the two leads are exempt there too: a second pass across the
         # same column is ink across the index, not a wire leaving an end.
-        repeat_status, repeat_audit = audit_status(closure_log(
-            "closure-one-column-repeat.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=0,0|stroke=0|clear=-800000|"
-            "points=0,0;-600000,0;-600000,-800000;600000,-800000;"
-            "600000,-100000;-600000,-100000;-600000,0;0,0\n",
-        ))
+        repeat_status, repeat_audit = audit_status(
+            closure_log(
+                "closure-one-column-repeat.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=0,0|stroke=0|clear=-800000|"
+                "points=0,0;-600000,0;-600000,-800000;600000,-800000;"
+                "600000,-100000;-600000,-100000;-600000,0;0,0\n",
+            )
+        )
         if repeat_status != 1 or not any(
-                finding.rule == "closure-crossed"
-                for finding in repeat_audit.findings):
+            finding.rule == "closure-crossed" for finding in repeat_audit.findings
+        ):
             raise AssertionError(
                 "audit exempted a second shallow pass over a one-column row"
             )
 
         # `arc` is the only word for a closure with no row line.  A flat rail
         # that named any other would take the rule out of its own reading.
-        word_status, word_audit = audit_status(closure_log(
-            "closure-word-standoff.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=none|"
-            "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
-            "2600000,0;2000000,0\n",
-        ))
-        if word_status != 1 or not any(
-                finding.rule == "malformed-event"
-                for finding in word_audit.findings):
-            raise AssertionError(
-                "audit accepted a flat closure naming no standoff"
+        word_status, word_audit = audit_status(
+            closure_log(
+                "closure-word-standoff.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=none|"
+                "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
+                "2600000,0;2000000,0\n",
             )
+        )
+        if word_status != 1 or not any(
+            finding.rule == "malformed-event" for finding in word_audit.findings
+        ):
+            raise AssertionError("audit accepted a flat closure naming no standoff")
 
         # A stream written before the standoff field existed is still a
         # stream: the field arrived on an existing kind, and section 7 of
         # TNLOG.md holds a reader to accepting both spellings.  The archived
         # record reads clean, and the standoff rule asks nothing of it.
-        archived_status, archived_audit = audit_status(closure_log(
-            "closure-archived.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|"
-            "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
-            "2600000,0;2000000,0\n",
-        ))
+        archived_status, archived_audit = audit_status(
+            closure_log(
+                "closure-archived.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|"
+                "points=0,0;-600000,0;-600000,-800000;2600000,-800000;"
+                "2600000,0;2000000,0\n",
+            )
+        )
         if archived_status != 0 or archived_audit.findings:
             raise AssertionError(
                 "audit rejected a closure record written before the standoff "
@@ -1728,16 +1835,16 @@ def main() -> int:
 
         # A ring's sector stands off no row line, so it names no standoff and
         # the rule has nothing to read.  Its ends are its two stations.
-        arc_status, arc_audit = audit_status(closure_log(
-            "closure-arc.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=arc|"
-            "points=0,0;1000000,-100000;2000000,0\n",
-        ))
-        if arc_status != 0 or arc_audit.findings:
-            raise AssertionError(
-                "audit demanded a row-line standoff of a frame arc"
+        arc_status, arc_audit = audit_status(
+            closure_log(
+                "closure-arc.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=arc|"
+                "points=0,0;1000000,-100000;2000000,0\n",
             )
+        )
+        if arc_status != 0 or arc_audit.findings:
+            raise AssertionError("audit demanded a row-line standoff of a frame arc")
 
         # The site name that stood on the return: a box straddling the rail's
         # own run, which is exactly where a label band shallower than the
@@ -1752,9 +1859,9 @@ def main() -> int:
         )
         on_rail_status, on_rail_audit = audit_status(on_rail)
         if on_rail_status != 1 or not any(
-                finding.rule == "label-overlap"
-                and "closure wrap-1 of row 1" in finding.msg
-                for finding in on_rail_audit.findings):
+            finding.rule == "label-overlap" and "closure wrap-1 of row 1" in finding.msg
+            for finding in on_rail_audit.findings
+        ):
             raise AssertionError(
                 "audit accepted a label lying across a traced row's closure"
             )
@@ -1769,9 +1876,7 @@ def main() -> int:
         )
         stepped_status, stepped_audit = audit_status(stepped)
         if stepped_status != 0 or stepped_audit.findings:
-            raise AssertionError(
-                "audit rejected a label stepped clear of the closure"
-            )
+            raise AssertionError("audit rejected a label stepped clear of the closure")
 
         malformed_rail = closure_log(
             "closure-malformed.tnlog",
@@ -1780,8 +1885,8 @@ def main() -> int:
         )
         malformed_status, malformed_audit = audit_status(malformed_rail)
         if malformed_status != 1 or not any(
-                finding.rule == "malformed-event"
-                for finding in malformed_audit.findings):
+            finding.rule == "malformed-event" for finding in malformed_audit.findings
+        ):
             raise AssertionError("audit accepted a one-point closure contour")
 
         # A rail is a wire of nonzero width, and the record carries the half
@@ -1796,7 +1901,8 @@ def main() -> int:
 
         def stroked_log(name: str, ymin: int, ymax: int) -> Path:
             return closure_log(
-                name, stroked_rail,
+                name,
+                stroked_rail,
                 "label-use|picture=1\n"
                 "bbox|picture=1|class=label|id=1|owner=0|"
                 f"xmin=400000|xmax=800000|ymin={ymin}|ymax={ymax}|"
@@ -1807,12 +1913,10 @@ def main() -> int:
             stroked_log("closure-label-on-stroke.tnlog", -790000, -700000)
         )
         if on_stroke_status != 1 or not any(
-                finding.rule == "label-overlap"
-                and "closure wrap-1 of row 1" in finding.msg
-                for finding in on_stroke_audit.findings):
-            raise AssertionError(
-                "audit read the closure as a centreline of no width"
-            )
+            finding.rule == "label-overlap" and "closure wrap-1 of row 1" in finding.msg
+            for finding in on_stroke_audit.findings
+        ):
+            raise AssertionError("audit read the closure as a centreline of no width")
 
         off_stroke_status, off_stroke_audit = audit_status(
             stroked_log("closure-label-off-stroke.tnlog", -770000, -700000)
@@ -1827,20 +1931,22 @@ def main() -> int:
         # corner circle can report it.  `_roundrect_parts` hands those circles
         # back in doubled coordinates, and doubling them a second time put
         # every such corner four times its own reach away.
-        corner_status, corner_audit = audit_status(closure_log(
-            "closure-label-round-corner.tnlog",
-            "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
-            "west=0,0|east=2000000,0|stroke=0|clear=400000|"
-            "points=0,0;0,500000;400000,200000;2000000,0\n",
-            "label-use|picture=1\n"
-            "bbox|picture=1|class=label|id=1|owner=0|"
-            "xmin=0|xmax=1000000|ymin=250000|ymax=1250000|"
-            "shape=roundrect|radius=400000\n",
-        ))
+        corner_status, corner_audit = audit_status(
+            closure_log(
+                "closure-label-round-corner.tnlog",
+                "closure-rail|picture=1|name=wrap-1|row=1|side=west-east|"
+                "west=0,0|east=2000000,0|stroke=0|clear=400000|"
+                "points=0,0;0,500000;400000,200000;2000000,0\n",
+                "label-use|picture=1\n"
+                "bbox|picture=1|class=label|id=1|owner=0|"
+                "xmin=0|xmax=1000000|ymin=250000|ymax=1250000|"
+                "shape=roundrect|radius=400000\n",
+            )
+        )
         if corner_status != 1 or not any(
-                finding.rule == "label-overlap"
-                and "closure wrap-1 of row 1" in finding.msg
-                for finding in corner_audit.findings):
+            finding.rule == "label-overlap" and "closure wrap-1 of row 1" in finding.msg
+            for finding in corner_audit.findings
+        ):
             raise AssertionError(
                 "audit accepted a closure clipping a rounded name's corner"
             )
@@ -1851,7 +1957,8 @@ def main() -> int:
         # rail; a name another glyph owns is not.
         def inscribed_log(name: str, label_owner: int) -> Path:
             return closure_log(
-                name, stroked_rail,
+                name,
+                stroked_rail,
                 "ink-use|picture=1|class=glyph|id=1|shape=rect\n"
                 "label-use|picture=1\n"
                 "glyph-geometry|picture=1|owner=1|shape=rect|"
@@ -1876,12 +1983,11 @@ def main() -> int:
             inscribed_log("closure-label-sibling.tnlog", 2)
         )
         if sibling_status != 1 or not any(
-                finding.rule == "label-overlap"
-                and "closure wrap-1 of row 1" in finding.msg
-                for finding in sibling_audit.findings):
+            finding.rule == "label-overlap" and "closure wrap-1 of row 1" in finding.msg
+            for finding in sibling_audit.findings
+        ):
             raise AssertionError(
-                "the covered-glyph exemption reached a name the glyph does "
-                "not own"
+                "the covered-glyph exemption reached a name the glyph does " "not own"
             )
 
         glyph_bbox = work / "glyph-bbox.tnlog"
@@ -1893,9 +1999,9 @@ def main() -> int:
         )
         glyph_bbox_status, glyph_bbox_audit = audit_status(glyph_bbox)
         if glyph_bbox_status != 1 or not any(
-                finding.rule == "malformed-event"
-                and "class=glyph" in finding.msg
-                for finding in glyph_bbox_audit.findings):
+            finding.rule == "malformed-event" and "class=glyph" in finding.msg
+            for finding in glyph_bbox_audit.findings
+        ):
             raise AssertionError("audit accepted obsolete glyph bbox geometry")
 
         # ---- label bands against wire ink (#6169) ----
@@ -1911,8 +2017,7 @@ def main() -> int:
             path.write_text(
                 "picture|id=1|lang=kernel\n"
                 "atom|picture=1|cell=1-1|kind=dot\n"
-                "kernel-boundary|picture=1|signature=\n"
-                + ink + labels,
+                "kernel-boundary|picture=1|signature=\n" + ink + labels,
                 encoding="utf-8",
             )
             return path
@@ -1932,27 +2037,27 @@ def main() -> int:
 
         # A wire-ink record alone is derived geometry: it must not disturb
         # the dialect, empty-picture, or coverage readings.
-        quiet_status, quiet_audit = audit_status(
-            ink_log("ink-quiet.tnlog", flat_ink))
+        quiet_status, quiet_audit = audit_status(ink_log("ink-quiet.tnlog", flat_ink))
         if quiet_status != 0 or quiet_audit.findings:
             raise AssertionError(
                 "a wire-ink record disturbed an unrelated reading: "
-                + "; ".join(f.msg for f in quiet_audit.findings))
+                + "; ".join(f.msg for f in quiet_audit.findings)
+            )
 
         # Strict hit one scaled point inside the band; exact tangency and a
         # one-point step past it are legal on either side of the stroke.
         for name, ymin, ymax, expected in (
-                ("ink-hit-above.tnlog", 18022, 100000, True),
-                ("ink-tangent-above.tnlog", 18023, 100000, False),
-                ("ink-clear-above.tnlog", 18024, 100000, False),
-                ("ink-hit-below.tnlog", -100000, -18022, True),
-                ("ink-tangent-below.tnlog", -100000, -18023, False),
+            ("ink-hit-above.tnlog", 18022, 100000, True),
+            ("ink-tangent-above.tnlog", 18023, 100000, False),
+            ("ink-clear-above.tnlog", 18024, 100000, False),
+            ("ink-hit-below.tnlog", -100000, -18022, True),
+            ("ink-tangent-below.tnlog", -100000, -18023, False),
         ):
-            status, audit = audit_status(
-                ink_log(name, flat_ink, ink_label(ymin, ymax)))
+            status, audit = audit_status(ink_log(name, flat_ink, ink_label(ymin, ymax)))
             found = [f for f in audit.findings if f.rule == "label-on-ink"]
-            if expected and (len(found) != 1 or found[0].severity != "ADV"
-                             or status != 0):
+            if expected and (
+                len(found) != 1 or found[0].severity != "ADV" or status != 0
+            ):
                 raise AssertionError(f"{name}: expected one advisory hit")
             if not expected and (found or status != 0):
                 raise AssertionError(f"{name}: tangency or daylight reported")
@@ -1961,17 +2066,18 @@ def main() -> int:
         # the kernel chose is a broken promise and hard; the author's own
         # station and an unclaimed site are advisory.
         for name, claim, severity, code in (
-                ("ink-auto.tnlog", "|station=s|provenance=auto", "HARD", 1),
-                ("ink-explicit.tnlog", "|provenance=explicit", "ADV", 0),
-                ("ink-unclaimed.tnlog", "", "ADV", 0),
+            ("ink-auto.tnlog", "|station=s|provenance=auto", "HARD", 1),
+            ("ink-explicit.tnlog", "|provenance=explicit", "ADV", 0),
+            ("ink-unclaimed.tnlog", "", "ADV", 0),
         ):
             status, audit = audit_status(
-                ink_log(name, flat_ink, ink_label(-100000, -18022, claim)))
+                ink_log(name, flat_ink, ink_label(-100000, -18022, claim))
+            )
             found = [f for f in audit.findings if f.rule == "label-on-ink"]
-            if (status != code or len(found) != 1
-                    or found[0].severity != severity):
+            if status != code or len(found) != 1 or found[0].severity != severity:
                 raise AssertionError(
-                    f"{name}: expected one {severity} finding and exit {code}")
+                    f"{name}: expected one {severity} finding and exit {code}"
+                )
 
         # The historical k_roperator collision, reconstructed as events: the
         # B name at its pre-fix south station stood on the B.s->R.n bond.
@@ -1988,13 +2094,15 @@ def main() -> int:
         )
         roperator_status, roperator_audit = audit_status(roperator)
         if roperator_status != 1 or not any(
-                finding.rule == "label-on-ink"
-                and finding.severity == "HARD"
-                and "station the kernel chose (s)" in finding.msg
-                for finding in roperator_audit.findings):
+            finding.rule == "label-on-ink"
+            and finding.severity == "HARD"
+            and "station the kernel chose (s)" in finding.msg
+            for finding in roperator_audit.findings
+        ):
             raise AssertionError(
                 "the reconstructed k_roperator collision was not a hard "
-                "kernel-promise violation")
+                "kernel-promise violation"
+            )
 
         # Cubic ink.  The route below rises to y = 300000 at its middle, so
         # its band tops out at 318023; its control hull reaches 400000.
@@ -2012,42 +2120,47 @@ def main() -> int:
             )
 
         for name, ymin, ymax, expected in (
-                # through the interior of the band
-                ("ink-cubic-hit.tnlog", 250000, 350000, True),
-                # inside the control hull but strictly above the curve's
-                # band: the subdivision must exonerate it
-                ("ink-cubic-hull-miss.tnlog", 350000, 430000, False),
-                # tangent at the stream's one-point resolution
-                ("ink-cubic-tangent.tnlog", 318024, 430000, False),
+            # through the interior of the band
+            ("ink-cubic-hit.tnlog", 250000, 350000, True),
+            # inside the control hull but strictly above the curve's
+            # band: the subdivision must exonerate it
+            ("ink-cubic-hull-miss.tnlog", 350000, 430000, False),
+            # tangent at the stream's one-point resolution
+            ("ink-cubic-tangent.tnlog", 318024, 430000, False),
         ):
             status, audit = audit_status(
-                ink_log(name, arch_ink, arch_label(ymin, ymax)))
+                ink_log(name, arch_ink, arch_label(ymin, ymax))
+            )
             found = [f for f in audit.findings if f.rule == "label-on-ink"]
             if expected and (len(found) != 1 or status != 1):
                 raise AssertionError(f"{name}: expected one hard cubic hit")
             if not expected and (found or status != 0):
                 raise AssertionError(
-                    f"{name}: the certified walk convicted clear geometry")
+                    f"{name}: the certified walk convicted clear geometry"
+                )
 
         # A diagonal bow: the chord runs corner to corner and the curve bows
         # a quarter of the picture away from it.  A coordinate-wise bound
         # understates that Euclidean distance by up to sqrt(2), so this seed
         # holds the walk to its no-false-negative guarantee: the label sits
         # on the curve at t = 1/2 and must be found.
-        diagonal_status, diagonal_audit = audit_status(ink_log(
-            "ink-cubic-diagonal.tnlog",
-            "wire-ink|picture=1|name=diag|origin=bond|stroke=1|"
-            "points=0,0;c:0,1000,0,1000,1000,1000\n",
-            "label-use|picture=1\n"
-            "bbox|picture=1|class=label|id=1|owner=0|"
-            "xmin=124|xmax=126|ymin=874|ymax=876|shape=rect|radius=0\n",
-        ))
+        diagonal_status, diagonal_audit = audit_status(
+            ink_log(
+                "ink-cubic-diagonal.tnlog",
+                "wire-ink|picture=1|name=diag|origin=bond|stroke=1|"
+                "points=0,0;c:0,1000,0,1000,1000,1000\n",
+                "label-use|picture=1\n"
+                "bbox|picture=1|class=label|id=1|owner=0|"
+                "xmin=124|xmax=126|ymin=874|ymax=876|shape=rect|radius=0\n",
+            )
+        )
         if diagonal_status != 0 or [
-                finding.rule for finding in diagonal_audit.findings
+            finding.rule for finding in diagonal_audit.findings
         ] != ["label-on-ink"]:
             raise AssertionError(
                 "the certified walk missed a label on a diagonal bow: "
-                + "; ".join(f.msg for f in diagonal_audit.findings))
+                + "; ".join(f.msg for f in diagonal_audit.findings)
+            )
 
         # Station provenance is a coupled claim.  Every inconsistent
         # combination is a malformed event, and the label it rode drops out
@@ -2055,22 +2168,24 @@ def main() -> int:
         # first seed's geometry is a genuine hit, and it must surface as
         # malformed rather than as any label-on-ink severity.
         for name, claim in (
-                ("ink-auto-no-station.tnlog", "|provenance=auto"),
-                ("ink-explicit-station.tnlog",
-                 "|station=s|provenance=explicit"),
-                ("ink-station-alone.tnlog", "|station=s"),
+            ("ink-auto-no-station.tnlog", "|provenance=auto"),
+            ("ink-explicit-station.tnlog", "|station=s|provenance=explicit"),
+            ("ink-station-alone.tnlog", "|station=s"),
         ):
             status, audit = audit_status(
-                ink_log(name, flat_ink, ink_label(-100000, -18022, claim)))
-            if status != 1 or any(
-                    finding.rule == "label-on-ink"
-                    for finding in audit.findings) or not any(
-                    finding.rule == "malformed-event"
-                    for finding in audit.findings):
+                ink_log(name, flat_ink, ink_label(-100000, -18022, claim))
+            )
+            if (
+                status != 1
+                or any(finding.rule == "label-on-ink" for finding in audit.findings)
+                or not any(
+                    finding.rule == "malformed-event" for finding in audit.findings
+                )
+            ):
                 raise AssertionError(
                     f"{name}: an inconsistent claim was not read as "
-                    "malformed: "
-                    + "; ".join(f.msg for f in audit.findings))
+                    "malformed: " + "; ".join(f.msg for f in audit.findings)
+                )
         wire_claim = ink_log(
             "ink-wire-class-claim.tnlog",
             "bbox|picture=1|class=wire|id=1|owner=1|"
@@ -2078,36 +2193,44 @@ def main() -> int:
         )
         wire_claim_status, wire_claim_audit = audit_status(wire_claim)
         if wire_claim_status != 1 or not any(
-                finding.rule == "malformed-event"
-                and "ride only label boxes" in finding.msg
-                for finding in wire_claim_audit.findings):
+            finding.rule == "malformed-event" and "ride only label boxes" in finding.msg
+            for finding in wire_claim_audit.findings
+        ):
             raise AssertionError(
-                "a station claim on a wire box was not read as malformed")
+                "a station claim on a wire box was not read as malformed"
+            )
 
         # Grammar rejections: malformed points, a zero stroke, and a missing
         # stroke are each a malformed event, exactly as the label-geometry
         # path reads them.
         for name, ink in (
-                ("ink-bad-points.tnlog",
-                 "wire-ink|picture=1|name=b|origin=bond|stroke=18023|"
-                 "points=0,0;x\n"),
-                ("ink-lone-point.tnlog",
-                 "wire-ink|picture=1|name=b|origin=bond|stroke=18023|"
-                 "points=0,0\n"),
-                ("ink-short-cubic.tnlog",
-                 "wire-ink|picture=1|name=b|origin=bond|stroke=18023|"
-                 "points=0,0;c:1,2,3,4\n"),
-                ("ink-zero-stroke.tnlog",
-                 "wire-ink|picture=1|name=b|origin=bond|stroke=0|"
-                 "points=0,0;2000000,0\n"),
-                ("ink-missing-stroke.tnlog",
-                 "wire-ink|picture=1|name=b|origin=bond|"
-                 "points=0,0;2000000,0\n"),
+            (
+                "ink-bad-points.tnlog",
+                "wire-ink|picture=1|name=b|origin=bond|stroke=18023|" "points=0,0;x\n",
+            ),
+            (
+                "ink-lone-point.tnlog",
+                "wire-ink|picture=1|name=b|origin=bond|stroke=18023|" "points=0,0\n",
+            ),
+            (
+                "ink-short-cubic.tnlog",
+                "wire-ink|picture=1|name=b|origin=bond|stroke=18023|"
+                "points=0,0;c:1,2,3,4\n",
+            ),
+            (
+                "ink-zero-stroke.tnlog",
+                "wire-ink|picture=1|name=b|origin=bond|stroke=0|"
+                "points=0,0;2000000,0\n",
+            ),
+            (
+                "ink-missing-stroke.tnlog",
+                "wire-ink|picture=1|name=b|origin=bond|" "points=0,0;2000000,0\n",
+            ),
         ):
             status, audit = audit_status(ink_log(name, ink))
             if status != 1 or not any(
-                    finding.rule == "malformed-event"
-                    for finding in audit.findings):
+                finding.rule == "malformed-event" for finding in audit.findings
+            ):
                 raise AssertionError(f"{name}: malformed ink was accepted")
 
         # The issue's named regression, compiled: `label pos=` forces a
@@ -2118,10 +2241,12 @@ def main() -> int:
         onink_tex.write_text(ONINK_SOURCE, encoding="utf-8")
         try:
             run = subprocess.run(
-                [engine, "-interaction=nonstopmode", "-halt-on-error",
-                 onink_tex.name],
-                cwd=work, env=env, text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                [engine, "-interaction=nonstopmode", "-halt-on-error", onink_tex.name],
+                cwd=work,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 timeout=120,
             )
         except subprocess.TimeoutExpired as exc:
@@ -2132,27 +2257,38 @@ def main() -> int:
             print(run.stdout)
             print("FAIL: label-on-wire-ink fixture did not compile")
             return 1
-        onink_status, onink_audit = audit_status(
-            work / "label-on-wire-ink.tnlog")
-        onink_found = [finding for finding in onink_audit.findings
-                       if finding.rule == "label-on-ink"]
-        if (onink_status != 0 or len(onink_found) != 1
-                or onink_found[0].severity != "ADV"
-                or "picture k1 label bbox id=1" not in onink_found[0].msg
-                or "author's chosen station" not in onink_found[0].msg):
+        onink_status, onink_audit = audit_status(work / "label-on-wire-ink.tnlog")
+        onink_found = [
+            finding
+            for finding in onink_audit.findings
+            if finding.rule == "label-on-ink"
+        ]
+        if (
+            onink_status != 0
+            or len(onink_found) != 1
+            or onink_found[0].severity != "ADV"
+            or "picture k1 label bbox id=1" not in onink_found[0].msg
+            or "author's chosen station" not in onink_found[0].msg
+        ):
             raise AssertionError(
                 "the forced label pos= regression did not produce exactly "
                 "one attributed advisory: "
-                + "; ".join(f.msg for f in onink_audit.findings))
-        onink_labels = [event for event in onink_audit.events("k1")
-                        if event.kind == "bbox"
-                        and event.attrs.get("class") == "label"]
-        if (len(onink_labels) != 1
-                or onink_labels[0].attrs.get("provenance") != "explicit"
-                or "station" in onink_labels[0].attrs):
+                + "; ".join(f.msg for f in onink_audit.findings)
+            )
+        onink_labels = [
+            event
+            for event in onink_audit.events("k1")
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
+        if (
+            len(onink_labels) != 1
+            or onink_labels[0].attrs.get("provenance") != "explicit"
+            or "station" in onink_labels[0].attrs
+        ):
             raise AssertionError(
                 "an explicit label pos= did not claim provenance=explicit "
-                "with no station")
+                "with no station"
+            )
 
         # Every mark label site claims its provenance (#6362).  One
         # compiled picture exercises all five: the mark's default north and
@@ -2163,10 +2299,12 @@ def main() -> int:
         markclaim_tex = work / "mark-claims.tex"
         markclaim_tex.write_text(MARK_CLAIM_SOURCE, encoding="utf-8")
         run = subprocess.run(
-            [engine, "-interaction=nonstopmode", "-halt-on-error",
-             markclaim_tex.name],
-            cwd=work, env=env, text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            [engine, "-interaction=nonstopmode", "-halt-on-error", markclaim_tex.name],
+            cwd=work,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             timeout=120,
         )
         if run.returncode:
@@ -2177,30 +2315,48 @@ def main() -> int:
         markclaim_labels = [
             (event.attrs.get("provenance"), event.attrs.get("station"))
             for event in markclaim_audit.events("k1")
-            if event.kind == "bbox" and event.attrs.get("class") == "label"]
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
         if markclaim_labels != [
-                ("auto", "n"), ("explicit", None), ("auto", "s"),
-                ("explicit", None), (None, None)]:
+            ("auto", "n"),
+            ("explicit", None),
+            ("auto", "s"),
+            ("explicit", None),
+            (None, None),
+        ]:
             raise AssertionError(
                 "the mark label sites did not claim per their choosers: "
-                + repr(markclaim_labels))
+                + repr(markclaim_labels)
+            )
 
         # The severity split at a mark site, compiled with identical
         # geometry: the kernel's default north on the wire is HARD, the
         # author's same word one advisory.
         for name, source, want_status, want_severity, want_msg in (
-                ("mark-onink-auto", MARK_ONINK_SOURCE, 1, "HARD",
-                 "station the kernel chose (n)"),
-                ("mark-onink-explicit", MARK_ONINK_EXPLICIT_SOURCE, 0,
-                 "ADV", "author's chosen station"),
+            (
+                "mark-onink-auto",
+                MARK_ONINK_SOURCE,
+                1,
+                "HARD",
+                "station the kernel chose (n)",
+            ),
+            (
+                "mark-onink-explicit",
+                MARK_ONINK_EXPLICIT_SOURCE,
+                0,
+                "ADV",
+                "author's chosen station",
+            ),
         ):
             case_tex = work / f"{name}.tex"
             case_tex.write_text(source, encoding="utf-8")
             run = subprocess.run(
-                [engine, "-interaction=nonstopmode", "-halt-on-error",
-                 case_tex.name],
-                cwd=work, env=env, text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                [engine, "-interaction=nonstopmode", "-halt-on-error", case_tex.name],
+                cwd=work,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 timeout=120,
             )
             if run.returncode:
@@ -2208,28 +2364,36 @@ def main() -> int:
                 print(f"FAIL: {name} fixture did not compile")
                 return 1
             case_status, case_audit = audit_status(work / f"{name}.tnlog")
-            case_found = [finding for finding in case_audit.findings
-                          if finding.rule == "label-on-ink"]
-            if (case_status != want_status or len(case_found) != 1
-                    or case_found[0].severity != want_severity
-                    or want_msg not in case_found[0].msg):
+            case_found = [
+                finding
+                for finding in case_audit.findings
+                if finding.rule == "label-on-ink"
+            ]
+            if (
+                case_status != want_status
+                or len(case_found) != 1
+                or case_found[0].severity != want_severity
+                or want_msg not in case_found[0].msg
+            ):
                 raise AssertionError(
                     f"{name}: the mark severity split did not hold: "
-                    + "; ".join(f.msg for f in case_audit.findings))
+                    + "; ".join(f.msg for f in case_audit.findings)
+                )
 
         # The two fixtures the issue names audit clean at their fixed label
         # positions: the collision class is historical there.
         for fixture in ("p3_probe_opop.tex", "kernel/k_roperator.tex"):
             source = ROOT / "tests/tenkz" / fixture
             target = work / source.name
-            target.write_text(source.read_text(encoding="utf-8"),
-                              encoding="utf-8")
+            target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
             try:
                 run = subprocess.run(
-                    [engine, "-interaction=nonstopmode", "-halt-on-error",
-                     target.name],
-                    cwd=work, env=env, text=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    [engine, "-interaction=nonstopmode", "-halt-on-error", target.name],
+                    cwd=work,
+                    env=env,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
                     timeout=120,
                 )
             except subprocess.TimeoutExpired as exc:
@@ -2241,22 +2405,26 @@ def main() -> int:
                 print(f"FAIL: {fixture} did not compile")
                 return 1
             fixture_status, fixture_audit = audit_status(
-                work / (target.stem + ".tnlog"))
+                work / (target.stem + ".tnlog")
+            )
             if fixture_status != 0 or any(
-                    finding.rule == "label-on-ink"
-                    for finding in fixture_audit.findings):
+                finding.rule == "label-on-ink" for finding in fixture_audit.findings
+            ):
                 raise AssertionError(
                     f"{fixture} reported label-on-ink at its fixed labels: "
-                    + "; ".join(f.msg for f in fixture_audit.findings))
+                    + "; ".join(f.msg for f in fixture_audit.findings)
+                )
 
         def compile_tex(name: str, text: str) -> Path:
             target = work / name
             target.write_text(text, encoding="utf-8")
             run = subprocess.run(
-                [engine, "-interaction=nonstopmode", "-halt-on-error",
-                 target.name],
-                cwd=work, env=env, text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                [engine, "-interaction=nonstopmode", "-halt-on-error", target.name],
+                cwd=work,
+                env=env,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 timeout=120,
             )
             if run.returncode:
@@ -2269,70 +2437,97 @@ def main() -> int:
         # the ink: 4pt of line width is a half stroke of 131072 scaled
         # points.
         styled_status, styled_audit = audit_status(
-            compile_tex("styled-bond.tex", STYLED_SOURCE))
-        styled_inks = [event for event in styled_audit.events("k1")
-                       if event.kind == "wire-ink"]
-        if (styled_status != 0 or len(styled_inks) != 1
-                or styled_inks[0].attrs.get("stroke") != "131072"):
+            compile_tex("styled-bond.tex", STYLED_SOURCE)
+        )
+        styled_inks = [
+            event for event in styled_audit.events("k1") if event.kind == "wire-ink"
+        ]
+        if (
+            styled_status != 0
+            or len(styled_inks) != 1
+            or styled_inks[0].attrs.get("stroke") != "131072"
+        ):
             raise AssertionError(
                 "a restyled bond did not record its resolved half stroke: "
-                + "; ".join(event.raw for event in styled_inks))
+                + "; ".join(event.raw for event in styled_inks)
+            )
 
         # The claim is consumed by the audited node's own reset hook, so a
         # nested label created by an execute-at-end-node hook during that
         # node's construction starts unclaimed: the outer dot's name keeps
         # its auto claim and the nested label carries neither field.
         _nested_status, nested_audit = audit_status(
-            compile_tex("nested-claim.tex", NESTED_CLAIM_SOURCE))
-        nested_boxes = [event for event in nested_audit.events("k1")
-                        if event.kind == "bbox"
-                        and event.attrs.get("class") == "label"]
-        claimed = [event for event in nested_boxes
-                   if "provenance" in event.attrs]
-        unclaimed = [event for event in nested_boxes
-                     if "provenance" not in event.attrs
-                     and "station" not in event.attrs]
-        if (len(nested_boxes) != 2 or len(claimed) != 1
-                or claimed[0].attrs.get("provenance") != "auto"
-                or len(unclaimed) != 1):
+            compile_tex("nested-claim.tex", NESTED_CLAIM_SOURCE)
+        )
+        nested_boxes = [
+            event
+            for event in nested_audit.events("k1")
+            if event.kind == "bbox" and event.attrs.get("class") == "label"
+        ]
+        claimed = [event for event in nested_boxes if "provenance" in event.attrs]
+        unclaimed = [
+            event
+            for event in nested_boxes
+            if "provenance" not in event.attrs and "station" not in event.attrs
+        ]
+        if (
+            len(nested_boxes) != 2
+            or len(claimed) != 1
+            or claimed[0].attrs.get("provenance") != "auto"
+            or len(unclaimed) != 1
+        ):
             raise AssertionError(
                 "the station claim leaked into a nested end-hook label: "
-                + "; ".join(event.raw for event in nested_boxes))
+                + "; ".join(event.raw for event in nested_boxes)
+            )
 
         # Renderer-owned ink the wire pass does not stroke itself: a
         # crossing-deferred policy leg emits from the crossing-policed
         # engine path, and an under-strand route emits its post-surgery
         # components -- the crossing gap splits its record in two.
-        leg_source = (ROOT / "tests/tenkz/kernel/regression/"
-                      "r_onwire_policy_leg.tex")
-        leg_status, leg_audit = audit_status(compile_tex(
-            "r_onwire_policy_leg.tex",
-            leg_source.read_text(encoding="utf-8")))
-        deferred_legs = [event for event in leg_audit.events("k1")
-                         if event.kind == "wire-ink"
-                         and event.attrs.get("origin") == "leg"
-                         and event.attrs.get("name") == "leg-s-1-2"]
-        split_ports = [event for event in leg_audit.events("k2")
-                       if event.kind == "wire-ink"
-                       and event.attrs.get("name") == "port-open-1"]
+        leg_source = ROOT / "tests/tenkz/kernel/regression/" "r_onwire_policy_leg.tex"
+        leg_status, leg_audit = audit_status(
+            compile_tex(
+                "r_onwire_policy_leg.tex", leg_source.read_text(encoding="utf-8")
+            )
+        )
+        deferred_legs = [
+            event
+            for event in leg_audit.events("k1")
+            if event.kind == "wire-ink"
+            and event.attrs.get("origin") == "leg"
+            and event.attrs.get("name") == "leg-s-1-2"
+        ]
+        split_ports = [
+            event
+            for event in leg_audit.events("k2")
+            if event.kind == "wire-ink" and event.attrs.get("name") == "port-open-1"
+        ]
         if leg_status != 0 or len(deferred_legs) != 1 or len(split_ports) != 2:
             raise AssertionError(
                 "a deferred leg or gapped under-strand lost its ink record: "
-                f"legs={len(deferred_legs)}, ports={len(split_ports)}")
+                f"legs={len(deferred_legs)}, ports={len(split_ports)}"
+            )
 
         # An after-atom physical trace strokes outside the queued index
         # class and still writes its record.
-        trace_source = (ROOT / "tests/tenkz/kernel/regression/"
-                        "r_affine_physical_trace.tex")
-        trace_status, trace_audit = audit_status(compile_tex(
-            "r_affine_physical_trace.tex",
-            trace_source.read_text(encoding="utf-8")))
-        trace_inks = [event for event in trace_audit.events()
-                      if event.kind == "wire-ink"
-                      and event.attrs.get("origin") == "trace"]
+        trace_source = (
+            ROOT / "tests/tenkz/kernel/regression/" "r_affine_physical_trace.tex"
+        )
+        trace_status, trace_audit = audit_status(
+            compile_tex(
+                "r_affine_physical_trace.tex", trace_source.read_text(encoding="utf-8")
+            )
+        )
+        trace_inks = [
+            event
+            for event in trace_audit.events()
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "trace"
+        ]
         if trace_status != 0 or not trace_inks:
             raise AssertionError(
-                "an after-atom physical trace emitted no wire-ink record")
+                "an after-atom physical trace emitted no wire-ink record"
+            )
 
         # The trace's own preaction paints a paper halo of line width
         # wirewidth + crossgap, wider than the coloured band its own draw
@@ -2344,17 +2539,21 @@ def main() -> int:
             raise AssertionError(
                 "a trace route's recorded stroke did not widen past the "
                 "coloured band's own half stroke: "
-                + "; ".join(event.raw for event in trace_inks))
+                + "; ".join(event.raw for event in trace_inks)
+            )
         # Picture k1's closure has the flat run from (2513, 892806) to
         # (1228198, 892806); a label sitting just past wirewidth/2
         # (18023 sp) above that line, but still short of the recorded halo
         # stroke, sits in the annulus the halo paints and the coloured band
         # alone would have missed.
         halo_trace = next(
-            event for event in trace_inks
+            event
+            for event in trace_inks
             if event.attrs.get("picture") == "k1"
             and event.attrs["points"].startswith(
-                "2513,318485;2513,892806;1228198,892806;"))
+                "2513,318485;2513,892806;1228198,892806;"
+            )
+        )
         halo_picture = halo_trace.attrs["picture"]
         halo_stroke = int(halo_trace.attrs["stroke"])
         halo_band_lo = 892806 + 18024
@@ -2362,7 +2561,8 @@ def main() -> int:
         if halo_band_lo >= halo_band_hi:
             raise AssertionError(
                 "the trace halo does not clear wirewidth/2 widely enough "
-                "for this seed's label")
+                "for this seed's label"
+            )
         halo_log = trace_audit.log_path.read_text(encoding="utf-8")
         halo_log += (
             f"label-use|picture={halo_picture}\n"
@@ -2375,13 +2575,16 @@ def main() -> int:
         halo_seeded.write_text(halo_log, encoding="utf-8")
         halo_status, halo_audit = audit_status(halo_seeded)
         halo_found = [
-            finding for finding in halo_audit.findings
-            if finding.rule == "label-on-ink" and "trace route" in finding.msg]
+            finding
+            for finding in halo_audit.findings
+            if finding.rule == "label-on-ink" and "trace route" in finding.msg
+        ]
         if halo_status != 1 or len(halo_found) != 1:
             raise AssertionError(
                 "a label in the trace's paper-halo annulus, clear of the "
                 "coloured band's old half stroke, was not flagged: "
-                + "; ".join(f.msg for f in halo_audit.findings))
+                + "; ".join(f.msg for f in halo_audit.findings)
+            )
 
         # The trace's two emission paths each understated the drawn ink in
         # one direction (#6359).  The foreground stroke inherits the
@@ -2389,29 +2592,39 @@ def main() -> int:
         # halo sum: the after-atom record must follow the resolved width,
         # and a label on that outer foreground ink must read as ink.
         styled_trace_status, styled_trace_audit = audit_status(
-            compile_tex("styled-trace.tex", STYLED_TRACE_SOURCE))
-        styled_traces = [event for event in styled_trace_audit.events("k1")
-                         if event.kind == "wire-ink"
-                         and event.attrs.get("origin") == "trace"]
-        if styled_trace_status != 0 or not styled_traces or any(
-                event.attrs.get("stroke") != "131072"
-                for event in styled_traces):
+            compile_tex("styled-trace.tex", STYLED_TRACE_SOURCE)
+        )
+        styled_traces = [
+            event
+            for event in styled_trace_audit.events("k1")
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "trace"
+        ]
+        if (
+            styled_trace_status != 0
+            or not styled_traces
+            or any(event.attrs.get("stroke") != "131072" for event in styled_traces)
+        ):
             raise AssertionError(
                 "a restyled-bond trace did not record its widened "
-                "foreground: "
-                + "; ".join(event.raw for event in styled_traces))
+                "foreground: " + "; ".join(event.raw for event in styled_traces)
+            )
         # The record's first run is the vertical rise at the trace's own
         # west x; a label strictly between the old halo half stroke
         # (120586) and the widened band (131072) sits on drawn foreground
         # the halo-only record missed.
         styled_run = next(
-            (event for event in styled_traces
-             if event.attrs["points"].startswith("0,530808;0,1310253;")),
-            None)
+            (
+                event
+                for event in styled_traces
+                if event.attrs["points"].startswith("0,530808;0,1310253;")
+            ),
+            None,
+        )
         if styled_run is None:
             raise AssertionError(
                 "the restyled trace lost its west rise; its records were: "
-                + "; ".join(event.raw for event in styled_traces))
+                + "; ".join(event.raw for event in styled_traces)
+            )
         styled_log = styled_trace_audit.log_path.read_text(encoding="utf-8")
         styled_log += (
             "label-use|picture=k1\n"
@@ -2423,14 +2636,15 @@ def main() -> int:
         styled_seeded.write_text(styled_log, encoding="utf-8")
         styled_seed_status, styled_seed_audit = audit_status(styled_seeded)
         styled_found = [
-            finding for finding in styled_seed_audit.findings
-            if finding.rule == "label-on-ink"
-            and "trace route" in finding.msg]
+            finding
+            for finding in styled_seed_audit.findings
+            if finding.rule == "label-on-ink" and "trace route" in finding.msg
+        ]
         if styled_seed_status != 1 or len(styled_found) != 1:
             raise AssertionError(
                 "a label on a restyled trace's outer foreground ink was "
-                "not flagged: "
-                + "; ".join(f.msg for f in styled_seed_audit.findings))
+                "not flagged: " + "; ".join(f.msg for f in styled_seed_audit.findings)
+            )
 
         # And the queued path: a multi-row physical pair trace rides the
         # queued index route, whose capture reads only the foreground; the
@@ -2438,24 +2652,35 @@ def main() -> int:
         # the wider of the two, and a label in the halo's annulus beyond
         # the foreground band must read as ink.
         pair_status, pair_audit = audit_status(
-            compile_tex("pair-trace.tex", PAIR_TRACE_SOURCE))
-        pair_traces = [event for event in pair_audit.events("k1")
-                       if event.kind == "wire-ink"
-                       and event.attrs.get("origin") == "trace"]
-        if pair_status != 0 or not pair_traces or any(
-                event.attrs.get("stroke") != "120586"
-                for event in pair_traces):
+            compile_tex("pair-trace.tex", PAIR_TRACE_SOURCE)
+        )
+        pair_traces = [
+            event
+            for event in pair_audit.events("k1")
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "trace"
+        ]
+        if (
+            pair_status != 0
+            or not pair_traces
+            or any(event.attrs.get("stroke") != "120586" for event in pair_traces)
+        ):
             raise AssertionError(
                 "a queued pair trace did not record the halo band: "
-                + "; ".join(event.raw for event in pair_traces))
+                + "; ".join(event.raw for event in pair_traces)
+            )
         pair_run = next(
-            (event for event in pair_traces
-             if event.attrs["points"].startswith("0,0;0,779436;")),
-            None)
+            (
+                event
+                for event in pair_traces
+                if event.attrs["points"].startswith("0,0;0,779436;")
+            ),
+            None,
+        )
         if pair_run is None:
             raise AssertionError(
                 "the pair trace lost its west rise; its records were: "
-                + "; ".join(event.raw for event in pair_traces))
+                + "; ".join(event.raw for event in pair_traces)
+            )
         pair_log = pair_audit.log_path.read_text(encoding="utf-8")
         pair_log += (
             "label-use|picture=k1\n"
@@ -2467,14 +2692,15 @@ def main() -> int:
         pair_seeded.write_text(pair_log, encoding="utf-8")
         pair_seed_status, pair_seed_audit = audit_status(pair_seeded)
         pair_found = [
-            finding for finding in pair_seed_audit.findings
-            if finding.rule == "label-on-ink"
-            and "trace route" in finding.msg]
+            finding
+            for finding in pair_seed_audit.findings
+            if finding.rule == "label-on-ink" and "trace route" in finding.msg
+        ]
         if pair_seed_status != 1 or len(pair_found) != 1:
             raise AssertionError(
                 "a label in a queued trace's halo annulus was not "
-                "flagged: "
-                + "; ".join(f.msg for f in pair_seed_audit.findings))
+                "flagged: " + "; ".join(f.msg for f in pair_seed_audit.findings)
+            )
 
         # A directed wire's Straight Barb postaction paints ink the
         # centreline walk cannot see (#6330 review, direction-mark ink).
@@ -2485,20 +2711,29 @@ def main() -> int:
         # all: before this cover existed, nothing but the thin centreline
         # was ever checked here, so the miss this proves against is total.
         mark_status, mark_audit = audit_status(
-            compile_tex("dir-mark.tex", DIR_MARK_SOURCE))
-        mark_events = [event for event in mark_audit.events("k1")
-                       if event.kind == "wire-ink"
-                       and event.attrs.get("name") == "east"]
+            compile_tex("dir-mark.tex", DIR_MARK_SOURCE)
+        )
+        mark_events = [
+            event
+            for event in mark_audit.events("k1")
+            if event.kind == "wire-ink" and event.attrs.get("name") == "east"
+        ]
         mark_ink = next(
-            (event for event in mark_events
-             if event.attrs.get("origin") == "mark"), None)
+            (event for event in mark_events if event.attrs.get("origin") == "mark"),
+            None,
+        )
         leg_ink = next(
-            (event for event in mark_events
-             if event.attrs.get("origin") == "physical-leg"), None)
+            (
+                event
+                for event in mark_events
+                if event.attrs.get("origin") == "physical-leg"
+            ),
+            None,
+        )
         if mark_status != 0 or mark_ink is None or leg_ink is None:
             raise AssertionError(
-                "a dir=to leg did not emit both its centreline and its "
-                "barb cover")
+                "a dir=to leg did not emit both its centreline and its " "barb cover"
+            )
         mx1, my1, mx2, my2 = parse_two_point_ink(mark_ink.attrs["points"])
         mark_stroke = int(mark_ink.attrs["stroke"])
         leg_stroke = int(leg_ink.attrs["stroke"])
@@ -2507,13 +2742,15 @@ def main() -> int:
                 "the barb cover geometry is not the flat, wider band this "
                 "seed assumes: "
                 f"points={mark_ink.attrs['points']} stroke={mark_stroke} "
-                f"leg-stroke={leg_stroke}")
+                f"leg-stroke={leg_stroke}"
+            )
         mark_band_lo = my1 + leg_stroke + 1
         mark_band_hi = my1 + mark_stroke - 1
         if mark_band_lo >= mark_band_hi:
             raise AssertionError(
                 "the barb cover does not clear the centreline band widely "
-                "enough for this seed's label")
+                "enough for this seed's label"
+            )
         mark_cx = (min(mx1, mx2) + max(mx1, mx2)) // 2
         mark_picture = mark_ink.attrs["picture"]
         mark_log = mark_audit.log_path.read_text(encoding="utf-8")
@@ -2528,13 +2765,16 @@ def main() -> int:
         mark_seeded.write_text(mark_log, encoding="utf-8")
         mark_seeded_status, mark_seeded_audit = audit_status(mark_seeded)
         mark_found = [
-            finding for finding in mark_seeded_audit.findings
-            if finding.rule == "label-on-ink" and "mark route" in finding.msg]
+            finding
+            for finding in mark_seeded_audit.findings
+            if finding.rule == "label-on-ink" and "mark route" in finding.msg
+        ]
         if mark_seeded_status != 1 or len(mark_found) != 1:
             raise AssertionError(
                 "a label inside the barb cover's stroke band, clear of the "
                 "centreline, was not flagged: "
-                + "; ".join(f.msg for f in mark_seeded_audit.findings))
+                + "; ".join(f.msg for f in mark_seeded_audit.findings)
+            )
 
         # ---- the barb cover of a bowed route sits on the bow (#6360) ----
         # A directed arc places its Straight Barb at arc length along the
@@ -2546,31 +2786,38 @@ def main() -> int:
         # chord-station cover -- seeded synthetically at the chord -- must
         # show the miss this fix removes.
         arch_status, arch_audit = audit_status(
-            compile_tex("arch-mark.tex", ARCH_MARK_SOURCE))
-        arch_marks = [event for event in arch_audit.events("k1")
-                      if event.kind == "wire-ink"
-                      and event.attrs.get("origin") == "mark"]
+            compile_tex("arch-mark.tex", ARCH_MARK_SOURCE)
+        )
+        arch_marks = [
+            event
+            for event in arch_audit.events("k1")
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "mark"
+        ]
         if arch_status != 0 or len(arch_marks) != 1:
             raise AssertionError(
                 "the directed arc did not emit exactly one barb cover: "
-                + "; ".join(event.raw for event in arch_marks))
+                + "; ".join(event.raw for event in arch_marks)
+            )
         # The second picture is the same arch four times as wide: its
         # control net demands more than the sixteen-piece floor, and the
         # cover must still stand on the bow (y ~ 7100000 sp), not on the
         # chord at y = 0 -- pinning the adaptive count end to end.
-        wide_marks = [event for event in arch_audit.events("k2")
-                      if event.kind == "wire-ink"
-                      and event.attrs.get("origin") == "mark"]
+        wide_marks = [
+            event
+            for event in arch_audit.events("k2")
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "mark"
+        ]
         if len(wide_marks) != 1:
             raise AssertionError(
                 "the wide arch did not emit exactly one barb cover: "
-                + "; ".join(event.raw for event in wide_marks))
-        wx1, wy1, wx2, wy2 = parse_two_point_ink(
-            wide_marks[0].attrs["points"])
+                + "; ".join(event.raw for event in wide_marks)
+            )
+        wx1, wy1, wx2, wy2 = parse_two_point_ink(wide_marks[0].attrs["points"])
         if min(wy1, wy2) < 6500000:
             raise AssertionError(
                 "the wide arch's barb cover fell toward the chord: "
-                f"points={wide_marks[0].attrs['points']}")
+                f"points={wide_marks[0].attrs['points']}"
+            )
         # The certified widening is visible in the strokes: each arch's
         # cover exceeds the bare barb (170394 sp = barblen 2.6pt) by its
         # own computed sandwich loss, and the wide arch, carrying four
@@ -2580,13 +2827,14 @@ def main() -> int:
         if not (170394 < small_stroke < wide_stroke):
             raise AssertionError(
                 "the covers do not carry their certified widening: "
-                f"small={small_stroke}, wide={wide_stroke}")
-        ax1, ay1, ax2, ay2 = parse_two_point_ink(
-            arch_marks[0].attrs["points"])
+                f"small={small_stroke}, wide={wide_stroke}"
+            )
+        ax1, ay1, ax2, ay2 = parse_two_point_ink(arch_marks[0].attrs["points"])
         if min(ay1, ay2) < 900000:
             raise AssertionError(
                 "the arch's barb cover fell toward the chord instead of "
-                f"the bow: points={arch_marks[0].attrs['points']}")
+                f"the bow: points={arch_marks[0].attrs['points']}"
+            )
         arch_stroke = int(arch_marks[0].attrs["stroke"])
         arch_cx = (ax1 + ax2) // 2
         arch_cy = (ay1 + ay2) // 2
@@ -2602,13 +2850,16 @@ def main() -> int:
         arch_seeded.write_text(arch_log + arch_label, encoding="utf-8")
         arch_seed_status, arch_seed_audit = audit_status(arch_seeded)
         arch_found = [
-            finding for finding in arch_seed_audit.findings
-            if finding.rule == "label-on-ink" and "mark route" in finding.msg]
+            finding
+            for finding in arch_seed_audit.findings
+            if finding.rule == "label-on-ink" and "mark route" in finding.msg
+        ]
         if arch_seed_status != 1 or len(arch_found) != 1:
             raise AssertionError(
                 "a label on the bowed barb was not flagged against the "
                 "arc-length cover: "
-                + "; ".join(f.msg for f in arch_seed_audit.findings))
+                + "; ".join(f.msg for f in arch_seed_audit.findings)
+            )
         # The pre-fix miss, watched: replace the cover with the chord
         # station's geometry (the same span at y = 0) and the same label
         # draws no mark finding at all.
@@ -2618,19 +2869,25 @@ def main() -> int:
             f"points={ax1},0;{ax2},0\n"
         )
         arch_chord_log = "".join(
-            line + "\n" for line in arch_log.splitlines()
-            if not (line.startswith("wire-ink") and "origin=mark" in line))
+            line + "\n"
+            for line in arch_log.splitlines()
+            if not (line.startswith("wire-ink") and "origin=mark" in line)
+        )
         arch_chord = work / "arch-mark-chord.tnlog"
-        arch_chord.write_text(arch_chord_log + chord_cover + arch_label,
-                              encoding="utf-8")
+        arch_chord.write_text(
+            arch_chord_log + chord_cover + arch_label, encoding="utf-8"
+        )
         chord_status, chord_audit = audit_status(arch_chord)
         chord_found = [
-            finding for finding in chord_audit.findings
-            if finding.rule == "label-on-ink" and "mark route" in finding.msg]
+            finding
+            for finding in chord_audit.findings
+            if finding.rule == "label-on-ink" and "mark route" in finding.msg
+        ]
         if chord_found:
             raise AssertionError(
                 "the chord-station cover unexpectedly reached the bowed "
-                "barb; the regression no longer demonstrates the miss")
+                "barb; the regression no longer demonstrates the miss"
+            )
 
         # ---- skin pairings join the wire-ink surface (#6357) ----
         # A declared skin's rendered pairing is drawn ink in the same sense
@@ -2645,23 +2902,26 @@ def main() -> int:
             "points=0,0;2000000,0\n"
         )
         for name, claim, severity, expected_status in (
-                ("skin-ink-auto.tnlog", "|station=s|provenance=auto",
-                 "HARD", 1),
-                ("skin-ink-explicit.tnlog", "|provenance=explicit",
-                 "ADV", 0),
+            ("skin-ink-auto.tnlog", "|station=s|provenance=auto", "HARD", 1),
+            ("skin-ink-explicit.tnlog", "|provenance=explicit", "ADV", 0),
         ):
             status, audit = audit_status(
-                ink_log(name, skin_ink,
-                        ink_label(-100000, -18022, claim)))
-            found = [finding for finding in audit.findings
-                     if finding.rule == "label-on-ink"]
-            if (status != expected_status or len(found) != 1
-                    or found[0].severity != severity
-                    or "skin route" not in found[0].msg):
+                ink_log(name, skin_ink, ink_label(-100000, -18022, claim))
+            )
+            found = [
+                finding for finding in audit.findings if finding.rule == "label-on-ink"
+            ]
+            if (
+                status != expected_status
+                or len(found) != 1
+                or found[0].severity != severity
+                or "skin route" not in found[0].msg
+            ):
                 raise AssertionError(
                     f"{name}: a label on skin-pairing ink did not read as "
                     f"one {severity} label-on-ink: "
-                    + "; ".join(f.msg for f in audit.findings))
+                    + "; ".join(f.msg for f in audit.findings)
+                )
 
         # And the records exist end to end: the declared-skin fixture's
         # rendered pairings each write an `origin=skin` record at the
@@ -2670,20 +2930,25 @@ def main() -> int:
         # a pairing no earlier record could see, is the rule's own
         # organic evidence.
         skin_fixture = ROOT / "tests/tenkz/kernel/k_skin_pairings.tex"
-        skin_status, skin_audit = audit_status(compile_tex(
-            "k_skin_pairings.tex",
-            skin_fixture.read_text(encoding="utf-8")))
-        skin_records = [event for event in skin_audit.events()
-                        if event.kind == "wire-ink"
-                        and event.attrs.get("origin") == "skin"]
-        if skin_status != 0 or not skin_records or any(
-                event.attrs.get("stroke") != "26215"
-                for event in skin_records):
+        skin_status, skin_audit = audit_status(
+            compile_tex("k_skin_pairings.tex", skin_fixture.read_text(encoding="utf-8"))
+        )
+        skin_records = [
+            event
+            for event in skin_audit.events()
+            if event.kind == "wire-ink" and event.attrs.get("origin") == "skin"
+        ]
+        if (
+            skin_status != 0
+            or not skin_records
+            or any(event.attrs.get("stroke") != "26215" for event in skin_records)
+        ):
             raise AssertionError(
                 "the declared-skin fixture did not write its pairings as "
                 "origin=skin records at the halo half stroke: "
                 f"{len(skin_records)} record(s); "
-                + "; ".join(f.msg for f in skin_audit.findings))
+                + "; ".join(f.msg for f in skin_audit.findings)
+            )
 
         # Coverage: at least one compiled fixture's `wire-ink` record must
         # actually carry a `c:`-prefixed cubic sextuple, not only the
@@ -2691,24 +2956,32 @@ def main() -> int:
         # curve segments from the emitter would move only golden digests,
         # never trip a HARD finding (#6330 review, cubic coverage).
         torus_source = ROOT / "tests/tenkz/kernel/k_torus.tex"
-        torus_status, torus_audit = audit_status(compile_tex(
-            "k_torus.tex", torus_source.read_text(encoding="utf-8")))
+        torus_status, torus_audit = audit_status(
+            compile_tex("k_torus.tex", torus_source.read_text(encoding="utf-8"))
+        )
         torus_cubics = [
-            event for event in torus_audit.events()
-            if event.kind == "wire-ink"
-            and ";c:" in event.attrs.get("points", "")
+            event
+            for event in torus_audit.events()
+            if event.kind == "wire-ink" and ";c:" in event.attrs.get("points", "")
         ]
         if torus_status != 0 or not torus_cubics:
             raise AssertionError(
-                "k_torus emitted no wire-ink record with a c: cubic "
-                "sextuple")
+                "k_torus emitted no wire-ink record with a c: cubic " "sextuple"
+            )
 
         core_source = (ROOT / "tex/tenkz/tenkz-core.code.tex").read_text(
-            encoding="utf-8")
-        for style in ("tensor", "box tensor", "pill tensor", "on-wire matrix",
-                      "canonical tensor", "tree junction"):
+            encoding="utf-8"
+        )
+        for style in (
+            "tensor",
+            "box tensor",
+            "pill tensor",
+            "on-wire matrix",
+            "canonical tensor",
+            "tree junction",
+        ):
             start = core_source.index(f"  {style}/.style=")
-            if "tenkz audited glyph=" not in core_source[start:start + 180]:
+            if "tenkz audited glyph=" not in core_source[start : start + 180]:
                 raise AssertionError(f"core glyph skin {style} lacks geometry")
 
     print("PASS: sibling-node overlap geometry and coverage invariants hold")

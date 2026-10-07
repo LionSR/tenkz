@@ -100,9 +100,7 @@ def main() -> int:
             raise AssertionError("the two skins did not preserve one topology")
         if "role=marked|species=anyon" not in lines[2]:
             raise AssertionError("tree role/species semantics were not recorded")
-        if not re.search(
-            r"TENKZ-SPECIES-HUE=.*draw=red\s*,\s*fill=red", run.stdout
-        ):
+        if not re.search(r"TENKZ-SPECIES-HUE=.*draw=red\s*,\s*fill=red", run.stdout):
             raise AssertionError(
                 "a declared hue did not reach the shared species tree styles"
             )
@@ -158,15 +156,16 @@ def main() -> int:
         malformed_audit = Audit(malformed, None)
         malformed_audit.parse_log()
         failures = [
-            finding for finding in malformed_audit.findings
+            finding
+            for finding in malformed_audit.findings
             if finding.rule == "malformed-tree"
         ]
         if len(failures) != 4:
             raise AssertionError("audit accepted noncanonical tree topology")
         numeric_failures = [
-            finding for finding in malformed_audit.findings
-            if finding.rule == "malformed-event"
-            and "tree field id=" in finding.msg
+            finding
+            for finding in malformed_audit.findings
+            if finding.rule == "malformed-event" and "tree field id=" in finding.msg
         ]
         if len(numeric_failures) != 1:
             raise AssertionError("audit integer validator accepted an overlong tree id")

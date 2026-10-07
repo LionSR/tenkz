@@ -16,10 +16,17 @@ import tenkz_language
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def run(*args: str, cwd: Path = ROOT, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run(
+    *args: str, cwd: Path = ROOT, check: bool = True
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        args, cwd=cwd, check=check, text=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT, timeout=120,
+        args,
+        cwd=cwd,
+        check=check,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=120,
     )
 
 
@@ -31,8 +38,13 @@ def compile_source(source: str) -> subprocess.CompletedProcess[str]:
         env["TEXINPUTS"] = f"{ROOT / 'tex/tenkz'}//:"
         return subprocess.run(
             ("xelatex", "-interaction=nonstopmode", "-halt-on-error", "case.tex"),
-            cwd=path, env=env, check=False, text=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, timeout=120,
+            cwd=path,
+            env=env,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=120,
         )
 
 
@@ -44,10 +56,19 @@ def compile_event_source(source: str) -> tuple[subprocess.CompletedProcess[str],
         env["TEXINPUTS"] = f"{ROOT / 'tex/tenkz'}//:"
         result = subprocess.run(
             ("xelatex", "-interaction=nonstopmode", "-halt-on-error", "case.tex"),
-            cwd=path, env=env, check=False, text=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, timeout=120,
+            cwd=path,
+            env=env,
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=120,
         )
-        log = (path / "case.tnlog").read_text(encoding="utf-8") if result.returncode == 0 else ""
+        log = (
+            (path / "case.tnlog").read_text(encoding="utf-8")
+            if result.returncode == 0
+            else ""
+        )
         return result, log
 
 
@@ -77,8 +98,13 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     # Words added or struck, on each side of the comparison.
     must_report(
         "a route word added to the contract",
-        seeded(contract.replace("| routes | `straight` `orth` `arc` |",
-                                "| routes | `straight` `orth` `arc` `bezier` |"), kernel),
+        seeded(
+            contract.replace(
+                "| routes | `straight` `orth` `arc` |",
+                "| routes | `straight` `orth` `arc` `bezier` |",
+            ),
+            kernel,
+        ),
         "in section 2.8 but not accepted: bezier",
     )
     must_report(
@@ -88,25 +114,36 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     )
     must_report(
         "a side word added to the kernel",
-        seeded(contract, kernel.replace(
-            "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
-            "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
-            "        {seal}  { \\__tenkz_kernel_stage_put:nn {#1} {none}  }\n")),
+        seeded(
+            contract,
+            kernel.replace(
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+                "        {seal}  { \\__tenkz_kernel_stage_put:nn {#1} {none}  }\n",
+            ),
+        ),
         "accepted but not in section 2.8: seal",
     )
     must_report(
         "a form word added to the choice table",
-        seeded(contract, kernel.replace("  { bracket, enclosure, label, prose }\n",
-                                        "  { bracket, enclosure, label, prose, band }\n")),
+        seeded(
+            contract,
+            kernel.replace(
+                "  { bracket, enclosure, label, prose }\n",
+                "  { bracket, enclosure, label, prose, band }\n",
+            ),
+        ),
         "accepted but not in section 2.8: band",
     )
     drifted = [
-        tenkz_language.Entry(
-            entry.kind,
-            (*entry.fields[:2], "enum(bracket|enclosure|label)", *entry.fields[3:]),
+        (
+            tenkz_language.Entry(
+                entry.kind,
+                (*entry.fields[:2], "enum(bracket|enclosure|label)", *entry.fields[3:]),
+            )
+            if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
+            else entry
         )
-        if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
-        else entry
         for entry in registry
     ]
     must_report(
@@ -116,8 +153,14 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     )
     must_report(
         "the recording word retired from both acceptors",
-        seeded(contract, kernel.replace("  { bracket, enclosure, label, prose }\n",
-                                        "  { bracket, enclosure, label }\n"), drifted),
+        seeded(
+            contract,
+            kernel.replace(
+                "  { bracket, enclosure, label, prose }\n",
+                "  { bracket, enclosure, label }\n",
+            ),
+            drifted,
+        ),
         "recording word",
     )
 
@@ -125,15 +168,54 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
     anchor = "| routes | `straight` `orth` `arc` |"
     header = "| Alphabet | Words |\n|---|---|"
     for label, text, expected in (
-        ("a duplicate alphabet row", contract.replace(anchor, f"{anchor}\n| routes | `straight` |"), "twice"),
-        ("bare text beside the words", contract.replace(anchor, "| routes | `straight` `orth` `arc` bezier |"), "cannot name"),
-        ("a row opening with bare text", contract.replace(anchor, f"{anchor}\n| weights | thin thick |"), "cannot name"),
-        ("a row with no alphabet name", contract.replace(anchor, f"{anchor}\n|  | `bezier` |"), "cannot name"),
-        ("a row with an extra cell", contract.replace(anchor, f"{anchor}\n| weights | `thin` | `thick` |"), "cannot name"),
-        ("a renamed header", contract.replace("| Alphabet | Words |", "| Deprecated | Replacements |", 1), "header reads"),
-        ("a one-cell delimiter", contract.replace(header, "| Alphabet | Words |\n|---|", 1), "delimiter"),
-        ("a delimiter with too few hyphens", contract.replace(header, "| Alphabet | Words |\n|-|-|", 1), "delimiter"),
-        ("a second section 2.8", contract + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n| routes | `bezier` |\n", "section 2.8s"),
+        (
+            "a duplicate alphabet row",
+            contract.replace(anchor, f"{anchor}\n| routes | `straight` |"),
+            "twice",
+        ),
+        (
+            "bare text beside the words",
+            contract.replace(anchor, "| routes | `straight` `orth` `arc` bezier |"),
+            "cannot name",
+        ),
+        (
+            "a row opening with bare text",
+            contract.replace(anchor, f"{anchor}\n| weights | thin thick |"),
+            "cannot name",
+        ),
+        (
+            "a row with no alphabet name",
+            contract.replace(anchor, f"{anchor}\n|  | `bezier` |"),
+            "cannot name",
+        ),
+        (
+            "a row with an extra cell",
+            contract.replace(anchor, f"{anchor}\n| weights | `thin` | `thick` |"),
+            "cannot name",
+        ),
+        (
+            "a renamed header",
+            contract.replace(
+                "| Alphabet | Words |", "| Deprecated | Replacements |", 1
+            ),
+            "header reads",
+        ),
+        (
+            "a one-cell delimiter",
+            contract.replace(header, "| Alphabet | Words |\n|---|", 1),
+            "delimiter",
+        ),
+        (
+            "a delimiter with too few hyphens",
+            contract.replace(header, "| Alphabet | Words |\n|-|-|", 1),
+            "delimiter",
+        ),
+        (
+            "a second section 2.8",
+            contract
+            + "\n### 2.8 Closed alphabets\n\n| Alphabet | Words |\n|---|---|\n| routes | `bezier` |\n",
+            "section 2.8s",
+        ),
     ):
         if text == contract:
             raise SystemExit(f"seed {label!r} changed nothing")
@@ -141,25 +223,43 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
 
     # Kernel spellings that change what is accepted.
     for label, text, expected in (
-        ("a parser replaced by another definition",
-         f"{kernel}\n\\cs_set:Nn \\__tenkz_kernel_route:n {{ }}\n", "times"),
-        ("a parser matching with no fallback",
-         kernel.replace(r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
-                        r"\str_case:Vn \l__tenkz_kernel_list_item_tl", 1), "no fallback"),
-        ("a branch that refuses its own word",
-         kernel.replace(r"{arc}      { \__tenkz_kernel_route_keep: }",
-                        r"{arc}      { \msg_expandable_error:nnn {a}{b}{c} }"),
-         "branch refuses the word"),
-        ("a branch key the reader cannot name",
-         kernel.replace(
-             "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
-             "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
-             "        {\\l_tenkz_word_tl} { }\n"),
-         "cannot name"),
-        ("a second choice table for one key",
-         f"{kernel}\n\\__tenkz_kernel_choice:nnnx {{ tenkz-kernel-mark }} "
-         "{ form } { bracket, enclosure, label, prose, glow } { form }\n",
-         "choice tables"),
+        (
+            "a parser replaced by another definition",
+            f"{kernel}\n\\cs_set:Nn \\__tenkz_kernel_route:n {{ }}\n",
+            "times",
+        ),
+        (
+            "a parser matching with no fallback",
+            kernel.replace(
+                r"\str_case:VnF \l__tenkz_kernel_list_item_tl",
+                r"\str_case:Vn \l__tenkz_kernel_list_item_tl",
+                1,
+            ),
+            "no fallback",
+        ),
+        (
+            "a branch that refuses its own word",
+            kernel.replace(
+                r"{arc}      { \__tenkz_kernel_route_keep: }",
+                r"{arc}      { \msg_expandable_error:nnn {a}{b}{c} }",
+            ),
+            "branch refuses the word",
+        ),
+        (
+            "a branch key the reader cannot name",
+            kernel.replace(
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n",
+                "        {cup}   { \\__tenkz_kernel_stage_put:nn {#1} {cup}   }\n"
+                "        {\\l_tenkz_word_tl} { }\n",
+            ),
+            "cannot name",
+        ),
+        (
+            "a second choice table for one key",
+            f"{kernel}\n\\__tenkz_kernel_choice:nnnx {{ tenkz-kernel-mark }} "
+            "{ form } { bracket, enclosure, label, prose, glow } { form }\n",
+            "choice tables",
+        ),
     ):
         if text == kernel:
             raise SystemExit(f"seed {label!r} changed nothing")
@@ -167,19 +267,26 @@ def alphabet_gate_fails_when_seeded(registry: list[tenkz_language.Entry]) -> Non
 
     # Benign spellings that must not report.
     reordered = [
-        tenkz_language.Entry(
-            entry.kind,
-            (*entry.fields[:2], "enum(prose|label|enclosure|bracket)", *entry.fields[3:]),
+        (
+            tenkz_language.Entry(
+                entry.kind,
+                (
+                    *entry.fields[:2],
+                    "enum(prose|label|enclosure|bracket)",
+                    *entry.fields[3:],
+                ),
+            )
+            if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
+            else entry
         )
-        if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
-        else entry
         for entry in registry
     ]
     if seeded(contract, kernel, reordered):
         raise SystemExit("a reordered enum row was reported as drift")
     unspaced = contract.replace(
         "| mark forms | `bracket` `enclosure` `label` |\n\n",
-        "| mark forms | `bracket` `enclosure` `label` |\n", 1,
+        "| mark forms | `bracket` `enclosure` `label` |\n",
+        1,
     )
     if unspaced != contract and seeded(unspaced, kernel):
         raise SystemExit("prose closing the table was reported as an interruption")
@@ -199,11 +306,15 @@ def main() -> int:
     reference = tenkz_language.REFERENCE.read_text(encoding="utf-8")
     if "Sunset" in reference or "Tombstoned" in reference:
         raise SystemExit("the current manual exposes historical registry rows")
-    if not any(e.kind == "command" and e.fields[0] == "tenkzkernel"
-               for e in registry):
+    if not any(e.kind == "command" and e.fields[0] == "tenkzkernel" for e in registry):
         raise SystemExit("manual filtering removed the runtime compatibility contract")
-    if "Prelude class & Name & Declaration" not in reference or "base=box" not in reference:
-        raise SystemExit("the generated language reference omitted the stock MPO declaration")
+    if (
+        "Prelude class & Name & Declaration" not in reference
+        or "base=box" not in reference
+    ):
+        raise SystemExit(
+            "the generated language reference omitted the stock MPO declaration"
+        )
     # Both chapters say they are generated, so both must equal what the
     # generator emits from the registry as committed.  Without this a registry
     # row could change its prose and the published reference keep the old
@@ -226,9 +337,7 @@ def main() -> int:
     )
     duplicate_errors = tenkz_language.check([*registry, duplicate_skin])
     if duplicate_errors != ["duplicate prelude records: skin:mpo"]:
-        raise SystemExit(
-            "an exact stock-skin duplicate was not rejected by class:name"
-        )
+        raise SystemExit("an exact stock-skin duplicate was not rejected by class:name")
     for declaration_class, descriptor in (
         ("atom", "skin=box"),
         ("species", "hue=source:red"),
@@ -267,47 +376,54 @@ def main() -> int:
 \begin{{document}}x\end{{document}}
 """
         )
-        if (
-            rejected.returncode == 0
-            or "TKZ-LANG-PRELUDE-CLASS" not in rejected.stdout
-        ):
+        if rejected.returncode == 0 or "TKZ-LANG-PRELUDE-CLASS" not in rejected.stdout:
             raise SystemExit(
                 f"the runtime installer accepted a {declaration_class} prelude"
             )
-    good = compile_source(r"""\documentclass{standalone}
+    good = compile_source(
+        r"""\documentclass{standalone}
 \usepackage{tenkz}
 \tndeclareatom{\tnphase}{skin=box, ports={west:virtual,east:virtual}}
 \begin{document}
 \begin{tenkz}[rows={wire}]\tn{A}&\tnphase{B}\end{tenkz}
 \end{document}
-""")
+"""
+    )
     if good.returncode:
         raise SystemExit(f"typed declaration did not compile:\n{good.stdout}")
-    bad = compile_source(r"""\documentclass{standalone}
+    bad = compile_source(
+        r"""\documentclass{standalone}
 \usepackage{tenkz}
 \tndeclareatom{\tnbad}{skin=box, ports={west:physical}}
 \begin{document}x\end{document}
-""")
+"""
+    )
     if bad.returncode == 0 or "TKZ-ATOM-INVALID-PORT" not in bad.stdout:
         raise SystemExit("invalid typed port did not produce TKZ-ATOM-INVALID-PORT")
     # No alias remains since the S4 surface swap, so the event-equivalence
     # probe compares a sugar row with its kernel expansion instead.
-    canonical, canonical_events = compile_event_source(r"""\documentclass{standalone}
+    canonical, canonical_events = compile_event_source(
+        r"""\documentclass{standalone}
 \usepackage{tenkz}
 \begin{document}
 \begin{tenkz}[rows={ket,op,bra}, cols=2]\end{tenkz}
 \end{document}
-""")
-    sugared, sugared_events = compile_event_source(r"""\documentclass{standalone}
+"""
+    )
+    sugared, sugared_events = compile_event_source(
+        r"""\documentclass{standalone}
 \usepackage{tenkz}
 \begin{document}
 \begin{tenkz}[sandwich, cols=2]\end{tenkz}
 \end{document}
-""")
+"""
+    )
     if canonical.returncode or sugared.returncode:
         raise SystemExit("kernel/sugar event-equivalence probe did not compile")
     if canonical_events != sugared_events:
-        raise SystemExit("sandwich and rows={ket,op,bra} emitted different semantic events")
+        raise SystemExit(
+            "sandwich and rows={ket,op,bra} emitted different semantic events"
+        )
     # Each retired word stays installed as a parser branch that refuses the
     # spelling and states the migration.  What is pinned here is that the
     # branch fires and prints its own words: the four are read out of the
@@ -321,7 +437,9 @@ def main() -> int:
         if entry.kind == "key" and entry.fields[:2] == ("kernel-mark", "form")
     )
     if form_row[2] != "enum(bracket|enclosure|label|prose)":
-        raise SystemExit(f"the mark form alphabet is no longer the contract's: {form_row[2]}")
+        raise SystemExit(
+            f"the mark form alphabet is no longer the contract's: {form_row[2]}"
+        )
     kernel = tenkz_language.kernel_source()
     branches = re.findall(
         r"\\__tenkz_kernel_tombstone:nnnn\s*\{\s*tenkz-kernel-mark\s*\}"
@@ -364,7 +482,8 @@ def main() -> int:
                 f"form={word} was refused without the parser's own migration"
             )
 
-    live = compile_source(r"""\documentclass{standalone}
+    live = compile_source(
+        r"""\documentclass{standalone}
 \usepackage{tenkz}
 \begin{document}
 \begin{tenkz}[rows={ket}, cols=2]
@@ -372,7 +491,8 @@ def main() -> int:
   \tnmark[form=bracket]{(1,1) .. (1,2)}{$L$}
 \end{tenkz}
 \end{document}
-""")
+"""
+    )
     if live.returncode:
         raise SystemExit(f"the surviving bracket form did not compile:\n{live.stdout}")
     print(

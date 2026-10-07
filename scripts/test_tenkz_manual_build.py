@@ -21,7 +21,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> int:
     date, version = build.package_release()
     manual = build.manual_version()
-    if not version or build.metadata_errors(date, build.manual_dateline(), version, manual):
+    if not version or build.metadata_errors(
+        date, build.manual_dateline(), version, manual
+    ):
         raise SystemExit("the unseeded metadata does not agree")
     seeded = build.metadata_errors(date, "June 1999", version, manual)
     if not seeded or "synchronize" not in seeded[0]:
@@ -41,13 +43,18 @@ def main() -> int:
     # does not strand this test on a literal it no longer contains.
     source = build.MANUAL.read_text(encoding="utf-8")
     for reader, line in (
-        (build.manual_version, next(
-            row for row in source.splitlines() if f"version {manual}" in row
-        )),
-        (build.manual_dateline, next(
-            row for row in source.splitlines()
-            if build.manual_dateline() in row and "\\par" in row
-        )),
+        (
+            build.manual_version,
+            next(row for row in source.splitlines() if f"version {manual}" in row),
+        ),
+        (
+            build.manual_dateline,
+            next(
+                row
+                for row in source.splitlines()
+                if build.manual_dateline() in row and "\\par" in row
+            ),
+        ),
     ):
         seeded = source.replace(line, "% " + line.lstrip(), 1)
         if seeded == source:
@@ -72,7 +79,9 @@ def main() -> int:
             reader(seeded)
         except ValueError:
             continue
-        raise SystemExit(f"metadata in a false branch was read as the manual's: {line!r}")
+        raise SystemExit(
+            f"metadata in a false branch was read as the manual's: {line!r}"
+        )
     # Every spelling of "compile me again" the manual's packages use.
     for warning in (
         "LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.",
@@ -90,9 +99,12 @@ def main() -> int:
     if len(direct) != 2:
         raise SystemExit(f"the manual's own picture count moved: {len(direct)}")
     # Two active lines are two claims, and the page shows both.
-    title_version = next(row for row in source.splitlines() if f"version {manual}" in row)
+    title_version = next(
+        row for row in source.splitlines() if f"version {manual}" in row
+    )
     title_date = next(
-        row for row in source.splitlines()
+        row
+        for row in source.splitlines()
         if build.manual_dateline() in row and "\\par" in row
     )
     for reader, line in (
@@ -125,8 +137,12 @@ def main() -> int:
     # A version is read whole and then required to be one, on both sides: a
     # numeric prefix match would call `0.7-beta` equal to the package's `0.7`
     # while the page says otherwise.
-    version_line = next(row for row in source.splitlines() if f"version {manual}" in row)
-    qualified = source.replace(version_line, version_line.replace(manual, f"{manual}-beta"))
+    version_line = next(
+        row for row in source.splitlines() if f"version {manual}" in row
+    )
+    qualified = source.replace(
+        version_line, version_line.replace(manual, f"{manual}-beta")
+    )
     try:
         build.manual_version(qualified)
     except ValueError:
@@ -153,7 +169,9 @@ def main() -> int:
     # Two declarations in one file: one of them is dead, and which one TeX
     # takes is a question this reader should not have to answer.
     doubled = package_source.replace(
-        declaration, f"\\iftrue\\else\n{declaration.replace('v' + version, 'v0.6')}\n\\fi\n{declaration}", 1
+        declaration,
+        f"\\iftrue\\else\n{declaration.replace('v' + version, 'v0.6')}\n\\fi\n{declaration}",
+        1,
     )
     if doubled == package_source:
         raise SystemExit("could not double the package declaration")
@@ -174,7 +192,9 @@ def main() -> int:
     # it: an `\input` committed without its file is the case that matters.
     requested = build.requested_inputs()
     if "ch-catalogue.tex" not in requested:
-        raise SystemExit(f"the manual's requested inputs look wrong: {sorted(requested)}")
+        raise SystemExit(
+            f"the manual's requested inputs look wrong: {sorted(requested)}"
+        )
     if any("\\" in name for name in requested):
         raise SystemExit("a run-time input name leaked into the guarded set")
     if read != "9.9":
@@ -195,7 +215,9 @@ def main() -> int:
         except ValueError:
             pass
         else:
-            raise SystemExit("a declaration in a false branch was read as the package's")
+            raise SystemExit(
+                "a declaration in a false branch was read as the package's"
+            )
         finally:
             build.PACKAGE = original
     try:
@@ -217,7 +239,9 @@ def main() -> int:
     pdf = build.DEFAULT_OUTPUT
     if shutil.which("pdftotext") is not None and pdf.is_file():
         if build.rendered_metadata_errors(pdf, version, build.manual_dateline()):
-            raise SystemExit("the installed manual's title page disagrees with the source")
+            raise SystemExit(
+                "the installed manual's title page disagrees with the source"
+            )
         wrong = build.rendered_metadata_errors(pdf, "9.9", build.manual_dateline())
         if not any("version" in error for error in wrong):
             raise SystemExit("a version absent from the rendered page was not reported")
@@ -247,12 +271,16 @@ def main() -> int:
             build.build(work / "build", epoch)
         except RuntimeError as exc:
             if "hard audit" not in str(exc):
-                raise SystemExit(f"the seeded empty picture failed for another reason: {exc}")
+                raise SystemExit(
+                    f"the seeded empty picture failed for another reason: {exc}"
+                )
         else:
             raise SystemExit("an empty picture in the manual did not fail the build")
         finally:
             build.MANUAL_DIR = original
-    print("PASS: manual build gates fire on seeded input, including a hard audit finding")
+    print(
+        "PASS: manual build gates fire on seeded input, including a hard audit finding"
+    )
     return 0
 
 

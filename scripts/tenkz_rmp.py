@@ -37,9 +37,7 @@ from tenkzlib.tnlog import ParsedLog, parse_log
 REPO = Path(__file__).resolve().parent.parent
 DEFAULT_MANIFEST = REPO / "tests" / "tenkz" / "rmp" / "manifest.toml"
 DEFAULT_VERDICT = REPO / "tests" / "tenkz" / "rmp" / "verdicts.toml"
-AUTHOR_SOURCE_HASHES = (
-    REPO / "tests" / "tenkz" / "rmp" / "author-source.sha256"
-)
+AUTHOR_SOURCE_HASHES = REPO / "tests" / "tenkz" / "rmp" / "author-source.sha256"
 DEFAULT_PAPER_SOURCE = REPO / "Papers" / "2011.12127" / "TN-Review-main.tex"
 FROZEN_TARGET_COUNT = 130
 BOOK_SOURCE = REPO / "docs" / "tenkz" / "rmp-benchmark.tex"
@@ -91,22 +89,27 @@ TARGET_OPTIONAL = {
     "extraction_override",
 }
 FORBIDDEN_CASE_PATTERNS = (
-    (re.compile(r"\\documentclass\b|\\usepackage\b|\\begin\{document\}"),
-     "case must be a preamble-free fragment"),
-    (re.compile(
-        r"\\begin\{tikzpicture\}|\\(?:draw|fill|filldraw|shade|path|node|tikzset)\b"
+    (
+        re.compile(r"\\documentclass\b|\\usepackage\b|\\begin\{document\}"),
+        "case must be a preamble-free fragment",
     ),
-     "case uses raw TikZ ink"),
-    (re.compile(r"\\(?:__tenkz|tenkz@|tenkz_[A-Za-z])"),
-     "case uses a private tenkz name"),
-    (re.compile(r"\\tndefine\b"),
-     "case uses a whole-figure definition"),
-    (re.compile(r"\\coordinate\b|\\pgf(?:point|path|extra)\b"),
-     "case uses an undocumented coordinate escape"),
+    (
+        re.compile(
+            r"\\begin\{tikzpicture\}|\\(?:draw|fill|filldraw|shade|path|node|tikzset)\b"
+        ),
+        "case uses raw TikZ ink",
+    ),
+    (
+        re.compile(r"\\(?:__tenkz|tenkz@|tenkz_[A-Za-z])"),
+        "case uses a private tenkz name",
+    ),
+    (re.compile(r"\\tndefine\b"), "case uses a whole-figure definition"),
+    (
+        re.compile(r"\\coordinate\b|\\pgf(?:point|path|extra)\b"),
+        "case uses an undocumented coordinate escape",
+    ),
 )
-INCLUDEGRAPHICS_RE = re.compile(
-    r"\\includegraphics(?:\s*\[[^\]]*\])?\s*\{([^}]*)\}"
-)
+INCLUDEGRAPHICS_RE = re.compile(r"\\includegraphics(?:\s*\[[^\]]*\])?\s*\{([^}]*)\}")
 
 
 VERDICT_STATUSES = (
@@ -163,9 +166,7 @@ _INK_FAMILY_CANON = {
 def rendered_ink_environment_families(parsed: ParsedLog) -> set[str]:
     """Return picture owners from the compiled model event stream."""
     languages = {
-        event.attrs["lang"]
-        for event in parsed.valid_events
-        if event.kind == "picture"
+        event.attrs["lang"] for event in parsed.valid_events if event.kind == "picture"
     }
     unknown_languages = languages.difference(INK_EVENT_FAMILIES)
     if unknown_languages:
@@ -188,9 +189,7 @@ def rendered_ink_environment_families(parsed: ParsedLog) -> set[str]:
     return families
 
 
-def ink_environment_problems(
-    target_id: str, ink: str, used: set[str]
-) -> list[str]:
+def ink_environment_problems(target_id: str, ink: str, used: set[str]) -> list[str]:
     """Return contradictions between Ink claims and compiled picture owners."""
     problems: list[str] = []
     claimed = {
@@ -417,7 +416,9 @@ def load_manifest(path: Path) -> list[Target]:
         if (
             not isinstance(capabilities, list)
             or not capabilities
-            or any(not isinstance(item, str) or not item.strip() for item in capabilities)
+            or any(
+                not isinstance(item, str) or not item.strip() for item in capabilities
+            )
         ):
             fail(f"{where}.capabilities must be a nonempty string array")
         normalized_capabilities = tuple(item.strip() for item in capabilities)
@@ -432,7 +433,11 @@ def load_manifest(path: Path) -> list[Target]:
         normalized_placements: list[dict[str, Any]] = []
         for placement_index, placement in enumerate(placements, 1):
             pwhere = f"{where}.placements[{placement_index}]"
-            if not isinstance(placement, dict) or set(placement) != {"order", "line", "asset"}:
+            if not isinstance(placement, dict) or set(placement) != {
+                "order",
+                "line",
+                "asset",
+            }:
                 fail(f"{pwhere} fields must be exactly order, line, asset")
             if any(
                 not isinstance(placement[key], int)
@@ -456,7 +461,9 @@ def load_manifest(path: Path) -> list[Target]:
             author_source = relative_repo_path(
                 raw["author_source"], field=f"{where}.author_source", suffix=".tex"
             )
-            author_lines = parse_author_lines(raw["author_lines"], field=f"{where}.author_lines")
+            author_lines = parse_author_lines(
+                raw["author_lines"], field=f"{where}.author_lines"
+            )
         if context_only and (author_source is not None or author_lines is not None):
             fail(f"{where} is paper-context-only and cannot claim author source")
         if target_corpus == "published" and not context_only and author_source is None:
@@ -466,7 +473,9 @@ def load_manifest(path: Path) -> list[Target]:
 
         fixture = None
         if "fixture" in raw:
-            fixture = relative_repo_path(raw["fixture"], field=f"{where}.fixture", suffix=".tex")
+            fixture = relative_repo_path(
+                raw["fixture"], field=f"{where}.fixture", suffix=".tex"
+            )
             if fixture.parent != Path("tests") / "tenkz":
                 fail(f"{where}.fixture must name an existing tests/tenkz/*.tex fixture")
         equivalent_to = None
@@ -564,8 +573,7 @@ def validate_census(targets: list[Target], census: dict[str, Any]) -> None:
     )
     if placement_orders != list(range(1, census["paper_placements"] + 1)):
         fail(
-            "paper placement order must be exactly "
-            f"1..{census['paper_placements']}"
+            "paper placement order must be exactly " f"1..{census['paper_placements']}"
         )
     published = [target for target in targets if target.corpus == "published"]
     mapped = sum(target.author_source is not None for target in published)
@@ -635,7 +643,9 @@ def validate_source_placements(targets: Sequence[Target], paper: Path) -> None:
 
 def case_headers(lines: list[str], *, path: Path) -> dict[str, str]:
     headers: dict[str, str] = {}
-    pattern = re.compile(r"^% (Target|Formula|Ink|Boundary|Source|Capabilities):\s*(.*\S)\s*$")
+    pattern = re.compile(
+        r"^% (Target|Formula|Ink|Boundary|Source|Capabilities):\s*(.*\S)\s*$"
+    )
     continuation = re.compile(r"^%   (.*\S)\s*$")
     active: str | None = None
     for line in lines:
@@ -697,7 +707,10 @@ def validate_distinct_case_bodies(targets: list[Target]) -> None:
         if target.equivalent_to is not None and target.id not in used_equivalences
     ]
     if dangling:
-        fail("equivalent_to declared for non-equivalent case bodies: " + ", ".join(dangling))
+        fail(
+            "equivalent_to declared for non-equivalent case bodies: "
+            + ", ".join(dangling)
+        )
     if repeated:
         details = "; ".join(", ".join(ids) for ids in repeated)
         fail("distinct targets have duplicate normalized case bodies: " + details)
@@ -732,8 +745,12 @@ def validate_case(target: Target) -> None:
                 f"({headers[key]!r} != {expected!r})"
             )
     if len(lines) > 100:
-        fail(f"{target.case.as_posix()}: {len(lines)} lines exceeds the 100-line review limit")
-    wide = [(number, len(line)) for number, line in enumerate(lines, 1) if len(line) > 88]
+        fail(
+            f"{target.case.as_posix()}: {len(lines)} lines exceeds the 100-line review limit"
+        )
+    wide = [
+        (number, len(line)) for number, line in enumerate(lines, 1) if len(line) > 88
+    ]
     if wide:
         details = ", ".join(f"{number} ({width})" for number, width in wide[:8])
         fail(f"{target.case.as_posix()}: lines exceed 88 characters: {details}")
@@ -743,14 +760,13 @@ def validate_case(target: Target) -> None:
         if match:
             line = syntax.count("\n", 0, match.start()) + 1
             fail(f"{target.case.as_posix()}:{line}: {reason}: {match.group(0)}")
-    if re.search(
-        r"\\begin\{tenkz\}|\\tnpic\b|\\tntree\b", syntax
-    ) is None:
+    if re.search(r"\\begin\{tenkz\}|\\tnpic\b|\\tntree\b", syntax) is None:
         fail(f"{target.case.as_posix()}: case must contain a public tenkz picture")
     bracket_display = "\\[" in syntax and "\\]" in syntax
-    environment_display = re.search(
-        r"\\begin\{(?:align|alignat|equation|gather|multline)\*?\}", syntax
-    ) is not None
+    environment_display = (
+        re.search(r"\\begin\{(?:align|alignat|equation|gather|multline)\*?\}", syntax)
+        is not None
+    )
     if not bracket_display and not environment_display:
         fail(f"{target.case.as_posix()}: case must contain a directly readable display")
     if target.fixture is not None and not (REPO / target.fixture).is_file():
@@ -799,8 +815,12 @@ def standalone_wrapper(target: Target) -> str:
 
 def pdf_dimensions(pdf: Path) -> tuple[str, str, int]:
     pdfinfo = require_tool("pdfinfo")
-    result = run([pdfinfo, str(pdf)], cwd=pdf.parent, timeout=30, label=f"pdfinfo {pdf.name}")
-    size_match = re.search(r"^Page size:\s+([0-9.]+) x ([0-9.]+) pts", result.stdout, re.MULTILINE)
+    result = run(
+        [pdfinfo, str(pdf)], cwd=pdf.parent, timeout=30, label=f"pdfinfo {pdf.name}"
+    )
+    size_match = re.search(
+        r"^Page size:\s+([0-9.]+) x ([0-9.]+) pts", result.stdout, re.MULTILINE
+    )
     pages_match = re.search(r"^Pages:\s+([1-9][0-9]*)\s*$", result.stdout, re.MULTILINE)
     if size_match is None or pages_match is None:
         fail(f"pdfinfo did not report dimensions and page count for {pdf}")
@@ -835,10 +855,14 @@ def event_signatures(parsed: ParsedLog) -> tuple[str, ...]:
 
     signatures: list[str] = []
     for picture, event_counts in counts.items():
-        topology = "".join(
-            f"|{event}={event_counts[event]}" for event in sorted(event_counts)
-            if event not in {"bbox", "glyph-geometry", "ink-use", "label-use"}
-        ) or "|topology=none"
+        topology = (
+            "".join(
+                f"|{event}={event_counts[event]}"
+                for event in sorted(event_counts)
+                if event not in {"bbox", "glyph-geometry", "ink-use", "label-use"}
+            )
+            or "|topology=none"
+        )
         signatures.append(
             "model-events"
             f"|picture={picture}"
@@ -891,20 +915,22 @@ def compile_one(target: Target, root: Path, env: dict[str, str]) -> BuildResult:
             timeout=120,
             label=f"event audit {target.id}",
         )
-        (target_work / f"{target.id}.audit.txt").write_text(audit.stdout, encoding="utf-8")
+        (target_work / f"{target.id}.audit.txt").write_text(
+            audit.stdout, encoding="utf-8"
+        )
         width, height, pages = pdf_dimensions(pdf)
         parsed = parse_log(tnlog.read_text(encoding="utf-8"), source_name=tnlog.name)
         used_families = rendered_ink_environment_families(parsed)
-        ink_problems = ink_environment_problems(
-            target.id, target.ink, used_families
-        )
+        ink_problems = ink_environment_problems(target.id, target.ink, used_families)
         if ink_problems:
             fail(
                 f"{target.case.as_posix()}: Ink environment mismatch:\n"
                 + "\n".join(ink_problems)
             )
         signatures = event_signatures(parsed)
-        return BuildResult(target, wrapper, pdf, tnlog, width, height, pages, signatures)
+        return BuildResult(
+            target, wrapper, pdf, tnlog, width, height, pages, signatures
+        )
     except RMPError as exc:
         if not transcript.exists():
             transcript.write_text(str(exc) + "\n", encoding="utf-8")
@@ -929,7 +955,10 @@ def compile_targets(targets: list[Target], work: Path, jobs: int) -> list[BuildR
     results: list[BuildResult] = []
     errors: list[str] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
-        futures = {executor.submit(compile_one, target, work, env): target for target in targets}
+        futures = {
+            executor.submit(compile_one, target, work, env): target
+            for target in targets
+        }
         for future in concurrent.futures.as_completed(futures):
             target = futures[future]
             try:
@@ -967,9 +996,7 @@ def load_author_source_hashes(path: Path) -> dict[Path, str]:
             continue
         match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line)
         if match is None:
-            fail(
-                f"{path}:{line_number}: expected '<sha256>  <relative .tex path>'"
-            )
+            fail(f"{path}:{line_number}: expected '<sha256>  <relative .tex path>'")
         source = relative_repo_path(
             match.group(2),
             field=f"{path}:{line_number}",
@@ -998,9 +1025,7 @@ def verify_author_source_tree(
         fail(f"source root does not exist: {source_root}")
     hashes = load_author_source_hashes(hashes_path)
     cited = {
-        target.author_source
-        for target in targets
-        if target.author_source is not None
+        target.author_source for target in targets if target.author_source is not None
     }
     recorded = set(hashes)
     if recorded != cited:
@@ -1115,7 +1140,9 @@ VERDICT_STANZA_KEYS = {
 }
 
 
-def string_tuple(value: Any, *, where: str, allowed: tuple[str, ...] | None) -> tuple[str, ...]:
+def string_tuple(
+    value: Any, *, where: str, allowed: tuple[str, ...] | None
+) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         fail(f"{where} must be a list of strings")
     if allowed is not None:
@@ -1178,8 +1205,12 @@ def load_verdicts(targets: Sequence[Target]) -> dict[str, TargetVerdict]:
             fail(f"{where}.status {status!r} not in {VERDICT_STATUSES}")
         if pairing not in PAIRING_STATES:
             fail(f"{where}.pairing {pairing!r} not in {PAIRING_STATES}")
-        defects = string_tuple(stanza.get("defects", []), where=f"{where}.defects", allowed=DEFECT_KINDS)
-        missing = string_tuple(stanza.get("missing", []), where=f"{where}.missing", allowed=None)
+        defects = string_tuple(
+            stanza.get("defects", []), where=f"{where}.defects", allowed=DEFECT_KINDS
+        )
+        missing = string_tuple(
+            stanza.get("missing", []), where=f"{where}.missing", allowed=None
+        )
         for key in ("note", "reviewed", "renderer", "second_viewer", "pairing_by"):
             if key in stanza and not isinstance(stanza[key], str):
                 fail(f"{where}.{key} must be a string")
@@ -1203,7 +1234,9 @@ def load_verdicts(targets: Sequence[Target]) -> dict[str, TargetVerdict]:
         )
         target = by_target[identifier]
         if status == "blocked" and not missing:
-            fail(f"{where}: blocked requires missing=[...] naming the absent capabilities")
+            fail(
+                f"{where}: blocked requires missing=[...] naming the absent capabilities"
+            )
         if status == "faithful":
             if not verdict.second_viewer:
                 fail(f"{where}: faithful requires a second_viewer countersign")
@@ -1261,7 +1294,9 @@ def verdict_histogram(verdicts: dict[str, TargetVerdict]) -> dict[str, int]:
     return counts
 
 
-def validate_verdict_consistency(targets: Sequence[Target], verdicts: dict[str, TargetVerdict]) -> None:
+def validate_verdict_consistency(
+    targets: Sequence[Target], verdicts: dict[str, TargetVerdict]
+) -> None:
     """Mechanical checks that need no judgment.
 
     A detected defect never blocks by itself; a detected defect CONTRADICTING
@@ -1278,7 +1313,7 @@ def validate_verdict_consistency(targets: Sequence[Target], verdicts: dict[str, 
             if not (concedes or declared):
                 problems.append(
                     f"{target.id}: case body typesets \\text{{...}} where the manifest "
-                    "declares diagram ink; record defects=[\"text-substitution\"] or a "
+                    'declares diagram ink; record defects=["text-substitution"] or a '
                     "conceding status"
                 )
         problems.extend(
@@ -1336,9 +1371,15 @@ def generate_book_index(results: list[BuildResult], destination: Path) -> None:
             if count:
                 lines.append(
                     r"\RMPAtlasRow"
-                    + "{" + tex_escape(corpus) + "}"
-                    + "{" + tex_escape(section) + "}"
-                    + "{" + str(count) + "}"
+                    + "{"
+                    + tex_escape(corpus)
+                    + "}"
+                    + "{"
+                    + tex_escape(section)
+                    + "}"
+                    + "{"
+                    + str(count)
+                    + "}"
                 )
     lines.append(r"\RMPAtlasEnd")
     current_corpus = None
@@ -1363,10 +1404,18 @@ def generate_book_index(results: list[BuildResult], destination: Path) -> None:
         if target.fixture is not None:
             fixture_digest = sha256(REPO / target.fixture)
         signature = "; ".join(result.audit_signatures)
-        placement = "; ".join(
-            f"{item['order']}: {item['asset']} line {item['line']}" for item in target.placements
-        ) or "author source order"
-        source_mode = "paper-context-only" if target.paper_context_only else "author source mapped"
+        placement = (
+            "; ".join(
+                f"{item['order']}: {item['asset']} line {item['line']}"
+                for item in target.placements
+            )
+            or "author source order"
+        )
+        source_mode = (
+            "paper-context-only"
+            if target.paper_context_only
+            else "author source mapped"
+        )
         fields = (
             target.id,
             target.corpus,
@@ -1392,14 +1441,24 @@ def generate_book_index(results: list[BuildResult], destination: Path) -> None:
         verdict = verdicts[target.id]
         lines.append(
             r"\RMPCaseVerdict"
-            + "{" + tex_escape(verdict.status) + "}"
-            + "{" + tex_escape(verdict.pairing) + "}"
-            + "{" + tex_escape(verdict_detail(verdict)) + "}"
+            + "{"
+            + tex_escape(verdict.status)
+            + "}"
+            + "{"
+            + tex_escape(verdict.pairing)
+            + "}"
+            + "{"
+            + tex_escape(verdict_detail(verdict))
+            + "}"
         )
         lines.append(
-            r"\RMPCaseSpread" + first
-            + r"\RMPCaseEvidence" + second
-            + "{" + artifact + "}"
+            r"\RMPCaseSpread"
+            + first
+            + r"\RMPCaseEvidence"
+            + second
+            + "{"
+            + artifact
+            + "}"
         )
     lines.append(r"\RMPGrammarIndexBegin")
     capabilities: dict[str, list[str]] = {}
@@ -1410,9 +1469,15 @@ def generate_book_index(results: list[BuildResult], destination: Path) -> None:
         consumers = capabilities[capability]
         lines.append(
             r"\RMPGrammarRow"
-            + "{" + tex_escape(capability) + "}"
-            + "{" + str(len(consumers)) + "}"
-            + "{" + tex_escape(", ".join(consumers)) + "}"
+            + "{"
+            + tex_escape(capability)
+            + "}"
+            + "{"
+            + str(len(consumers))
+            + "}"
+            + "{"
+            + tex_escape(", ".join(consumers))
+            + "}"
         )
     lines.append(r"\RMPGrammarIndexEnd")
     lines.append(r"\RMPVerdictTablesBegin")
@@ -1420,11 +1485,21 @@ def generate_book_index(results: list[BuildResult], destination: Path) -> None:
         verdict = verdicts[result.target.id]
         lines.append(
             r"\RMPVerdictRow"
-            + "{" + tex_escape(result.target.id) + "}"
-            + "{" + tex_escape(verdict.status) + "}"
-            + "{" + tex_escape(verdict.pairing) + "}"
-            + "{" + tex_escape(", ".join(verdict.defects) or "none") + "}"
-            + "{" + tex_escape(", ".join(verdict.missing) or verdict.note or "none") + "}"
+            + "{"
+            + tex_escape(result.target.id)
+            + "}"
+            + "{"
+            + tex_escape(verdict.status)
+            + "}"
+            + "{"
+            + tex_escape(verdict.pairing)
+            + "}"
+            + "{"
+            + tex_escape(", ".join(verdict.defects) or "none")
+            + "}"
+            + "{"
+            + tex_escape(", ".join(verdict.missing) or verdict.note or "none")
+            + "}"
         )
     lines.extend((r"\RMPVerdictTablesEnd", ""))
     destination.write_text("\n".join(lines), encoding="utf-8")
@@ -1459,14 +1534,17 @@ def compile_book(results: list[BuildResult], work: Path) -> Path:
             env=env,
             label=f"benchmark book XeLaTeX pass {pass_number}",
         )
-        (work / f"book-pass-{pass_number}.txt").write_text(result.stdout, encoding="utf-8")
+        (work / f"book-pass-{pass_number}.txt").write_text(
+            result.stdout, encoding="utf-8"
+        )
     log = work / "tenkz-rmp-benchmark.log"
     try:
         log_text = log.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
         fail(f"cannot inspect benchmark book log: {exc}")
     overfull = [
-        line for line in log_text.splitlines()
+        line
+        for line in log_text.splitlines()
         if line.startswith("Overfull \\hbox") or line.startswith("Overfull \\vbox")
     ]
     if overfull:
@@ -1573,7 +1651,9 @@ def transactional_render(
         rendered_book = render_pdf_pages(book, stage / "book", "benchmark book")
         artifacts.extend(rendered_book)
         census.append(("book/tenkz-rmp-benchmark", len(rendered_book), 0))
-        (stage / render_core.MARKER_NAME).write_text(render_core.MARKER_CONTENT, encoding="utf-8")
+        (stage / render_core.MARKER_NAME).write_text(
+            render_core.MARKER_CONTENT, encoding="utf-8"
+        )
         (stage / "CENSUS.tsv").write_text(
             "artifact\tpng_pages\tsvg_pages\n"
             + "".join(f"{name}\t{pngs}\t{svgs}\n" for name, pngs, svgs in census),
@@ -1678,8 +1758,10 @@ def extract_author_block(target: Target, source_root: Path, destination: Path) -
         fail(f"{target.id}: cannot read author source {source}: {exc}")
     start, end = line_range(target.author_lines)
     if end > len(lines):
-        fail(f"{target.id}: author line range {target.author_lines} exceeds {len(lines)} lines")
-    raw_block = "".join(lines[start - 1:end])
+        fail(
+            f"{target.id}: author line range {target.author_lines} exceeds {len(lines)} lines"
+        )
+    raw_block = "".join(lines[start - 1 : end])
     activated: list[str] = []
     path_continues = False
     for line in raw_block.splitlines():
@@ -1703,7 +1785,9 @@ def extract_author_block(target: Target, source_root: Path, destination: Path) -
             candidate = "% " + candidate
         activated.append(candidate)
         if stripped:
-            path_continues = not candidate.lstrip().startswith("%") and stripped.endswith("--")
+            path_continues = not candidate.lstrip().startswith(
+                "%"
+            ) and stripped.endswith("--")
     block = "\n".join(activated)
     begin_document = next(
         (index for index, line in enumerate(lines) if "\\begin{document}" in line),
@@ -1773,7 +1857,9 @@ def compile_comparison(
     if not source_root.is_dir():
         fail(f"source root does not exist: {source_root}")
     references: dict[str, Path] = {}
-    mapped = [result.target for result in results if result.target.author_source is not None]
+    mapped = [
+        result.target for result in results if result.target.author_source is not None
+    ]
     errors: list[str] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
         futures = {
@@ -1796,17 +1882,31 @@ def compile_comparison(
         if target.paper_context_only:
             lines.append(
                 r"\RMPComparisonContextOnly"
-                + "{" + tex_escape(target.id) + "}"
-                + "{" + result.pdf.as_posix() + "}"
-                + "{" + tex_escape(target.source) + "}"
+                + "{"
+                + tex_escape(target.id)
+                + "}"
+                + "{"
+                + result.pdf.as_posix()
+                + "}"
+                + "{"
+                + tex_escape(target.source)
+                + "}"
             )
         else:
             lines.append(
                 r"\RMPComparison"
-                + "{" + tex_escape(target.id) + "}"
-                + "{" + result.pdf.as_posix() + "}"
-                + "{" + references[target.id].as_posix() + "}"
-                + "{" + tex_escape(target.author_lines or "") + "}"
+                + "{"
+                + tex_escape(target.id)
+                + "}"
+                + "{"
+                + result.pdf.as_posix()
+                + "}"
+                + "{"
+                + references[target.id].as_posix()
+                + "}"
+                + "{"
+                + tex_escape(target.author_lines or "")
+                + "}"
             )
     index.write_text("\n".join(lines) + "\n", encoding="utf-8")
     document = work / "comparison.tex"
@@ -1854,7 +1954,8 @@ def compile_comparison(
     (work / "comparison-xelatex.txt").write_text(result.stdout, encoding="utf-8")
     log = document.with_suffix(".log").read_text(encoding="utf-8", errors="replace")
     overfull = [
-        line for line in log.splitlines()
+        line
+        for line in log.splitlines()
         if line.startswith("Overfull \\hbox") or line.startswith("Overfull \\vbox")
     ]
     if overfull:
@@ -1973,7 +2074,9 @@ def main() -> int:
                 for verdict in verdicts.values():
                     pairing_counts[verdict.pairing] += 1
                 pairing_line = " | ".join(
-                    f"{state} {count}" for state, count in pairing_counts.items() if count
+                    f"{state} {count}"
+                    for state, count in pairing_counts.items()
+                    if count
                 )
                 print(
                     "PASS: validated, compiled, linted, and audited "
@@ -1990,7 +2093,9 @@ def main() -> int:
                     return 0
                 png_count, destination = transactional_render(results, book, manifest)
                 print(f"PASS: wrote benchmark book to {BOOK_OUTPUT}")
-                print(f"PASS: rendered {png_count} target/book page(s) to {destination}")
+                print(
+                    f"PASS: rendered {png_count} target/book page(s) to {destination}"
+                )
                 print(f"Checksums: {destination / 'SHA256SUMS'}")
                 return 0
             comparison = compile_comparison(results, source_snapshot, work, jobs)

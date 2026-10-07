@@ -51,8 +51,18 @@ DEFAULT_OUTPUT = ROOT / "output" / "pdf" / "tenkz-manual.pdf"
 # compare it equal to the package's `0.7` while the page says otherwise.
 VERSION = re.compile(r"[0-9]+(?:\.[0-9]+)*")
 MONTHS = (
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 )
 # Every spelling of "compile me again" the manual's own packages use.  The
 # generic LaTeX warnings do not cover `longtable`, which the generated
@@ -96,7 +106,9 @@ def package_release() -> tuple[str, str]:
         raise ValueError("tenkz.sty has no active \\ProvidesPackage date and version")
     version = match.group(2)
     if not VERSION.fullmatch(version):
-        raise ValueError(f"tenkz.sty names a version this reader cannot read: {version!r}")
+        raise ValueError(
+            f"tenkz.sty names a version this reader cannot read: {version!r}"
+        )
     return match.group(1), version
 
 
@@ -117,7 +129,8 @@ def tex_installation_roots(engine: str | None = None) -> tuple[Path, ...]:
     """
     beside = Path(engine).with_name("kpsewhich") if engine else None
     query = (
-        str(beside) if beside is not None and beside.is_file()
+        str(beside)
+        if beside is not None and beside.is_file()
         else shutil.which("kpsewhich")
     )
     if query is None:
@@ -126,7 +139,10 @@ def tex_installation_roots(engine: str | None = None) -> tuple[Path, ...]:
     for variable in TEXMF_VARIABLES:
         run = subprocess.run(
             [query, f"-var-value={variable}"],
-            text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=60,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=60,
         )
         value = run.stdout.strip()
         if run.returncode == 0 and value:
@@ -169,7 +185,7 @@ def recorded_inputs(record: Path) -> list[str]:
     the packaging tool.
     """
     return [
-        line[len("INPUT "):].strip()
+        line[len("INPUT ") :].strip()
         for line in record.read_text(encoding="utf-8", errors="replace").splitlines()
         if line.startswith("INPUT ")
     ]
@@ -281,7 +297,7 @@ def direct_pictures(text: str | None = None) -> list[str]:
         for match in re.finditer(rf"\\begin\{{{name}\}}", text)
     ]
     return [
-        text[construct.start:construct.end]
+        text[construct.start : construct.end]
         for construct in scan_picture_event_constructs(text)
         if not any(begin <= construct.start < end for begin, end in spans if end > 0)
     ]
@@ -310,8 +326,12 @@ def audit_direct_pictures(work: Path, epoch: int, engine: str) -> int:
     env["TEXINPUTS"] = f"{ROOT / 'tex' / 'tenkz'}//:"
     run = subprocess.run(
         [engine, "-interaction=nonstopmode", "-halt-on-error", driver.name],
-        cwd=work, env=env, text=True, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT, timeout=300,
+        cwd=work,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=300,
     )
     if run.returncode:
         tail = "\n".join(run.stdout.splitlines()[-40:])
@@ -327,8 +347,13 @@ def audit_direct_pictures(work: Path, epoch: int, engine: str) -> int:
     return len(pictures)
 
 
-def foreign_inputs(work: Path, engine: str, *, manual_dir: Path | None = None,
-                   package_tree: Path | None = None) -> list[str]:
+def foreign_inputs(
+    work: Path,
+    engine: str,
+    *,
+    manual_dir: Path | None = None,
+    package_tree: Path | None = None,
+) -> list[str]:
     """Document sources the engine opened from outside this tree.
 
     Read from the recorder rather than the exit status: the search path ends
@@ -337,7 +362,9 @@ def foreign_inputs(work: Path, engine: str, *, manual_dir: Path | None = None,
     checkout no longer carries, identically in both builds.
     """
     manual_dir = MANUAL_DIR if manual_dir is None else manual_dir
-    package_tree = (ROOT / "tex" / "tenkz" if package_tree is None else package_tree).resolve()
+    package_tree = (
+        ROOT / "tex" / "tenkz" if package_tree is None else package_tree
+    ).resolve()
     record = work / "manual2.fls"
     if not record.is_file():
         raise RuntimeError("the engine wrote no input record; cannot prove the runtime")
@@ -374,32 +401,39 @@ def foreign_inputs(work: Path, engine: str, *, manual_dir: Path | None = None,
     # otherwise be served by an older installed sibling, in both builds
     # alike, and the byte comparison would agree about the wrong document.
     installation = tex_installation_roots(engine)
+
     def at_home(opened: str) -> bool:
         resolved = (work / opened).resolve()
-        return any(
-            resolved.is_relative_to(home) for home in (*homes, *installation)
-        )
+        return any(resolved.is_relative_to(home) for home in (*homes, *installation))
 
-    foreign = sorted({
-        opened
-        for opened in recorded_inputs(record)
-        if (
-            # This repository's own material must come from this repository,
-            # from whichever tree an installed copy might sit in.
-            Path(opened).name.startswith("tenkz")
-            or Path(opened).name in own
-        )
-        and not any(
-            (work / opened).resolve().is_relative_to(home) for home in homes
-        )
-        or Path(opened).suffix in {".tex", ".sty"} and not at_home(opened)
-    })
+    foreign = sorted(
+        {
+            opened
+            for opened in recorded_inputs(record)
+            if (
+                # This repository's own material must come from this repository,
+                # from whichever tree an installed copy might sit in.
+                Path(opened).name.startswith("tenkz")
+                or Path(opened).name in own
+            )
+            and not any(
+                (work / opened).resolve().is_relative_to(home) for home in homes
+            )
+            or Path(opened).suffix in {".tex", ".sty"}
+            and not at_home(opened)
+        }
+    )
     return foreign
 
 
-def build(work: Path, epoch: int, engine: str = "xelatex", *,
-          manual_dir: Path | None = None,
-          package_tree: Path | None = None) -> tuple[bytes, list[str]]:
+def build(
+    work: Path,
+    epoch: int,
+    engine: str = "xelatex",
+    *,
+    manual_dir: Path | None = None,
+    package_tree: Path | None = None,
+) -> tuple[bytes, list[str]]:
     """Compile the manual in `work`; return the PDF bytes and audit lines."""
     manual_dir = MANUAL_DIR if manual_dir is None else manual_dir
     package_tree = ROOT / "tex" / "tenkz" if package_tree is None else package_tree
@@ -425,12 +459,14 @@ def build(work: Path, epoch: int, engine: str = "xelatex", *,
     # where the runtime came from.
     env["TEXINPUTS"] = f"{package_tree}//:"
     engine_log = work / "manual2.log"
+
     # Each invocation rewrites the job's recorder, so a file opened only on an
     # earlier pass leaves no trace in the last one.  Every pass is read before
     # the next begins.
     def audit_record(number: int) -> None:
-        foreign = foreign_inputs(work, engine, manual_dir=manual_dir,
-                                 package_tree=package_tree)
+        foreign = foreign_inputs(
+            work, engine, manual_dir=manual_dir, package_tree=package_tree
+        )
         if foreign:
             raise RuntimeError(
                 f"pass {number} loaded document sources from outside this "
@@ -440,8 +476,11 @@ def build(work: Path, epoch: int, engine: str = "xelatex", *,
     for number in range(1, MAXIMUM_PASSES + 1):
         run = subprocess.run(
             [
-                engine, "-interaction=nonstopmode", "-halt-on-error",
-                "-recorder", "manual2.tex",
+                engine,
+                "-interaction=nonstopmode",
+                "-halt-on-error",
+                "-recorder",
+                "manual2.tex",
             ],
             cwd=work,
             env=env,
@@ -467,7 +506,8 @@ def build(work: Path, epoch: int, engine: str = "xelatex", *,
     # code alone.
     if UNRESOLVED.search(transcript):
         lines = [
-            line for line in transcript.splitlines()
+            line
+            for line in transcript.splitlines()
             if UNRESOLVED.search(line) or "undefined" in line.lower()
         ]
         raise RuntimeError(
@@ -520,7 +560,10 @@ def rendered_title_page(pdf: Path) -> str:
     """
     run = subprocess.run(
         ["pdftotext", "-f", "1", "-l", "1", str(pdf), "-"],
-        text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        timeout=120,
     )
     if run.returncode:
         raise RuntimeError(f"could not read the manual's title page:\n{run.stdout}")
@@ -535,8 +578,10 @@ def rendered_metadata_errors(
         # This is the only check that reads what a reader sees, so a release
         # build may not skip it.
         if required:
-            return ["pdftotext is not installed, so the rendered title page "
-                    "cannot be read"]
+            return [
+                "pdftotext is not installed, so the rendered title page "
+                "cannot be read"
+            ]
         return []
     page = rendered_title_page(pdf)
     errors: list[str] = []
@@ -571,12 +616,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("action", choices=("build", "check"))
     parser.add_argument(
-        "--output", type=Path, default=DEFAULT_OUTPUT,
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT,
         help=f"where to install the PDF (default {DEFAULT_OUTPUT.relative_to(ROOT)})",
     )
     parser.add_argument("--engine", default="xelatex")
     parser.add_argument(
-        "--require-engine", action="store_true",
+        "--require-engine",
+        action="store_true",
         help="fail rather than skip when the engine is not installed",
     )
     args = parser.parse_args()
@@ -615,7 +663,9 @@ def main() -> int:
                 return 1
             direct = audit_direct_pictures(work / "direct", epoch, engine)
             rendered = rendered_metadata_errors(
-                work / "manual2.pdf", version, manual_dateline(),
+                work / "manual2.pdf",
+                version,
+                manual_dateline(),
                 required=args.require_engine,
             )
             if rendered:
