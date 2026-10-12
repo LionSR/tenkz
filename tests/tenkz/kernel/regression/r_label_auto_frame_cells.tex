@@ -52,8 +52,8 @@
           }
         {U}
           {
-            \str_if_eq:VnF #2 {n}
-              { \errmessage{closure~corner~lost~one~of~its~two~faces} }
+            \str_if_eq:VnF #2 {s}
+              { \errmessage{rounded~closure~bead~answered~the~wrong~face} }
           }
         {E}
           {
@@ -102,9 +102,10 @@
     cross={over at crossing of probe and cup-1-2}]
     {1 n of T}{1 s of T}
 \end{tenkz}
-% At the first corner of a flat trace, the incoming and outgoing pieces take
-% two adjacent faces.  Reading only their common secant would call the corner
-% oblique and leave its south face falsely free.
+% The former first sharp corner is now a smooth rounded turn.  At this
+% arclength station the tangent leaves the south label station free.  PGF's
+% curve-time search here also exercises chords only a few scaled points long;
+% those must not overflow its vector-length arithmetic.
 \begin{tenkz}[lattice={1x1}, bonds=none, west=trace, east=trace]
   \tn[at=(1,1)]{}
   \tn[at=on wrap-1 0.19449155, skin=dot]{U}
