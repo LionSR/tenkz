@@ -1,7 +1,7 @@
-% Regression: periodic row returns round all four turns, above and below.
+% Regression: periodic row returns use four equal-radius turns, above and below.
 % Formula: tr(A B C); periodic sugar and its west/east expansion agree.
 \documentclass{standalone}
-\usepackage{tenkz}
+\usepackage{tikz-tensor-networks}
 \ExplSyntaxOn
 \file_input:n { tenkz-kernel.code.tex }
 \cs_new_eq:NN \__tenkz_test_corner_stroke:nn
@@ -12,6 +12,9 @@
 \seq_new:N \l__tenkz_test_corner_segments_seq
 \int_new:N \l__tenkz_test_corner_count_int
 \int_new:N \g__tenkz_test_corner_returns_int
+\dim_new:N \l__tenkz_test_corner_radius_dim
+\dim_new:N \l__tenkz_test_corner_dx_dim
+\dim_new:N \l__tenkz_test_corner_dy_dim
 \cs_set_protected:Npn \__tenkz_kernel_r_wire_stroke:nn #1#2
   {
     \__tenkz_test_corner_stroke:nn {#1} {#2}
@@ -30,7 +33,29 @@
             \spath_finalaction:NV \l__tenkz_test_corner_action_tl
               \l__tenkz_test_corner_segment_tl
             \tl_if_eq:NNT \l__tenkz_test_corner_action_tl \c_spath_curveto_tl
-              { \int_incr:N \l__tenkz_test_corner_count_int }
+              {
+                % A quarter circle's endpoint displacements both equal its
+                % radius. Read the saved curve, rather than renderer registers.
+                \dim_set:Nn \l__tenkz_test_corner_dx_dim
+                  { \dim_abs:n { \tl_item:Nn \l__tenkz_test_corner_segment_tl {11}
+                      - \tl_item:Nn \l__tenkz_test_corner_segment_tl {2} } }
+                \dim_set:Nn \l__tenkz_test_corner_dy_dim
+                  { \dim_abs:n { \tl_item:Nn \l__tenkz_test_corner_segment_tl {12}
+                      - \tl_item:Nn \l__tenkz_test_corner_segment_tl {3} } }
+                \int_compare:nNnT { \l__tenkz_test_corner_count_int } = {0}
+                  { \dim_set_eq:NN \l__tenkz_test_corner_radius_dim
+                      \l__tenkz_test_corner_dx_dim }
+                % PGF's dimension arithmetic can round tangent points by a few sp.
+                \dim_compare:nNnT
+                  { \dim_abs:n { \l__tenkz_test_corner_dx_dim
+                      - \l__tenkz_test_corner_radius_dim } } > {8sp}
+                  { \errmessage{Periodic~corner~radii~must~be~equal} }
+                \dim_compare:nNnT
+                  { \dim_abs:n { \l__tenkz_test_corner_dy_dim
+                      - \l__tenkz_test_corner_radius_dim } } > {8sp}
+                  { \errmessage{Periodic~turn~must~be~a~matching~quarter~circle} }
+                \int_incr:N \l__tenkz_test_corner_count_int
+              }
           }
         \int_compare:nNnF { \l__tenkz_test_corner_count_int } = {4}
           { \errmessage{Periodic~return~must~have~four~curved~turns} }
@@ -46,8 +71,16 @@
   \tn[skin=box]{A} & \tn[skin=box]{B} & \tn[skin=box]{C} \\
   \tn[skin=box]{A} & \tn[skin=box]{B} & \tn[skin=box]{C}
 \end{tenkz}
+\begin{tenkz}[lattice={3x2}, west=trace, east=trace]
+  \tn{A} & \tn{B} \\
+  \tn{A} & \tn{B} \\
+  \tn{A} & \tn{B}
+\end{tenkz}
+\begin{tenkz}[rows={wire}, cols=2, boundary=periodic]
+  \tn[skin=box]{AB} & \tn[skin=box]{C}
+\end{tenkz}
 \ExplSyntaxOn
-\int_compare:nNnF { \g__tenkz_test_corner_returns_int } = {3}
-  { \errmessage{Expected~three~periodic~returns~to~be~checked} }
+\int_compare:nNnF { \g__tenkz_test_corner_returns_int } = {7}
+  { \errmessage{Expected~seven~periodic~returns~to~be~checked} }
 \ExplSyntaxOff
 \end{document}
