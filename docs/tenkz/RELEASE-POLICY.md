@@ -56,7 +56,9 @@ the release notes. A separate campaign manifest is unnecessary.
 The maintainer explicitly approves the final commit and archive, creates its
 annotated `tikz-tensor-networks-vMAJOR.MINOR.PATCH` tag, and submits the archive through CTAN's
 upload form. Never move or reuse a release tag. Follow up on CTAN's response
-and check distribution inclusion separately. Local checks do not imply CTAN
+and check distribution inclusion separately. Then move the downstream pins to
+the tag: TNLean's `tenkz.toml` names the release in `rev` and the exact commit
+in `sha` (LionSR/TNLean#8351 records the pin that is waiting for the next tag). Local checks do not imply CTAN
 acceptance or immediate availability in TeX Live or MiKTeX.
 
 No fixed soak, work-record quota, activation PR, dedicated publisher, secret
