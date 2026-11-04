@@ -2569,13 +2569,22 @@
 % drawn ink to the clearance the metric table declares, which is the reading
 % a wire's own ink cannot supply: a wire carries no measured box.
 \tl_new:N \l__tenkz_kernel_r_rail_clear_tl
-% Round the lead-to-descent turns without asking PGF to round the
-% already-curved lower bends.  Clamp the radius to the available segments;
-% a missing lead has no upper turn, and a nonhorizontal lead keeps its route.
+% All four turns of a flat periodic return use one radius.  Bound that
+% radius by both leads, half the return depth, and half its width, so short
+% or asymmetric leads cannot give the upper and lower turns different sizes.
+% A missing or nonhorizontal lead has no new upper quarter turn.
+\fp_new:N \l__tenkz_kernel_rail_radius_fp
 \fp_new:N \l__tenkz_kernel_rail_left_radius_fp
 \fp_new:N \l__tenkz_kernel_rail_right_radius_fp
-\cs_new_protected:Npn \__tenkz_kernel_r_rail_upper_radii:
+\cs_new_protected:Npn \__tenkz_kernel_r_rail_corner_radii:
   {
+    \fp_set:Nn \l__tenkz_kernel_rail_radius_fp
+      {
+        max(0, min( \__tenkz_metric_ratio:n {corner},
+          \l__tenkz_kernel_r_reach_fp / 2,
+          ( \l__tenkz_kernel_r_wrap_ex_fp
+            - \l__tenkz_kernel_r_wrap_wx_fp ) / 2 ))
+      }
     \fp_zero:N \l__tenkz_kernel_rail_left_radius_fp
     \fp_zero:N \l__tenkz_kernel_rail_right_radius_fp
     \bool_if:NT \l__tenkz_kernel_r_wrap_llead_bool
@@ -2584,12 +2593,13 @@
           = { \l__tenkz_kernel_r_y_fp }
           {
             \fp_set:Nn \l__tenkz_kernel_rail_left_radius_fp
+              { max(0, ( \l__tenkz_kernel_r_wrap_lx_fp
+                  - \l__tenkz_kernel_r_wrap_wx_fp ) / 2) }
+            \fp_compare:nNnT { \l__tenkz_kernel_rail_left_radius_fp } > {0}
               {
-                max(0, min( \__tenkz_metric_ratio:n {corner},
-                  ( \l__tenkz_kernel_r_wrap_lx_fp
-                    - \l__tenkz_kernel_r_wrap_wx_fp ) / 2,
-                  ( \l__tenkz_kernel_r_reach_fp
-                    - \__tenkz_metric_ratio:n {pairtracereach} / 2 ) / 2 ))
+                \fp_set:Nn \l__tenkz_kernel_rail_radius_fp
+                  { min( \l__tenkz_kernel_rail_radius_fp,
+                      \l__tenkz_kernel_rail_left_radius_fp ) }
               }
           }
       }
@@ -2599,15 +2609,22 @@
           = { \l__tenkz_kernel_r_yb_fp }
           {
             \fp_set:Nn \l__tenkz_kernel_rail_right_radius_fp
+              { max(0, ( \l__tenkz_kernel_r_wrap_ex_fp
+                  - \l__tenkz_kernel_r_wrap_rx_fp ) / 2) }
+            \fp_compare:nNnT { \l__tenkz_kernel_rail_right_radius_fp } > {0}
               {
-                max(0, min( \__tenkz_metric_ratio:n {corner},
-                  ( \l__tenkz_kernel_r_wrap_ex_fp
-                    - \l__tenkz_kernel_r_wrap_rx_fp ) / 2,
-                  ( \l__tenkz_kernel_r_reach_fp
-                    - \__tenkz_metric_ratio:n {pairtracereach} / 2 ) / 2 ))
+                \fp_set:Nn \l__tenkz_kernel_rail_radius_fp
+                  { min( \l__tenkz_kernel_rail_radius_fp,
+                      \l__tenkz_kernel_rail_right_radius_fp ) }
               }
           }
       }
+    \fp_compare:nNnT { \l__tenkz_kernel_rail_left_radius_fp } > {0}
+      { \fp_set_eq:NN \l__tenkz_kernel_rail_left_radius_fp
+          \l__tenkz_kernel_rail_radius_fp }
+    \fp_compare:nNnT { \l__tenkz_kernel_rail_right_radius_fp } > {0}
+      { \fp_set_eq:NN \l__tenkz_kernel_rail_right_radius_fp
+          \l__tenkz_kernel_rail_radius_fp }
   }
 % Saved-path sampling stays in native TeX dimensions; rail records use sp.
 \tl_new:N \l__tenkz_kernel_rail_path_tl
@@ -2884,7 +2901,7 @@
                     \l__tenkz_kernel_r_xc_fp
                     * \__tenkz_metric_ratio:n {pairtracereach}
                   }
-                \__tenkz_kernel_r_rail_upper_radii:
+                \__tenkz_kernel_r_rail_corner_radii:
                 \__tenkz_kernel_r_wire_stroke:nn { bond }
                   {
                     \fp_compare:nNnTF
@@ -2934,8 +2951,7 @@
                         + \l__tenkz_kernel_r_yc_fp
                           * (
                               \l__tenkz_kernel_r_reach_fp
-                              - \__tenkz_metric_ratio:n {pairtracereach}
-                                / 2
+                              - \l__tenkz_kernel_rail_radius_fp
                             )
                       }
                     arc
@@ -2945,15 +2961,14 @@
                         radius =
                           \__tenkz_kernel_r_pt:n
                             {
-                              \__tenkz_metric_ratio:n {pairtracereach}
-                              / 2
+                              \l__tenkz_kernel_rail_radius_fp
                             }
                       ]
                     --
                     \__tenkz_kernel_r_pair:nn
                       {
                         \l__tenkz_kernel_r_wrap_ex_fp
-                        - \__tenkz_metric_ratio:n {pairtracereach} / 2
+                        - \l__tenkz_kernel_rail_radius_fp
                       }
                       {
                         \l__tenkz_kernel_r_yb_fp
@@ -2967,8 +2982,7 @@
                         radius =
                           \__tenkz_kernel_r_pt:n
                             {
-                              \__tenkz_metric_ratio:n {pairtracereach}
-                              / 2
+                              \l__tenkz_kernel_rail_radius_fp
                             }
                       ]
                     \fp_compare:nNnTF
